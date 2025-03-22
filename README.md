@@ -31,7 +31,7 @@ We propose an innovative **Mamba-Contrastive approach** that:
 
 ## 📂 Updated Repository Structure
 ```plaintext
-contrastive-mamba-emocon/
+contrastive-emotion-recognition/
 │── data/                          # Datasets (CrowdFlower, WASSA)
 │── notebooks/                     # Jupyter Notebooks (visualizations, analysis)
 │── src/
@@ -60,8 +60,8 @@ contrastive-mamba-emocon/
 ## ⚡ Installation & Setup
 ### **Step 1: Clone the Repository**
 ```bash
-git clone https://github.com/yourusername/contrastive-mamba-emocon.git
-cd contrastive-mamba-emocon
+git clone https://github.com/yourusername/contrastive-emotion-recognition.git
+cd contrastive-emotion-recognition.git
 ```
 
 ### **Step 2: Create a Virtual Environment & Install Dependencies**
