@@ -42,4 +42,4 @@ for epoch in range(5):
 
     print(f"Epoch {epoch+1}, Loss: {epoch_loss/len(train_loader)}")
 
-torch.save(model.state_dict(), '../results/contrastive_mamba.pt')
+torch.save(model.state_dict(), 'results/contrastive_mamba.pt')

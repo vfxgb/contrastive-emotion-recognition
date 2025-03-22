@@ -10,7 +10,7 @@ test_loader = DataLoader(test_dataset, batch_size=32)
 
 mamba_args = ModelArgs(d_model=128, n_layer=2, vocab_size=30522)
 model = ContrastiveMambaModel(mamba_args, num_emotions=6).to(device)
-model.load_state_dict(torch.load('../results/contrastive_mamba.pt'))
+model.load_state_dict(torch.load('results/contrastive_mamba.pt'))
 
 model.eval()
 preds, truths = [], []
