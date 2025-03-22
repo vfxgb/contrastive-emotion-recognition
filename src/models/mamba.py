@@ -31,7 +31,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
 
-from scans import selective_scan
+from .scans import selective_scan
 
 
 @dataclass
@@ -73,25 +73,33 @@ class Mamba(nn.Module):
         self.lm_head.weight = self.embedding.weight  # Tie output projection to embedding weights.
                                                      # See "Weight Tying" paper
 
-    def forward(self, input_ids):
-        """
-        Args:
-            input_ids (long tensor): shape (b, l)    (See Glossary at top for definitions of b, l, d_in, n...)
+    # def forward(self, input_ids):
+    #     """
+    #     Args:
+    #         input_ids (long tensor): shape (b, l)    (See Glossary at top for definitions of b, l, d_in, n...)
     
-        Returns:
-            logits: shape (b, l, vocab_size)
+    #     Returns:
+    #         logits: shape (b, l, vocab_size)
 
-        Official Implementation:
-            class MambaLMHeadModel, https://github.com/state-spaces/mamba/blob/main/mamba_ssm/models/mixer_seq_simple.py#L173
+    #     Official Implementation:
+    #         class MambaLMHeadModel, https://github.com/state-spaces/mamba/blob/main/mamba_ssm/models/mixer_seq_simple.py#L173
 
-        """
+    #     """
+    #     x = self.embedding(input_ids)
+        
+    #     for layer in self.layers:
+    #         x = layer(x)
+            
+    #     x = self.norm_f(x)
+    #     return self.lm_head(x)
+    def forward(self, input_ids):
         x = self.embedding(input_ids)
         
         for layer in self.layers:
             x = layer(x)
             
         x = self.norm_f(x)
-        return self.lm_head(x)
+        return x
 
     @staticmethod
     def from_pretrained(pretrained_model_name: str, model=None):

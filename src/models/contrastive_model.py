@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from mamba import Mamba, ModelArgs
+from .mamba import Mamba, ModelArgs
 
 class ContrastiveMambaModel(nn.Module):
     def __init__(self, mamba_args, num_emotions, embed_dim=256):
