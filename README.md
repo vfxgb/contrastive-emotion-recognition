@@ -73,7 +73,8 @@ pip install -r requirements.txt
 
 ### **Step 3: Preprocess the Data**
 ```bash
-python src/preprocess_data.py
+cd src
+python preprocess_data.py
 ```
 
 ### **Step 4: Train Baseline BERT Model**
