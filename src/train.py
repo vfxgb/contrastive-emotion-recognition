@@ -70,7 +70,7 @@ train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 mamba_args = ModelArgs(d_model=128, n_layer=2, vocab_size=30522)
 embed_dim = 256
 num_emotions = 13  
-num_epochs = 100000
+num_epochs = 1000
 
 # Instantiate encoder and classifier separately.
 encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
