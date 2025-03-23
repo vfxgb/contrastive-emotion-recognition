@@ -6,23 +6,30 @@ from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 from torch.utils.data import TensorDataset
 from models.mamba import ModelArgs
+from transformers import AutoTokenizer
 
 torch.serialization.add_safe_globals([TensorDataset])
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 train_dataset = torch.load('data/train.pt')
-print("Unique labels in the dataset:", torch.unique(train_dataset.tensors[2]))
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
 mamba_args = ModelArgs(d_model=128, n_layer=2, vocab_size=30522)
 model = ContrastiveMambaModel(mamba_args, num_emotions=13).to(device)
+# from mamba_ssm.models.mixer_seq_simple import MambaLMHeadModel
 
+# num_labels = 13  # the number of labels
+
+# tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
+# model = MambaLMHeadModel.from_pretrained("state-spaces/mamba-2.8b")
+
+# model.lm_head = torch.nn.Linear(model.config.d_model, num_labels)
 optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)
 criterion_cls = CrossEntropyLoss()
 criterion_contrastive = SupConLoss()
 
 model.train()
-for epoch in range(5):
+for epoch in range(100000):
     epoch_loss = 0
     for input_ids, _, labels in tqdm(train_loader):  # Ignore attention_mask
         input_ids = input_ids.to(device)

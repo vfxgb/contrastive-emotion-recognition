@@ -202,18 +202,32 @@ def load_wassa(path, emotions, max_length=128):
     return dataset
 
 if __name__ == "__main__":
+    # print("[Main] Loading CrowdFlower dataset...")
+    # train_dataset = load_crowdflower('../data/CrowdFlower/text_emotion.csv')
+    
+    # print("[Main] Loading WASSA dataset...")
+    # test_dataset = load_wassa('../data/WASSA2017/testing', [
+    #     'anger-ratings-0to1.test.target.txt',
+    #     'fear-ratings-0to1.test.target.txt',
+    #     'joy-ratings-0to1.test.target.txt',
+    #     'sadness-ratings-0to1.test.target.txt'
+    # ])
+    
+    # print("[Main] Saving datasets...")
+    # torch.save(train_dataset, '../data/train.pt')
+    # torch.save(test_dataset, '../data/test.pt')
+    # print("[Main] Datasets saved.")
     print("[Main] Loading CrowdFlower dataset...")
-    train_dataset = load_crowdflower('../data/CrowdFlower/text_emotion.csv')
-    
-    print("[Main] Loading WASSA dataset...")
-    test_dataset = load_wassa('../data/WASSA2017/testing', [
-        'anger-ratings-0to1.test.target.txt',
-        'fear-ratings-0to1.test.target.txt',
-        'joy-ratings-0to1.test.target.txt',
-        'sadness-ratings-0to1.test.target.txt'
-    ])
-    
+    full = load_crowdflower('../data/CrowdFlower/text_emotion.csv')
+
+    # split 80/20
+    train_ds, test_ds = train_test_split(
+        full, test_size=0.2, random_state=42, shuffle=True
+    )
+
+    print(f"[Main] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
+
     print("[Main] Saving datasets...")
-    torch.save(train_dataset, '../data/train.pt')
-    torch.save(test_dataset, '../data/test.pt')
-    print("[Main] Datasets saved.")
+    torch.save(train_ds, '../data/train.pt')
+    torch.save(test_ds, '../data/test.pt')
+    print("[Main] Done.")
