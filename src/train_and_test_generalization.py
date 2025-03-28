@@ -27,6 +27,9 @@ train_loader = DataLoader(train_ds_augmented, batch_size=batch_size, shuffle=Tru
 val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
+# Load trained encoder checkpoint
+checkpoint = torch.load('results/fully_trained/contrastive_mamba_decoupled.pt') # remove if not using the weights
+
 # Mamba Configuration
 mamba_args = dict(
     d_model=256,
@@ -37,6 +40,12 @@ mamba_args = dict(
 
 # Model initialization
 encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
+
+encoder.load_state_dict(checkpoint['encoder'])
+# We freeze our previously trained encoder weights
+for param in encoder.parameters():
+    param.requires_grad = False  # Set to True if fine-tuning desired
+
 classifier = ClassifierHead(embed_dim, num_emotions).to(device)
 
 # Loss and Optimizer
@@ -65,7 +74,7 @@ def evaluate(encoder, classifier, dataloader, device):
 
 # Training Loop with Early Stopping
 best_val_accuracy = 0
-patience, trigger_times = 10, 0
+patience, trigger_times = 30, 0
 
 for epoch in range(num_epochs):
     encoder.train()
