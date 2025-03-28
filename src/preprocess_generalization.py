@@ -91,7 +91,8 @@ if __name__ == "__main__":
     os.makedirs("../data", exist_ok=True)
 
     allowed_labels = ['anger', 'worry', 'happiness', 'sadness']
-    label_mapping = {'anger':0, 'worry':1, 'happiness':2, 'sadness':3}
+    label_mapping = {'anger':0, 'happiness':1, 'sadness':2, 'worry':3}
+
 
     # Load CrowdFlower dataset
     crowdflower_ds = load_crowdflower('../data/CrowdFlower/text_emotion.csv', allowed_labels)
