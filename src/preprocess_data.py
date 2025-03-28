@@ -16,17 +16,10 @@ nlp = spacy.load("en_core_web_sm")
 # Clean tweets/text
 def clean_text(text):
     text = re.sub(r'http\S+', '', text)
-    text = re.sub(r'@\S+', '', text)
+    text = re.sub(r'@\w+', '', text)
     text = re.sub(r'#', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
-    
-    doc = nlp(text.lower())
-    tokens = [
-        token.lemma_
-        for token in doc
-        if token.text not in string.punctuation and not token.is_stop
-    ]
-    return ' '.join(tokens)
+    return text.lower()
 
 # Load and process CrowdFlower dataset
 def load_crowdflower(path, max_length=128):
