@@ -10,7 +10,7 @@ import random
 # Configs
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 embed_dim = 256
-num_emotions = 13
+num_emotions = 9
 batch_size = 256
 num_epochs = 1000  # Reduced epochs for early stopping/validation
 learning_rate = 2e-5
