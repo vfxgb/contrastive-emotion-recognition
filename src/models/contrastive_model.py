@@ -1,5 +1,5 @@
 import torch.nn as nn
-from mamba_ssm import Mamba
+from mamba_ssm import Mamba2
 
 class ContrastiveMambaEncoder(nn.Module):
     def __init__(self, mamba_args, embed_dim=256, vocab_size=30522):
@@ -8,7 +8,7 @@ class ContrastiveMambaEncoder(nn.Module):
         # We assume mamba_args is a dictionary. If it's a ModelArgs instance, adjust accordingly.
         self.embedding = nn.Embedding(vocab_size, mamba_args['d_model'])
         # Unpack the mamba_args dictionary to pass keyword arguments.
-        self.mamba = Mamba(**mamba_args)
+        self.mamba = Mamba2(**mamba_args)
         # Projection layer to map from d_model to embed_dim.
         self.projection = nn.Linear(mamba_args['d_model'], embed_dim)
 

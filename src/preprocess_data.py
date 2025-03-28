@@ -8,48 +8,53 @@ import os
 import spacy
 import string
 from collections import Counter
+import random
 
-# Initialize tokenizer
+# Initialize tokenizer and spaCy model
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 nlp = spacy.load("en_core_web_sm")
 
 # Clean tweets/text
 def clean_text(text):
     text = re.sub(r'http\S+', '', text)
-    text = re.sub(r'@\S+', '', text)
+    text = re.sub(r'@\w+', '', text)
     text = re.sub(r'#', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
-    
-    doc = nlp(text.lower())
-    tokens = [
-        token.lemma_
-        for token in doc
-        if token.text not in string.punctuation and not token.is_stop
-    ]
-    return ' '.join(tokens)
+    return text.lower()
 
-# Load and process CrowdFlower dataset
-def load_crowdflower(path, max_length=128):
+def load_crowdflower(path, max_length=128, min_samples=1000):
     df = pd.read_csv(path)
     print(f"[CrowdFlower] Loaded {len(df)} rows from {path}")
 
     df['original'] = df['content']  # Keep original for debugging
     df['content'] = df['content'].apply(clean_text)
 
-    # Print a few samples
-    print("\n[SAMPLE CLEANED DATA]")
-    print(df[['original', 'content', 'sentiment']].sample(5))
-
     # Encode labels
     unique_sentiments = sorted(df['sentiment'].unique())
     label_map = {label: idx for idx, label in enumerate(unique_sentiments)}
-    print(f"\n[CrowdFlower] Label mapping: {label_map}")
+    df['label'] = df['sentiment'].map(label_map)
 
-    labels = df['sentiment'].map(label_map).tolist()
-    label_counts = Counter(labels)
-    print(f"[Label Distribution BEFORE split]: {label_counts}")
+    # Print original distribution
+    print(f"[Original Label Distribution]")
+    print(df['label'].value_counts())
 
-    texts = df['content'].tolist()
+    # Filter out classes with < min_samples
+    class_counts = df['label'].value_counts()
+    keep_classes = class_counts[class_counts >= min_samples].index.tolist()
+    df_filtered = df[df['label'].isin(keep_classes)].reset_index(drop=True)
+
+    print(f"[Filtered Label Distribution (min {min_samples} per class)]")
+    print(df_filtered['label'].value_counts())
+    print("\n[Filtered Sentiment Distribution]")
+    print(df_filtered['sentiment'].value_counts())
+
+    # Re-map labels to be consecutive
+    new_label_map = {old: i for i, old in enumerate(sorted(df_filtered['label'].unique()))}
+    df_filtered['label'] = df_filtered['label'].map(new_label_map)
+
+    texts = df_filtered['content'].tolist()
+    labels = df_filtered['label'].tolist()
+
     encodings = tokenizer(
         texts,
         truncation=True,
@@ -58,18 +63,15 @@ def load_crowdflower(path, max_length=128):
         return_tensors='pt'
     )
 
-    # Debug: avg length
-    input_lengths = [len(tokenizer.tokenize(t)) for t in texts]
-    print(f"\n[Stats] Avg token length: {np.mean(input_lengths):.2f} | Max: {np.max(input_lengths)}")
-
     input_ids = encodings['input_ids']
     attention_masks = encodings['attention_mask']
     label_tensor = torch.tensor(labels)
 
     dataset = TensorDataset(input_ids, attention_masks, label_tensor)
-    print(f"\n[CrowdFlower] Final dataset shape: {len(dataset)} samples")
+    print(f"[CrowdFlower] Final FILTERED dataset shape: {len(dataset)} samples")
+    print(f"[Final Label Mapping] {new_label_map}")
 
-    return dataset, texts, labels, label_map
+    return dataset, texts, labels, new_label_map
 
 # Proper splitting using Subset
 def split_dataset(dataset, split_ratio=0.8, seed=42):
@@ -88,7 +90,7 @@ def split_dataset(dataset, split_ratio=0.8, seed=42):
         indices,
         train_size=split_ratio,
         random_state=seed,
-        stratify=labels[indices].numpy()  # Stratified sampling to maintain label dist
+        stratify=labels[indices].numpy()  # Stratified sampling to maintain label distribution
     )
 
     train_ds = Subset(dataset, X_train_idx)
@@ -97,6 +99,45 @@ def split_dataset(dataset, split_ratio=0.8, seed=42):
     print(f"[Split] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
     return train_ds, test_ds
 
+# --- New: DualViewDataset for Contrastive Learning ---
+
+def random_dropout_tokens(token_ids, dropout_prob=0.1):
+    """
+    Simple augmentation: randomly drop tokens (except special tokens).
+    Assumes special tokens: [CLS]=101, [SEP]=102, [PAD]=0.
+    """
+    return [tok for tok in token_ids if random.random() > dropout_prob or tok in [101, 102, 0]]
+
+class DualViewDataset(torch.utils.data.Dataset):
+    """
+    Wraps an existing TensorDataset to produce two augmented views of input_ids.
+    """
+    def __init__(self, tensor_dataset, dropout_prob=0.1):
+        if isinstance(tensor_dataset, Subset):
+            tensor_dataset = tensor_dataset.dataset
+        self.input_ids = tensor_dataset.tensors[0]
+        self.attention_masks = tensor_dataset.tensors[1]  # Not used for augmentation here
+        self.labels = tensor_dataset.tensors[2]
+        self.dropout_prob = dropout_prob
+
+    def __len__(self):
+        return len(self.input_ids)
+
+    def __getitem__(self, idx):
+        original = self.input_ids[idx].tolist()
+        # Create two augmented views using random token dropout
+        view1 = random_dropout_tokens(original, self.dropout_prob)
+        view2 = random_dropout_tokens(original, self.dropout_prob)
+        
+        # Pad views to the same length as the original sequence
+        max_len = len(original)
+        view1 = view1 + [0] * (max_len - len(view1))
+        view2 = view2 + [0] * (max_len - len(view2))
+        
+        view1 = torch.tensor(view1)
+        view2 = torch.tensor(view2)
+        label = self.labels[idx]
+        return view1, view2, label
 
 if __name__ == "__main__":
     os.makedirs("../data", exist_ok=True)

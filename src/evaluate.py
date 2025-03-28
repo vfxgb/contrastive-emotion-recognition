@@ -8,11 +8,11 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.serialization.add_safe_globals([TensorDataset])
 
 # Load test dataset
-test_dataset = torch.load('data/test.pt')
+test_dataset = torch.load('data/train.pt', weights_only=False)
 test_loader = DataLoader(test_dataset, batch_size=32)
 
 # Mamba config
-mamba_args = dict(d_model=128, d_state=64, d_conv=4, expand=2)
+mamba_args = dict(d_model=256, d_state=128, d_conv=4, expand=2)
 embed_dim = 256
 num_emotions = 13
 

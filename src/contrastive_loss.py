@@ -1,39 +1,38 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 class SupConLoss(nn.Module):
     def __init__(self, temperature=0.07):
-        super(SupConLoss, self).__init__()
+        super().__init__()
         self.temperature = temperature
 
     def forward(self, features, labels):
         device = features.device
-        features = F.normalize(features, dim=1)  # Normalize embeddings
 
-        batch_size = features.size(0)
-        sim_matrix = torch.div(torch.matmul(features, features.T), self.temperature)
+        # If features have shape [B, views, D], flatten them to [B * views, D]
+        if features.dim() == 3:
+            B, views, D = features.shape
+            features = features.view(B * views, D)
+            # Repeat labels for each view.
+            labels = labels.repeat(views)
 
-        # For numerical stability
-        logits_max, _ = torch.max(sim_matrix, dim=1, keepdim=True)
-        sim_matrix = sim_matrix - logits_max.detach()
+        features = F.normalize(features, dim=1)
+        sim = torch.matmul(features, features.T) / self.temperature
 
-        labels = labels.contiguous().view(-1, 1)  # (B, 1)
-        mask = torch.eq(labels, labels.T).float().to(device)  # (B, B)
+        labels = labels.unsqueeze(1)
+        mask = torch.eq(labels, labels.T).float()
+        mask.fill_diagonal_(0)  # remove self‑pairs
 
-        # Mask-out self-contrast cases
-        logits_mask = torch.ones_like(mask).fill_diagonal_(0)
-        mask = mask * logits_mask  # Only true positives (not self)
+        pos_count = mask.sum(dim=1)
+        valid = pos_count > 0
 
-        # Compute log_prob
-        exp_logits = torch.exp(sim_matrix) * logits_mask  # remove diagonal
-        log_prob = sim_matrix - torch.log(exp_logits.sum(dim=1, keepdim=True) + 1e-8)
+        if valid.sum() == 0:
+            return torch.tensor(0.0, device=device)
 
-        # Mean of log-likelihood over positive
-        mean_log_prob_pos = (mask * log_prob).sum(dim=1) / (mask.sum(dim=1) + 1e-8)
+        exp_sim = torch.exp(sim)
+        numerator = (exp_sim * mask).sum(dim=1)
+        denominator = exp_sim.sum(dim=1)
 
-        # Loss
-        loss = -mean_log_prob_pos
-        loss = loss.mean()
-
-        return loss
+        loss = -torch.log(numerator[valid] / denominator[valid])
+        return loss.mean()
