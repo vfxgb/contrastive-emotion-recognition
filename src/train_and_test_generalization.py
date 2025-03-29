@@ -1,5 +1,7 @@
 import torch
-from torch.utils.data import DataLoader
+import random
+import numpy as np
+from torch.utils.data import DataLoader, random_split
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 from contrastive_loss import SupConLoss
 from torch.nn import CrossEntropyLoss
@@ -8,56 +10,25 @@ from tqdm import tqdm
 # Configurations
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 embed_dim = 256
-num_emotions = 4
+num_emotions = 2
 batch_size = 256
-num_epochs = 1000
+num_epochs = 100
 learning_rate = 2e-5
+num_runs = 5
 
-# Load prepared datasets
-train_ds = torch.load('data/train.pt', weights_only=False)
-val_ds = torch.load('data/val.pt', weights_only=False)
-test_ds = torch.load('data/test.pt', weights_only=False)
-
-# Data augmentation wrapper
-from preprocess_generalization import DualViewDataset
-train_ds_augmented = DualViewDataset(train_ds, dropout_prob=0.1)
-
-# Dataloaders
-train_loader = DataLoader(train_ds_augmented, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
-
-# Load trained encoder checkpoint
-checkpoint = torch.load('results/fully_trained/contrastive_mamba_decoupled.pt') # remove if not using the weights
-
-# Mamba Configuration
-mamba_args = dict(
-    d_model=256,
-    d_state=128,
-    d_conv=4,
-    expand=2,
-)
-
-# Model initialization
-encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
-
-encoder.load_state_dict(checkpoint['encoder'])
-# We freeze our previously trained encoder weights
-for param in encoder.parameters():
-    param.requires_grad = False  # Set to True if fine-tuning desired
-
-classifier = ClassifierHead(embed_dim, num_emotions).to(device)
-
-# Loss and Optimizer
-criterion_cls = CrossEntropyLoss()
-criterion_contrastive = SupConLoss()
-optimizer = torch.optim.AdamW(list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate)
+# Seed function for reproducibility
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 # Evaluation function
 def evaluate(encoder, classifier, dataloader, device):
     encoder.eval()
     classifier.eval()
-
     correct, total = 0, 0
 
     with torch.no_grad():
@@ -69,55 +40,78 @@ def evaluate(encoder, classifier, dataloader, device):
             correct += (preds == labels).sum().item()
             total += labels.size(0)
 
-    accuracy = correct / total
-    return accuracy
+    return correct / total
 
-# Training Loop with Early Stopping
-best_val_accuracy = 0
-patience, trigger_times = 30, 0
+# Run multiple trials
+all_test_accuracies = []
 
-for epoch in range(num_epochs):
-    encoder.train()
-    classifier.train()
+for run in range(num_runs):
+    print(f"\n🔁 Run {run+1}/{num_runs}")
+    set_seed(42 + run)
 
-    total_loss = 0
-    for view1, view2, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
-        view1, view2, labels = view1.to(device), view2.to(device), labels.to(device)
+    # Load dataset
+    train_ds = torch.load('data/train.pt', weights_only=False)
+    test_ds = torch.load('data/test.pt', weights_only=False)
 
-        emb1, emb2 = encoder(view1), encoder(view2)
-        features = torch.stack([emb1, emb2], dim=1)
+    # Split train into train/val
+    train_len = int(0.9 * len(train_ds))
+    val_len = len(train_ds) - train_len
+    train_ds, val_ds = random_split(train_ds, [train_len, val_len], generator=torch.Generator().manual_seed(42 + run))
 
-        loss_contrastive = criterion_contrastive(features, labels)
-        loss_cls = criterion_cls(classifier(emb1), labels)
+    # Dataloaders
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-        loss = loss_cls + loss_contrastive
+    # Model initialization
+    mamba_args = dict(d_model=256, d_state=128, d_conv=4, expand=2)
+    encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
+    classifier = ClassifierHead(embed_dim, num_emotions).to(device)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+    # Load pretrained encoder
+    checkpoint = torch.load('results/fully_trained/contrastive_mamba_decoupled.pt')
+    encoder.load_state_dict(checkpoint['encoder'])
 
-        total_loss += loss.item()
+    # Loss and optimizer
+    criterion_cls = CrossEntropyLoss()
+    optimizer = torch.optim.AdamW(list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate)
 
-    avg_loss = total_loss / len(train_loader)
-    print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
+    # Fine-tuning
+    best_val_acc = 0
+    for epoch in range(num_epochs):
+        encoder.train()
+        classifier.train()
+        total_loss = 0
 
-    val_accuracy = evaluate(encoder, classifier, val_loader, device)
-    print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
+        for input_ids, _, labels in tqdm(train_loader, desc=f"Fine-tuning Epoch {epoch+1}"):
+            input_ids, labels = input_ids.to(device), labels.to(device)
+            embeddings = encoder(input_ids)
+            logits = classifier(embeddings)
+            loss = criterion_cls(logits, labels)
 
-    if val_accuracy > best_val_accuracy:
-        best_val_accuracy = val_accuracy
-        torch.save({
-            'encoder': encoder.state_dict(),
-            'classifier': classifier.state_dict(),
-        }, 'results/best_generalization_mamba.pt')
-        trigger_times = 0
-        print(f"[Epoch {epoch+1}] New best model saved.")
-    else:
-        trigger_times += 1
-        if trigger_times >= patience:
-            print(f"Early stopping triggered after epoch {epoch+1}")
-            break
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-# Final generalization evaluation on WASSA
-test_accuracy = evaluate(encoder, classifier, test_loader, device)
-print(f"Final Generalization Accuracy (WASSA): {test_accuracy:.4f}")
+            total_loss += loss.item()
+
+        avg_loss = total_loss / len(train_loader)
+        val_acc = evaluate(encoder, classifier, val_loader, device)
+        print(f"[Epoch {epoch+1}] Loss: {avg_loss:.4f} | Val Accuracy: {val_acc:.4f}")
+
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            best_encoder = encoder.state_dict()
+            best_classifier = classifier.state_dict()
+
+    # Load best model and evaluate on test set
+    encoder.load_state_dict(best_encoder)
+    classifier.load_state_dict(best_classifier)
+    test_acc = evaluate(encoder, classifier, test_loader, device)
+    all_test_accuracies.append(test_acc)
+    print(f"✅ Run {run+1} Test Accuracy: {test_acc:.4f}")
+
+# Print final results
+mean_acc = np.mean(all_test_accuracies)
+std_acc = np.std(all_test_accuracies)
+print(f"\n📊 Final Test Accuracy over {num_runs} runs: {mean_acc:.4f} ± {std_acc:.4f}")
