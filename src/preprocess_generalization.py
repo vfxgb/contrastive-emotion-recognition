@@ -1,3 +1,4 @@
+"""Direct comparison"""
 import pandas as pd
 import torch
 from transformers import AutoTokenizer
@@ -8,49 +9,6 @@ import random
 
 # Initialize tokenizer
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-
-# Cleaning text
-def clean_text(text):
-    text = re.sub(r'http\S+', '', text)
-    text = re.sub(r'@\w+', '', text)
-    text = re.sub(r'#', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text.lower()
-
-# CrowdFlower loading
-def load_crowdflower(path, allowed_labels, max_length=128):
-    df = pd.read_csv(path)
-    df = df[df['sentiment'].isin(allowed_labels)].reset_index(drop=True)
-
-    label_map = {label: idx for idx, label in enumerate(sorted(allowed_labels))}
-    df['label'] = df['sentiment'].map(label_map)
-
-    texts = df['content'].apply(clean_text).tolist()
-    labels = df['label'].tolist()
-
-    encodings = tokenizer(texts, truncation=True, padding='max_length', max_length=max_length, return_tensors='pt')
-
-    dataset = TensorDataset(encodings['input_ids'], encodings['attention_mask'], torch.tensor(labels))
-    print(f"CrowdFlower dataset loaded: {len(dataset)} samples")
-    return dataset
-
-# WASSA loading
-def load_wassa(paths, emotion, label, threshold=0.75, max_length=128):
-    dfs = []
-    for path in paths:
-        df = pd.read_csv(path, sep='\t')
-        df = df[df['score'] >= threshold]
-        df['label'] = label
-        df['content'] = df['tweet'].apply(clean_text)
-        dfs.append(df[['content', 'label']])
-
-    combined_df = pd.concat(dfs).reset_index(drop=True)
-
-    encodings = tokenizer(combined_df['content'].tolist(), truncation=True, padding='max_length', max_length=max_length, return_tensors='pt')
-
-    dataset = TensorDataset(encodings['input_ids'], encodings['attention_mask'], torch.tensor(combined_df['label'].tolist()))
-    print(f"WASSA-{emotion} dataset loaded: {len(dataset)} samples")
-    return dataset
 
 # DualViewDataset class
 def random_dropout_tokens(token_ids, dropout_prob=0.1):
@@ -86,47 +44,62 @@ class DualViewDataset(torch.utils.data.Dataset):
 
         return view1, view2, label
 
+# Cleaning text
+def clean_text(text):
+    text = re.sub(r'http\S+', '', text)
+    text = re.sub(r'@\w+', '', text)
+    text = re.sub(r'#', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text.lower()
 
+# Explicit consistent label mapping
+label_mapping = {'anger': 0, 'sadness': 1}
+
+# WASSA loading
+def load_wassa(paths, emotion, cf_label, threshold=0.75, max_length=128):
+    dfs = []
+    for path in paths:
+        df = pd.read_csv(path, sep='\t')
+        df = df[df['score'] >= threshold]
+        df['label'] = cf_label
+        df['content'] = df['tweet'].apply(clean_text)
+        dfs.append(df[['content', 'label']])
+
+    combined_df = pd.concat(dfs).reset_index(drop=True)
+
+    encodings = tokenizer(combined_df['content'].tolist(), truncation=True, padding='max_length', max_length=max_length, return_tensors='pt')
+
+    dataset = TensorDataset(encodings['input_ids'], encodings['attention_mask'], torch.tensor(combined_df['label'].tolist()))
+    print(f"WASSA-{emotion} dataset loaded: {len(dataset)} samples")
+    return dataset
+
+# Main execution
 if __name__ == "__main__":
     os.makedirs("../data", exist_ok=True)
 
-    allowed_labels = ['anger', 'worry', 'happiness', 'sadness']
-    label_mapping = {'anger':0, 'happiness':1, 'sadness':2, 'worry':3}
-
-
-    # Load CrowdFlower dataset
-    crowdflower_ds = load_crowdflower('../data/CrowdFlower/text_emotion.csv', allowed_labels)
-
-    # Split CrowdFlower into train/val
-    train_size = int(0.8 * len(crowdflower_ds))
-    val_size = len(crowdflower_ds) - train_size
-    train_ds, val_ds = random_split(crowdflower_ds, [train_size, val_size], generator=torch.Generator().manual_seed(42))
-
-    torch.save(train_ds, '../data/train.pt')
-    torch.save(val_ds, '../data/val.pt')
-
-    # Load WASSA datasets
-    wassa_paths = [
-        '../data/WASSA2017/training/anger-ratings-0to1.train.txt',
-        '../data/WASSA2017/validation/anger-ratings-0to1.dev.gold.txt',
-        '../data/WASSA2017/training/fear-ratings-0to1.train.txt',
-        '../data/WASSA2017/validation/fear-ratings-0to1.dev.gold.txt',
-        '../data/WASSA2017/training/joy-ratings-0to1.train.txt',
-        '../data/WASSA2017/validation/joy-ratings-0to1.dev.gold.txt',
-        '../data/WASSA2017/training/sadness-ratings-0to1.train.txt',
-        '../data/WASSA2017/validation/sadness-ratings-0to1.dev.gold.txt'
-    ]
+    # WASSA paths
+    wassa_paths = {
+        'anger': ["../data/WASSA2017/training/anger-ratings-0to1.train.txt",
+                  "../data/WASSA2017/validation/anger-ratings-0to1.dev.gold.txt"],
+        'sadness': ["../data/WASSA2017/training/sadness-ratings-0to1.train.txt",
+                    "../data/WASSA2017/validation/sadness-ratings-0to1.dev.gold.txt"]
+    }
 
     wassa_ds_list = []
-    for emotion in allowed_labels:
-        emotion_paths = [p for p in wassa_paths if emotion in p or (emotion=='worry' and 'fear' in p) or (emotion=='happiness' and 'joy' in p)]
-        ds = load_wassa(emotion_paths, emotion, label_mapping[emotion], threshold=0.75)
+    for emotion, paths in wassa_paths.items():
+        ds = load_wassa(paths, emotion, label_mapping[emotion], threshold=0.75)
         wassa_ds_list.append(ds)
 
     wassa_combined_ds = ConcatDataset(wassa_ds_list)
-    torch.save(wassa_combined_ds, '../data/test.pt')
 
-    print("Datasets prepared and saved:")
-    print(f"- CrowdFlower train: {len(train_ds)} samples")
-    print(f"- CrowdFlower val: {len(val_ds)} samples")
-    print(f"- WASSA test: {len(wassa_combined_ds)} samples")
+    # Split into train/test
+    train_size = int(0.8 * len(wassa_combined_ds))
+    test_size = len(wassa_combined_ds) - train_size
+    wassa_train, wassa_test = random_split(wassa_combined_ds, [train_size, test_size], generator=torch.Generator().manual_seed(42))
+
+    torch.save(wassa_train, '../data/train.pt')
+    torch.save(wassa_test, '../data/test.pt')
+
+    print("Datasets prepared and saved (WASSA only):")
+    print(f"- WASSA train: {len(wassa_train)} samples")
+    print(f"- WASSA test: {len(wassa_test)} samples")
