@@ -23,10 +23,7 @@ We propose an innovative **Mamba-Contrastive approach** that:
 ## 🚀 Key Features
 ✅ **Baseline Model:** Fine-tuned BERT for standard emotion classification.  
 ✅ **Proposed Model:** **Selective Mamba + Contrastive Learning** to leverage global context and learn robust emotion embeddings.  
-✅ **Cross-Dataset Evaluation:** Train on **CrowdFlower**, evaluate on **WASSA 2017** to test generalization.  
-✅ **Few-Shot Emotion Recognition:** Evaluate robustness with limited samples of new emotions.  
-✅ **t-SNE Visualizations:** Visual demonstration of improved emotion embedding clusters.
-
+✅ **Cross-Dataset Evaluation:** Train on **CrowdFlower**, evaluate on **WASSA 2021** & **ISEAR** to test generalization.  
 ---
 
 ## 📂 Updated Repository Structure - To DO
@@ -79,15 +76,17 @@ pip install -e .
 
 ---
 
-## 📌 Expected Results
+## 📌 Expected Results - TBC
 ✅ **Hypothesis:** The integration of Mamba and Contrastive Learning will yield superior performance and better generalization.
 
 | **Model**                   | **Dataset**     | **Accuracy** | **F1-Score** |
 |-----------------------------|-----------------|--------------|--------------|
-| BERT Baseline               | CrowdFlower     | 85.2%        | 84.8%        |
-| BERT Baseline               | WASSA           | 78.5%        | 77.9%        |
+| Bilstm                      | CrowdFlower     | 85.2%        | 84.8%        |
+| Bilstm                      | WASSA           | 78.5%        | 77.9%        |
+| Bilstm                      | ISEAR           | 78.5%        | 77.9%        |
 | **Contrastive-Mamba (ours)**| **CrowdFlower** | **89.0%**    | **88.5%**    |
 | **Contrastive-Mamba (ours)**| **WASSA**       | **85.0%**    | **84.3%**    |
+| **Contrastive-Mamba (ours)**| **ISEAR**       | **85.0%**    | **84.3%**    |
 
 ---
 
