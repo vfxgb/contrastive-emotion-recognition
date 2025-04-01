@@ -71,6 +71,33 @@ python -m spacy download en_core_web_sm
 pip install -e .
 ```
 
+### **Step 3: Run**
+```bash
+Preprocess Only a Specific Dataset
+./run_pipeline.sh --preprocess <dataset>
+# Examples:
+./run_pipeline.sh --preprocess crowdflower
+./run_pipeline.sh --preprocess isear
+./run_pipeline.sh --preprocess wassa
+
+Train/Test Only a Specific Dataset
+./run_pipeline.sh --train_test <dataset>
+# Example:
+./run_pipeline.sh --train_test crowdflower
+./run_pipeline.sh --train_test iseasr
+./run_pipeline.sh --train_test wassa
+
+Preprocess and Train/Test a Specific Dataset (Both Steps)
+./run_pipeline.sh <dataset>
+# Examples:
+./run_pipeline.sh crowdflower
+./run_pipeline.sh isear
+./run_pipeline.sh wassa
+
+Preprocess and Train/Test All Datasets (Both Steps)
+./run_pipeline.sh --all
+```
+
 ## 🛠️ Model Architectures
 - **Baseline:** Fine-tuned BERT classifier.
 - **Proposed:** **Selective Mamba** embeddings optimized with **Supervised + Self-Supervised Contrastive Learning** for enhanced emotion discrimination.
