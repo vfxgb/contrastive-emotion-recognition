@@ -51,7 +51,8 @@ contrastive-emotion-recognition/
 
 ## 📊 Datasets Used
 - **[CrowdFlower Emotion Dataset](https://data.world/crowdflower/sentiment-analysis-in-text)** (Training)
-- **[WASSA 2021](https://github.com/vinayakumarr/WASSA-2017/tree/master/wassa)** (Domain generalization testing)
+- **[WASSA 2021]** (Domain generalization testing)
+- **[ISEAR]** (Domain generalization testing)
 
 ---
 
