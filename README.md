@@ -70,6 +70,31 @@ conda activate mamba_contrastive
 python -m spacy download en_core_web_sm
 pip install -e .
 ```
+### **Step 3: Run the Pipeline**
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `./run_pipeline.sh <dataset>` | Full pipeline (preprocess + train/test) for specific dataset | `./run_pipeline.sh isear` |
+| `./run_pipeline.sh --all` | Full pipeline for all datasets | `./run_pipeline.sh --all` |
+| `./run_pipeline.sh --preprocess <dataset>` | Preprocess only specific dataset | `./run_pipeline.sh --preprocess wassa` |
+| `./run_pipeline.sh --train_test <dataset>` | Train/test only specific dataset | `./run_pipeline.sh --train_test crowdflower` |
+| `./run_pipeline.sh --all --preprocess` | Preprocess all datasets | `./run_pipeline.sh --all --preprocess` |
+| `./run_pipeline.sh --all --train_test` | Train/test all datasets | `./run_pipeline.sh --all --train_test` |
+
+**Valid Dataset Options**: `crowdflower`, `isear`, `wassa`
+
+**Examples**:
+```bash
+# Process all datasets (preprocess + train/test)
+./run_pipeline.sh --all
+
+# Preprocess WASSA only
+./run_pipeline.sh --preprocess wassa
+
+# Train/test on ISEAR and CrowdFlower
+./run_pipeline.sh --train_test isear
+./run_pipeline.sh --train_test crowdflower
+```
 
 ## 🛠️ Model Architectures
 - **Baseline:** Fine-tuned BERT classifier.
