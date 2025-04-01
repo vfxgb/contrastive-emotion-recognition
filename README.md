@@ -24,6 +24,7 @@ We propose an innovative **Mamba-Contrastive approach** that:
 ✅ **Baseline Model:** Fine-tuned BERT for standard emotion classification.  
 ✅ **Proposed Model:** **Selective Mamba + Contrastive Learning** to leverage global context and learn robust emotion embeddings.  
 ✅ **Cross-Dataset Evaluation:** Train on **CrowdFlower**, evaluate on **WASSA 2021** & **ISEAR** to test generalization.  
+
 ---
 
 ## 📂 Updated Repository Structure - To DO
