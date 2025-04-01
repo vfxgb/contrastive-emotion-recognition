@@ -23,13 +23,11 @@ We propose an innovative **Mamba-Contrastive approach** that:
 ## 🚀 Key Features
 ✅ **Baseline Model:** Fine-tuned BERT for standard emotion classification.  
 ✅ **Proposed Model:** **Selective Mamba + Contrastive Learning** to leverage global context and learn robust emotion embeddings.  
-✅ **Cross-Dataset Evaluation:** Train on **CrowdFlower**, evaluate on **WASSA 2017** to test generalization.  
-✅ **Few-Shot Emotion Recognition:** Evaluate robustness with limited samples of new emotions.  
-✅ **t-SNE Visualizations:** Visual demonstration of improved emotion embedding clusters.
+✅ **Cross-Dataset Evaluation:** Train on **CrowdFlower**, evaluate on **WASSA 2021** & **ISEAR** to test generalization.  
 
 ---
 
-## 📂 Updated Repository Structure
+## 📂 Updated Repository Structure - To DO
 ```plaintext
 contrastive-emotion-recognition/
 │── data/                          # Datasets (CrowdFlower, WASSA)
@@ -52,8 +50,9 @@ contrastive-emotion-recognition/
 ---
 
 ## 📊 Datasets Used
-- **[CrowdFlower Emotion Dataset](https://data.world/crowdflower/sentiment-analysis-in-text)** (Training)
-- **[WASSA 2017](https://github.com/vinayakumarr/WASSA-2017/tree/master/wassa)** (Domain generalization testing)
+- **CrowdFlower Emotion Dataset** (Training)
+- **WASSA 2021** (Domain generalization testing)
+- **ISEAR** (Domain generalization testing)
 
 ---
 
@@ -66,33 +65,11 @@ cd contrastive-emotion-recognition.git
 
 ### **Step 2: Create a Virtual Environment & Install Dependencies**
 ```bash
-python3 -m venv env
-source env/bin/activate  # Windows: env\Scripts\activate
-pip install -r requirements.txt
+conda create --name mamba_contrastive python==3.10
+conda activate mamba_contrastive
+python -m spacy download en_core_web_sm
+pip install -e .
 ```
-
-### **Step 3: Preprocess the Data**
-```bash
-cd src
-python preprocess_data.py
-```
-
-### **Step 4: Train Baseline BERT Model**
-```bash
-python src/train.py --model bert --epochs 5
-```
-
-### **Step 5: Train Contrastive-Mamba Model**
-```bash
-python src/train.py --model contrastive_mamba --epochs 5
-```
-
-### **Step 6: Evaluate and Compare Models**
-```bash
-python src/evaluate.py --model contrastive_mamba --dataset wassa
-```
-
----
 
 ## 🛠️ Model Architectures
 - **Baseline:** Fine-tuned BERT classifier.
@@ -101,15 +78,17 @@ python src/evaluate.py --model contrastive_mamba --dataset wassa
 
 ---
 
-## 📌 Expected Results
+## 📌 Expected Results - TBC
 ✅ **Hypothesis:** The integration of Mamba and Contrastive Learning will yield superior performance and better generalization.
 
 | **Model**                   | **Dataset**     | **Accuracy** | **F1-Score** |
 |-----------------------------|-----------------|--------------|--------------|
-| BERT Baseline               | CrowdFlower     | 85.2%        | 84.8%        |
-| BERT Baseline               | WASSA           | 78.5%        | 77.9%        |
+| Bilstm                      | CrowdFlower     | 85.2%        | 84.8%        |
+| Bilstm                      | WASSA           | 78.5%        | 77.9%        |
+| Bilstm                      | ISEAR           | 78.5%        | 77.9%        |
 | **Contrastive-Mamba (ours)**| **CrowdFlower** | **89.0%**    | **88.5%**    |
 | **Contrastive-Mamba (ours)**| **WASSA**       | **85.0%**    | **84.3%**    |
+| **Contrastive-Mamba (ours)**| **ISEAR**       | **85.0%**    | **84.3%**    |
 
 ---
 
