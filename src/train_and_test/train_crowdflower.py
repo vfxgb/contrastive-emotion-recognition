@@ -121,7 +121,7 @@ def main():
     checkpoint = torch.load(model_save_path, map_location=device)
     test_encoder.load_state_dict(checkpoint['encoder'])
     
-    checkpoint_test = torch.load('results/contrastive_mamba_decoupled.pt', map_location=device)
+    checkpoint_test = torch.load('results/mamba/contrastive_mamba_decoupled.pt', map_location=device)
     test_classifier.load_state_dict(checkpoint_test['classifier'])
     
     # Evaluation loop
