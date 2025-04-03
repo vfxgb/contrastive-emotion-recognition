@@ -7,19 +7,9 @@ import os
 import random
 import numpy as np
 from sklearn.model_selection import train_test_split
+from utils import clean_text
 
 # --- Helper Functions ---
-
-def clean_text(text):
-    """
-    Clean text by removing URLs, mentions, hashtags, extra whitespace,
-    and converting to lowercase.
-    """
-    text = re.sub(r'http\S+', '', text)    # Remove URLs
-    text = re.sub(r'@\w+', '', text)         # Remove mentions
-    text = re.sub(r'#', '', text)            # Remove hashtag symbols
-    text = re.sub(r'\s+', ' ', text).strip() # Remove extra spaces
-    return text.lower()
 
 # Define a label mapping for the 6 Ekman emotions.
 label_mapping_wassa = {

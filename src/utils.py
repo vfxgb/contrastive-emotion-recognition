@@ -5,6 +5,9 @@ from sklearn.manifold import TSNE
 import torch.nn.functional as F
 from torch import nn
 import random
+import re
+import nlp
+import string
 
 def visualize_embeddings(embeddings, labels):
     tsne = TSNE(n_components=2, random_state=42)
@@ -17,12 +20,41 @@ def visualize_embeddings(embeddings, labels):
     plt.show()
 
 def set_seed(seed):
+    """
+    Sets random seed.
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+def clean_text(text, extended = False):
+    """
+    Clean text by removing URLs, mentions, hashtags, extra whitespace,
+    and converting to lowercase.
+    Args:
+        text : the text that is to be cleaned.
+        extended : if True, applies lematisation and removes 
+            punctuations
+    """
+    text = re.sub(r'http\S+', '', text)    # Remove URLs
+    text = re.sub(r'@\w+', '', text)         # Remove mentions
+    text = re.sub(r'#', '', text)            # Remove hashtag symbols
+    text = re.sub(r'\s+', ' ', text).strip() # Remove extra spaces
+    if not extended:
+        return text.lower()
+    
+    doc = nlp(text.lower())
+
+    tokens = [
+        token.lemma_
+        for token in doc
+        if token.text not in string.punctuation 
+        # and not token.is_stop
+    ]
+    return " ".join(tokens)
 
 class SupConLoss(nn.Module):
     def __init__(self, temperature=0.07, eps=1e-8):
