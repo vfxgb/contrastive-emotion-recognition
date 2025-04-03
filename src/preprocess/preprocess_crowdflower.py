@@ -16,11 +16,11 @@ nlp = spacy.load("en_core_web_sm")
 
 # Clean tweets/text
 def clean_text(text):
-    text = re.sub(r'http\S+', '', text)
-    text = re.sub(r'@\w+', '', text)
-    text = re.sub(r'#', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text.lower()
+    # Remove URLs, mentions, hashtags, and HTML entities
+    text = re.sub(r'http\S+|@\w+|#\w+', '', text)
+    text = re.sub(r'&amp;', '&', text)
+
+    return text  
 
 def load_crowdflower(path, max_length=128, min_samples=1000):
     df = pd.read_csv(path)
