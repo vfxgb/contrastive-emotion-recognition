@@ -7,19 +7,10 @@ import os
 import random
 import numpy as np
 from sklearn.model_selection import train_test_split
-from utils import clean_text
+from utils import clean_text, fetch_label_mapping
 
 # --- Helper Functions ---
-
-# Define a label mapping for the 6 Ekman emotions.
-label_mapping_wassa = {
-    'anger': 0,
-    'sadness': 1,
-    'disgust': 2,
-    'fear': 3,
-    'joy': 4,
-    'surprise': 5
-}
+label_mapping = fetch_label_mapping(wassa=True)
 
 # Initialize the BERT tokenizer
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
@@ -46,7 +37,7 @@ def load_wassa(tsv_path, max_length=128):
     print(df['Emotion'].value_counts())
     
     # Filter to keep only rows with desired emotions (exclude others such as 'neutral')
-    df = df[df['Emotion'].isin(label_mapping_wassa.keys())].reset_index(drop=True)
+    df = df[df['Emotion'].isin(label_mapping.keys())].reset_index(drop=True)
     print("Filtered dataset shape:", df.shape)
     print("Filtered label distribution:")
     print(df['Emotion'].value_counts())
@@ -68,9 +59,9 @@ def load_wassa(tsv_path, max_length=128):
     print("Attention mask shape:", encodings['attention_mask'].shape)
     
     # Map emotion labels to integers using the defined mapping
-    labels = torch.tensor(df['Emotion'].map(label_mapping_wassa).values)
+    labels = torch.tensor(df['Emotion'].map(label_mapping).values)
     print("Labels tensor shape:", labels.shape)
-    print("Unique label mapping:", label_mapping_wassa)
+    print("Unique label mapping:", label_mapping)
     
     # Create and return a TensorDataset
     dataset = TensorDataset(encodings['input_ids'], encodings['attention_mask'], labels)

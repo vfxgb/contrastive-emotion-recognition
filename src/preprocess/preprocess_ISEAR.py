@@ -7,20 +7,10 @@ import os
 import random
 import numpy as np
 from sklearn.model_selection import train_test_split
-from utils import clean_text
+from utils import clean_text, fetch_label_mapping
 
 # --- Helper Functions ---
-
-# Define a label mapping for all 7 emotion categories
-label_mapping = {
-    'anger': 0,
-    'sadness': 1,
-    'disgust': 2,
-    'shame': 3,
-    'fear': 4,
-    'joy': 5,
-    'guilt': 6
-}
+label_mapping = fetch_label_mapping(isear=True)
 
 # Initialize the BERT tokenizer
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")

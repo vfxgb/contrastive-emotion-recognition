@@ -30,6 +30,29 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+def fetch_label_mapping(isear = False, crowdflower = False, wassa = False):
+    if isear:
+        # return label mapping for isear dataset
+        return {
+            'anger': 0,
+            'sadness': 1,
+            'disgust': 2,
+            'shame': 3,
+            'fear': 4,
+            'joy': 5,
+            'guilt': 6
+        }
+    elif wassa:
+        # return label mapping for wassa dataset
+        return {
+            'anger': 0,
+            'sadness': 1,
+            'disgust': 2,
+            'fear': 3,
+            'joy': 4,
+            'surprise': 5
+        }
+
 def clean_text(text, extended = False):
     """
     Clean text by removing URLs, mentions, hashtags, extra whitespace,
