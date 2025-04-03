@@ -76,14 +76,14 @@ for run in range(num_runs):
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-    mamba_args = dict(d_model=1024, d_state=256, d_conv=4, expand=2)
+    mamba_args = dict(d_model=2048, d_state=256, d_conv=4, expand=2)
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     classifier = ClassifierHead(embed_dim, num_emotions).to(device)
 
     # Load the pre-trained checkpoint for the encoder trained on crowdflower
     # Ensure the checkpoint is appropriate for WASSA
-    # checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt', map_location=device)
-    # encoder.load_state_dict(checkpoint['encoder'])
+    checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt', map_location=device)
+    encoder.load_state_dict(checkpoint['encoder'])
 
     criterion_cls = CrossEntropyLoss()
     criterion_contrastive = SupConLoss()
@@ -115,7 +115,7 @@ for run in range(num_runs):
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
         # Evaluate on validation set
-        val_acc, val_recall, val_precision, val_f1 = evaluate(encoder, classifier, val_loader, device)
+        val_acc, val_recall, val_f1 = evaluate(encoder, classifier, val_loader, device)
         print(f"[Epoch {epoch+1}] Val F1: {val_f1:.4f}")
 
         # Save model based on best validation F1
