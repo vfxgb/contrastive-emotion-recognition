@@ -14,10 +14,10 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     embed_dim = 1024
     num_emotions = 9 
-    batch_size = 1024
-    num_epochs = 1000
-    learning_rate = 2e-5
-    patience = 30
+    batch_size = 128
+    num_epochs = 10
+    learning_rate = 6e-5
+    patience = 3
     model_save_path = 'results/mamba/contrastive_mamba_decoupled.pt'
     torch.serialization.add_safe_globals([TensorDataset])
 
