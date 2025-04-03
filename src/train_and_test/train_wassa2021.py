@@ -84,6 +84,8 @@ for run in range(num_runs):
     # Ensure the checkpoint is appropriate for WASSA
     checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt', map_location=device)
     encoder.load_state_dict(checkpoint['encoder'])
+     # for param in encoder.parameters():
+    #     param.requires_grad = False
 
     criterion_cls = CrossEntropyLoss()
     criterion_contrastive = SupConLoss()
