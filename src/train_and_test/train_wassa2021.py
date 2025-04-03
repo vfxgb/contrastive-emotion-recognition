@@ -3,11 +3,12 @@ import random
 import numpy as np
 from torch.utils.data import DataLoader, random_split
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
-from contrastive_loss import SupConLoss
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from preprocess.preprocess_WASSA2021 import DualViewDataset
+from utils import set_seed, SupConLoss
+
 # Configurations
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 embed_dim = 256
@@ -16,14 +17,6 @@ batch_size = 256
 num_epochs = 50
 learning_rate = 1e-3
 num_runs = 5
-
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
 
 def evaluate(encoder, classifier, dataloader, device):
     encoder.eval()

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import torch.nn.functional as F
 from torch import nn
+import random
 
 def visualize_embeddings(embeddings, labels):
     tsne = TSNE(n_components=2, random_state=42)
@@ -15,6 +16,13 @@ def visualize_embeddings(embeddings, labels):
     plt.title('t-SNE visualization of emotion embeddings')
     plt.show()
 
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 class SupConLoss(nn.Module):
     def __init__(self, temperature=0.07, eps=1e-8):

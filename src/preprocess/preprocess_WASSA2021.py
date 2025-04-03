@@ -22,7 +22,6 @@ def clean_text(text):
     return text.lower()
 
 # Define a label mapping for the 6 Ekman emotions.
-# (Assuming 'discuss' in your file is intended to be 'disgust'.)
 label_mapping_wassa = {
     'anger': 0,
     'sadness': 1,
