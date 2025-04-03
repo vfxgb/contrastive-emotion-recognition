@@ -9,18 +9,11 @@ import spacy
 import string
 from collections import Counter
 import random
+from utils import clean_text
 
 # Initialize tokenizer and spaCy model
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 nlp = spacy.load("en_core_web_sm")
-
-# Clean tweets/text
-def clean_text(text):
-    text = re.sub(r'http\S+', '', text)
-    text = re.sub(r'@\w+', '', text)
-    text = re.sub(r'#', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text.lower()
 
 def load_crowdflower(path, max_length=128, min_samples=1000):
     df = pd.read_csv(path)
