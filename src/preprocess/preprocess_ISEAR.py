@@ -11,29 +11,34 @@ from sklearn.model_selection import train_test_split
 # --- Helper Functions ---
 
 def clean_text(text):
-    """
-    Clean text by removing URLs, mentions, hashtags, extra whitespace,
-    and converting to lowercase.
-    """
-    text = re.sub(r'http\S+', '', text)    # Remove URLs
-    text = re.sub(r'@\w+', '', text)         # Remove mentions
-    text = re.sub(r'#', '', text)            # Remove hashtag symbols
-    text = re.sub(r'\s+', ' ', text).strip() # Remove extra spaces
-    return text.lower()
+    # Remove URLs, mentions, hashtags, and HTML entities
+    text = re.sub(r'http\S+|@\w+|#\w+', '', text)
+    text = re.sub(r'&amp;', '&', text)
+
+    return text  
 
 # Define a label mapping for all 7 emotion categories
 label_mapping = {
-    'anger': 0,
-    'sadness': 1,
-    'disgust': 2,
-    'shame': 3,
-    'fear': 4,
-    'joy': 5,
+    'anger': 0,  
+    'sadness': 1,  
+    'disgust': 2, 
+    'shame': 3, 
+    'fear': 4, 
+    'joy': 5, 
     'guilt': 6
 }
 
+"""To compare with other papers"""
+# label_mapping = {
+#     'anger': 0,  
+#     'sadness': 1,  
+#     'disgust': 2, 
+#     'fear': 3, 
+#     'joy': 4, 
+# }
+
 # Initialize the BERT tokenizer
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
 
 def load_isear(csv_path, max_length=128):
     """
