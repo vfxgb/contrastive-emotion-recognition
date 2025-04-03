@@ -76,7 +76,7 @@ for run in range(num_runs):
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-    mamba_args = dict(d_model=2048, d_state=256, d_conv=4, expand=2)
+    mamba_args = dict(d_model=1024, d_state=256, d_conv=4, expand=2)
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     classifier = ClassifierHead(embed_dim, num_emotions).to(device)
 
