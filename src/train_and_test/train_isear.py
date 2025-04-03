@@ -3,18 +3,18 @@ import random
 import numpy as np
 from torch.utils.data import DataLoader, random_split
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
-from contrastive_loss import SupConLoss
+from utils import SupConLoss
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from preprocess.preprocess_ISEAR import DualViewDataset
 # Configurations
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-embed_dim = 256
+embed_dim = 1024
 num_emotions = 7
-batch_size = 256
-num_epochs = 50
-learning_rate = 1e-3
+batch_size = 128
+num_epochs = 10
+learning_rate = 6e-5
 num_runs = 5
 
 def set_seed(seed):
@@ -74,19 +74,19 @@ for run in range(num_runs):
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-    mamba_args = dict(d_model=256, d_state=128, d_conv=4, expand=2)
+    mamba_args = dict(d_model=2048, d_state=256, d_conv=4, expand=2)
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     classifier = ClassifierHead(embed_dim, num_emotions).to(device)
 
-    checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt')
-    encoder.load_state_dict(checkpoint['encoder'])
+    # checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt')
+    # encoder.load_state_dict(checkpoint['encoder'])
 
     criterion_cls = CrossEntropyLoss()
     criterion_contrastive = SupConLoss()
     optimizer = torch.optim.AdamW(list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate)
 
     best_val_f1 = 0.0
-    patience, trigger_times = 10, 0
+    patience, trigger_times = 3, 0
 
     for epoch in range(num_epochs):
         encoder.train()
@@ -101,8 +101,7 @@ for run in range(num_runs):
 
             loss_cls = criterion_cls(classifier(emb1), labels)
             loss_contrastive = criterion_contrastive(features, labels)
-            loss = loss_cls  # or loss_cls + 0.1 * loss_contrastive
-
+            loss = 0.9 * loss_cls + 0.1 * loss_contrastive 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -125,7 +124,7 @@ for run in range(num_runs):
                 'classifier': best_classifier,
                 'val_f1': best_val_f1,
                 'epoch': epoch + 1
-            }, 'results/mamba/mamba_isea.pt')
+            }, 'results/mamba/mamba_isear.pt')
             trigger_times = 0
             print(f"✅ Best model saved at epoch {epoch+1} with val F1: {val_f1:.4f}")
         else:
@@ -139,24 +138,19 @@ for run in range(num_runs):
     test_acc, test_recall, test_precision, test_f1 = evaluate(encoder, classifier, test_loader, device)
     print(f"Test Accuracy: {test_acc:.4f}")
     print(f"Test Recall: {test_recall:.4f}")
-    print(f"Test Precision: {test_precision:.4f}")
     print(f"Test F1 Score: {test_f1:.4f}")
 
     test_acc_list.append(test_acc)
     test_recall_list.append(test_recall)
-    test_precision_list.append(test_precision)
     test_f1_list.append(test_f1)
 
 mean_acc = np.mean(test_acc_list)
 std_acc = np.std(test_acc_list)
 mean_recall = np.mean(test_recall_list)
 std_recall = np.std(test_recall_list)
-mean_precision = np.mean(test_precision_list)
-std_precision = np.std(test_precision_list)
 mean_f1 = np.mean(test_f1_list)
 std_f1 = np.std(test_f1_list)
 
 print(f"\n📊 Final Test Accuracy over {num_runs} runs: {mean_acc:.4f} ± {std_acc:.4f}")
 print(f"📊 Final Test Recall over {num_runs} runs: {mean_recall:.4f} ± {std_recall:.4f}")
-print(f"📊 Final Test Precision over {num_runs} runs: {mean_precision:.4f} ± {std_precision:.4f}")
 print(f"📊 Final Test F1 Score over {num_runs} runs: {mean_f1:.4f} ± {std_f1:.4f}")
