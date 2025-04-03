@@ -11,18 +11,11 @@ from sklearn.model_selection import train_test_split
 # --- Helper Functions ---
 
 def clean_text(text):
-    """
-    Clean text by removing URLs, mentions, hashtags, extra whitespace,
-    and converting to lowercase.
-    """
-    text = re.sub(r'http\S+', '', text)    # Remove URLs
-    text = re.sub(r'@\w+', '', text)         # Remove mentions
-    text = re.sub(r'#', '', text)            # Remove hashtag symbols
-    text = re.sub(r'\s+', ' ', text).strip() # Remove extra spaces
-    return text.lower()
+    # Remove URLs, mentions, hashtags, and HTML entities
+    text = re.sub(r'http\S+|@\w+|#\w+', '', text)
+    text = re.sub(r'&amp;', '&', text)
+    return text  # No lowercasing!
 
-# Define a label mapping for the 6 Ekman emotions.
-# (Assuming 'discuss' in your file is intended to be 'disgust'.)
 label_mapping_wassa = {
     'anger': 0,
     'sadness': 1,
@@ -196,5 +189,5 @@ if __name__ == "__main__":
     torch.save(wassa_test, 'data/preprocessed_dataset/wassa/test.pt')
     
     print("\nDatasets prepared and saved:")
-    print(f"- WASSA 2021 dual-view train: {len(wassa_train)} samples")
+    print(f"- WASSA 2021 train: {len(wassa_train)} samples")
     print(f"- WASSA 2021 test: {len(wassa_test)} samples")
