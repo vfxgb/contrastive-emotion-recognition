@@ -111,7 +111,7 @@ for run in range(num_runs):
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
         # Evaluate on validation set
-        val_acc, val_recall, val_precision, val_f1 = evaluate(encoder, classifier, val_loader, device)
+        val_acc, val_recall, val_f1 = evaluate(encoder, classifier, val_loader, device)
         print(f"[Epoch {epoch+1}] Val F1: {val_f1:.4f}")
 
         # Save model based on best val F1
