@@ -42,9 +42,8 @@ def evaluate(encoder, classifier, dataloader, device):
 
     acc = accuracy_score(all_labels, all_preds)
     recall = recall_score(all_labels, all_preds, average='macro')
-    precision = precision_score(all_labels, all_preds, average='macro')
     f1 = f1_score(all_labels, all_preds, average='macro')
-    return acc, recall, precision, f1
+    return acc, recall, f1
 
 test_acc_list = []
 test_recall_list = []
@@ -78,10 +77,8 @@ for run in range(num_runs):
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     classifier = ClassifierHead(embed_dim, num_emotions).to(device)
 
-    # checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt')
-    # encoder.load_state_dict(checkpoint['encoder'])
-     # for param in encoder.parameters():
-    #     param.requires_grad = False
+    checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt')
+    encoder.load_state_dict(checkpoint['encoder'])
 
     criterion_cls = CrossEntropyLoss()
     criterion_contrastive = SupConLoss()
@@ -137,7 +134,7 @@ for run in range(num_runs):
 
     encoder.load_state_dict(best_encoder)
     classifier.load_state_dict(best_classifier)
-    test_acc, test_recall, test_precision, test_f1 = evaluate(encoder, classifier, test_loader, device)
+    test_acc, test_recall, test_f1 = evaluate(encoder, classifier, test_loader, device)
     print(f"Test Accuracy: {test_acc:.4f}")
     print(f"Test Recall: {test_recall:.4f}")
     print(f"Test F1 Score: {test_f1:.4f}")
