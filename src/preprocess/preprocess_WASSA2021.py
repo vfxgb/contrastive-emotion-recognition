@@ -26,7 +26,7 @@ label_mapping_wassa = {
 }
 
 # Initialize the BERT tokenizer
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
 
 def load_wassa(tsv_path, max_length=128):
     """
