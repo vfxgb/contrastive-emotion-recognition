@@ -9,7 +9,7 @@ def bilstm_config():
         "hidden_dim" : 256,
         "num_classes" : 9, 
         "dropout_rate" : 0.3, 
-        "lstm_layers": 2,
+        "lstm_layers": 1,
         "num_epochs": 30,
         "learning_rate": 0.001,
         "batch_size": 1024, 

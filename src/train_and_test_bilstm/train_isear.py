@@ -57,7 +57,8 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
         num_classes=num_classes,
-        dropout=model_config["dropout"]
+        dropout_rate=model_config["dropout_rate"], 
+        lstm_layers=model_config["lstm_layers"],
     )
 
     # load parameters from pretrained model
@@ -76,7 +77,8 @@ model_config = bilstm_config()
 num_classes = 7
 num_epochs = model_config["num_epochs"]
 learning_rate = model_config["learning_rate"]
-batch_size = model_config["batch_size"]
+# batch_size = model_config["batch_size"]
+batch_size = 256
 device = model_config["device"]
 isear_finetune_save_path = model_config["isear_finetune_save_path"]
 
@@ -111,18 +113,29 @@ for run in range(num_runs):
 
     # initialise model
     model = load_and_adapt_model(model_config["model_save_path"], num_classes = num_classes, model_config = model_config)
-
+    model = BiLSTM(model_config["bert_model_name"], 
+                   model_config["hidden_dim"], 
+                   num_classes, 
+                   model_config["dropout_rate"], 
+                   model_config["lstm_layers"])
+    
     # freeze bert and lstm layers and only train the final classification layer
-    for param in model.bert.parameters():
-        param.requires_grad = False
-    for param in model.lstm.parameters():
-        param.requires_grad = False
-    for param in model.fc1.parameters():
-        param.requires_grad = True
-    for param in model.fc2.parameters():
-        param.requires_grad = True
-    for param in model.fc3.parameters():
-        param.requires_grad = True
+    # for param in model.bert.parameters():
+    #     param.requires_grad = False  # freeze all
+
+    # # unfreeze last 2 encoder layers
+    # for layer in model.bert.encoder.layer[-2:]:
+    #     for param in layer.parameters():
+    #         param.requires_grad = True
+            
+    # for param in model.lstm.parameters():
+    #     param.requires_grad = True
+    # for param in model.fc1.parameters():
+    #     param.requires_grad = True
+    # for param in model.fc2.parameters():
+    #     param.requires_grad = True
+    # for param in model.fc3.parameters():
+    #     param.requires_grad = True
 
     model.to(device)
 
@@ -183,7 +196,7 @@ std_test_precision = np.std(test_precision_list)
 mean_test_f1 = np.mean(test_f1_list)
 std_test_f1 = np.std(test_f1_list)
 
-print(f"\n📊 Final Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}")
-print(f"📊 Final Test Recall over {num_runs} runs: {mean_test_recall:.4f} ± {std_test_recall:.4f}")
-print(f"📊 Final Test Precision over {num_runs} runs: {mean_test_precision:.4f} ± {std_test_precision:.4f}")
-print(f"📊 Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")
+print(f"\nFinal Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}")
+print(f"Final Test Recall over {num_runs} runs: {mean_test_recall:.4f} ± {std_test_recall:.4f}")
+print(f"Final Test Precision over {num_runs} runs: {mean_test_precision:.4f} ± {std_test_precision:.4f}")
+print(f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")

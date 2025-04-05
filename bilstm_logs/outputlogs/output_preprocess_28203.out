@@ -1,0 +1,424 @@
+Activating environment
+CUDA_HOME is set to: /tc1apps/cuda/11.8
+Checking GPU availability
+CUDA available: True
+Current device: Tesla V100-PCIE-32GB
+Downloading spaCy model
+Collecting en-core-web-sm==3.8.0
+  Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl (12.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 10.8 MB/s eta 0:00:00
+[38;5;2m✔ Download and installation successful[0m
+You can now load the package via spacy.load('en_core_web_sm')
+Running script
+Using device : cuda
+Loading training data...
+[Epoch 1] Training Loss: 2.0134
+Accuracy: 28.56%, F1 Score: 0.1852
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.19      0.05      0.07       391
+           2       0.00      0.00      0.00       116
+           3       0.00      0.00      0.00       269
+           4       0.27      0.79      0.40       709
+           5       0.00      0.00      0.00       124
+           6       0.00      0.00      0.00       388
+           7       0.00      0.00      0.00       196
+           8       0.33      0.44      0.38       628
+
+    accuracy                           0.29      2980
+   macro avg       0.09      0.14      0.09      2980
+weighted avg       0.16      0.29      0.19      2980
+
+[Epoch 1] Validation Accuracy: 0.2856
+Best model saved at cepoch 1 with accuracy: 0.2856
+[Epoch 2] Training Loss: 1.8563
+Accuracy: 33.62%, F1 Score: 0.2619
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.31      0.33      0.32       391
+           2       0.00      0.00      0.00       116
+           3       0.40      0.19      0.26       269
+           4       0.38      0.56      0.46       709
+           5       0.00      0.00      0.00       124
+           6       0.00      0.00      0.00       388
+           7       0.00      0.00      0.00       196
+           8       0.30      0.68      0.42       628
+
+    accuracy                           0.34      2980
+   macro avg       0.16      0.20      0.16      2980
+weighted avg       0.23      0.34      0.26      2980
+
+[Epoch 2] Validation Accuracy: 0.3362
+Best model saved at cepoch 2 with accuracy: 0.3362
+[Epoch 3] Training Loss: 1.8035
+Accuracy: 33.15%, F1 Score: 0.2626
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.28      0.30      0.29       391
+           2       0.00      0.00      0.00       116
+           3       0.29      0.34      0.31       269
+           4       0.42      0.49      0.45       709
+           5       0.00      0.00      0.00       124
+           6       0.00      0.00      0.00       388
+           7       0.00      0.00      0.00       196
+           8       0.31      0.69      0.43       628
+
+    accuracy                           0.33      2980
+   macro avg       0.14      0.20      0.16      2980
+weighted avg       0.23      0.33      0.26      2980
+
+[Epoch 3] Validation Accuracy: 0.3315
+[Epoch 4] Training Loss: 1.7805
+Accuracy: 34.73%, F1 Score: 0.2899
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.32      0.38      0.35       391
+           2       0.00      0.00      0.00       116
+           3       0.36      0.36      0.36       269
+           4       0.43      0.46      0.44       709
+           5       0.00      0.00      0.00       124
+           6       0.30      0.07      0.12       388
+           7       0.00      0.00      0.00       196
+           8       0.31      0.69      0.43       628
+
+    accuracy                           0.35      2980
+   macro avg       0.19      0.22      0.19      2980
+weighted avg       0.28      0.35      0.29      2980
+
+[Epoch 4] Validation Accuracy: 0.3473
+Best model saved at cepoch 4 with accuracy: 0.3473
+[Epoch 5] Training Loss: 1.7596
+Accuracy: 34.90%, F1 Score: 0.2840
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.28      0.46      0.35       391
+           2       0.00      0.00      0.00       116
+           3       0.34      0.45      0.39       269
+           4       0.40      0.54      0.46       709
+           5       0.00      0.00      0.00       124
+           6       0.38      0.02      0.03       388
+           7       0.00      0.00      0.00       196
+           8       0.35      0.56      0.43       628
+
+    accuracy                           0.35      2980
+   macro avg       0.19      0.22      0.18      2980
+weighted avg       0.28      0.35      0.28      2980
+
+[Epoch 5] Validation Accuracy: 0.3490
+Best model saved at cepoch 5 with accuracy: 0.3490
+[Epoch 6] Training Loss: 1.7403
+Accuracy: 36.34%, F1 Score: 0.3082
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.31      0.35      0.33       391
+           2       0.00      0.00      0.00       116
+           3       0.39      0.42      0.41       269
+           4       0.37      0.65      0.47       709
+           5       0.00      0.00      0.00       124
+           6       0.38      0.14      0.20       388
+           7       0.00      0.00      0.00       196
+           8       0.37      0.51      0.43       628
+
+    accuracy                           0.36      2980
+   macro avg       0.20      0.23      0.20      2980
+weighted avg       0.29      0.36      0.31      2980
+
+[Epoch 6] Validation Accuracy: 0.3634
+Best model saved at cepoch 6 with accuracy: 0.3634
+[Epoch 7] Training Loss: 1.7194
+Accuracy: 36.71%, F1 Score: 0.3175
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.31      0.42      0.36       391
+           2       0.33      0.03      0.05       116
+           3       0.41      0.45      0.43       269
+           4       0.42      0.52      0.46       709
+           5       0.00      0.00      0.00       124
+           6       0.40      0.15      0.22       388
+           7       0.00      0.00      0.00       196
+           8       0.34      0.60      0.43       628
+
+    accuracy                           0.37      2980
+   macro avg       0.25      0.24      0.22      2980
+weighted avg       0.31      0.37      0.32      2980
+
+[Epoch 7] Validation Accuracy: 0.3671
+Best model saved at cepoch 7 with accuracy: 0.3671
+[Epoch 8] Training Loss: 1.7094
+Accuracy: 35.97%, F1 Score: 0.3006
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.30      0.51      0.38       391
+           2       0.43      0.03      0.05       116
+           3       0.43      0.43      0.43       269
+           4       0.43      0.46      0.44       709
+           5       0.00      0.00      0.00       124
+           6       0.45      0.05      0.10       388
+           7       0.00      0.00      0.00       196
+           8       0.33      0.65      0.44       628
+
+    accuracy                           0.36      2980
+   macro avg       0.26      0.24      0.20      2980
+weighted avg       0.32      0.36      0.30      2980
+
+[Epoch 8] Validation Accuracy: 0.3597
+[Epoch 9] Training Loss: 1.6893
+Accuracy: 36.64%, F1 Score: 0.3311
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.33      0.42      0.37       391
+           2       0.34      0.21      0.26       116
+           3       0.39      0.45      0.42       269
+           4       0.41      0.49      0.45       709
+           5       0.00      0.00      0.00       124
+           6       0.35      0.30      0.32       388
+           7       0.00      0.00      0.00       196
+           8       0.35      0.50      0.41       628
+
+    accuracy                           0.37      2980
+   macro avg       0.24      0.26      0.25      2980
+weighted avg       0.31      0.37      0.33      2980
+
+[Epoch 9] Validation Accuracy: 0.3664
+[Epoch 10] Training Loss: 1.6871
+Accuracy: 37.55%, F1 Score: 0.3375
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.31      0.49      0.38       391
+           2       0.34      0.29      0.31       116
+           3       0.40      0.47      0.43       269
+           4       0.40      0.58      0.47       709
+           5       0.00      0.00      0.00       124
+           6       0.38      0.24      0.30       388
+           7       0.00      0.00      0.00       196
+           8       0.39      0.42      0.41       628
+
+    accuracy                           0.38      2980
+   macro avg       0.25      0.28      0.26      2980
+weighted avg       0.32      0.38      0.34      2980
+
+[Epoch 10] Validation Accuracy: 0.3755
+Best model saved at cepoch 10 with accuracy: 0.3755
+[Epoch 11] Training Loss: 1.6775
+Accuracy: 36.88%, F1 Score: 0.3322
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.29      0.52      0.37       391
+           2       0.38      0.21      0.27       116
+           3       0.38      0.46      0.41       269
+           4       0.42      0.49      0.45       709
+           5       0.00      0.00      0.00       124
+           6       0.39      0.24      0.30       388
+           7       0.00      0.00      0.00       196
+           8       0.37      0.50      0.42       628
+
+    accuracy                           0.37      2980
+   macro avg       0.25      0.27      0.25      2980
+weighted avg       0.32      0.37      0.33      2980
+
+[Epoch 11] Validation Accuracy: 0.3688
+[Epoch 12] Training Loss: 1.6568
+Accuracy: 37.99%, F1 Score: 0.3394
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.14      0.01      0.01       159
+           1       0.32      0.42      0.36       391
+           2       0.42      0.30      0.35       116
+           3       0.41      0.42      0.42       269
+           4       0.39      0.65      0.48       709
+           5       0.00      0.00      0.00       124
+           6       0.40      0.23      0.30       388
+           7       0.00      0.00      0.00       196
+           8       0.39      0.42      0.41       628
+
+    accuracy                           0.38      2980
+   macro avg       0.28      0.27      0.26      2980
+weighted avg       0.33      0.38      0.34      2980
+
+[Epoch 12] Validation Accuracy: 0.3799
+Best model saved at cepoch 12 with accuracy: 0.3799
+[Epoch 13] Training Loss: 1.6509
+Accuracy: 38.22%, F1 Score: 0.3466
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.31      0.50      0.38       391
+           2       0.42      0.28      0.33       116
+           3       0.38      0.45      0.41       269
+           4       0.42      0.54      0.47       709
+           5       0.00      0.00      0.00       124
+           6       0.41      0.30      0.34       388
+           7       0.00      0.00      0.00       196
+           8       0.39      0.46      0.43       628
+
+    accuracy                           0.38      2980
+   macro avg       0.26      0.28      0.26      2980
+weighted avg       0.33      0.38      0.35      2980
+
+[Epoch 13] Validation Accuracy: 0.3822
+Best model saved at cepoch 13 with accuracy: 0.3822
+[Epoch 14] Training Loss: 1.6393
+Accuracy: 37.52%, F1 Score: 0.3423
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.25      0.01      0.01       159
+           1       0.32      0.42      0.36       391
+           2       0.38      0.34      0.36       116
+           3       0.35      0.48      0.41       269
+           4       0.41      0.52      0.46       709
+           5       0.00      0.00      0.00       124
+           6       0.37      0.38      0.37       388
+           7       0.00      0.00      0.00       196
+           8       0.39      0.43      0.40       628
+
+    accuracy                           0.38      2980
+   macro avg       0.27      0.29      0.26      2980
+weighted avg       0.33      0.38      0.34      2980
+
+[Epoch 14] Validation Accuracy: 0.3752
+[Epoch 15] Training Loss: 1.6267
+Accuracy: 37.28%, F1 Score: 0.3285
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.32      0.46      0.38       391
+           2       0.47      0.23      0.31       116
+           3       0.34      0.49      0.40       269
+           4       0.43      0.48      0.45       709
+           5       0.00      0.00      0.00       124
+           6       0.42      0.14      0.22       388
+           7       0.00      0.00      0.00       196
+           8       0.36      0.60      0.45       628
+
+    accuracy                           0.37      2980
+   macro avg       0.26      0.27      0.25      2980
+weighted avg       0.32      0.37      0.33      2980
+
+[Epoch 15] Validation Accuracy: 0.3728
+[Epoch 16] Training Loss: 1.6162
+Accuracy: 38.05%, F1 Score: 0.3357
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.14      0.01      0.01       159
+           1       0.31      0.52      0.38       391
+           2       0.43      0.26      0.32       116
+           3       0.45      0.43      0.44       269
+           4       0.42      0.52      0.46       709
+           5       0.00      0.00      0.00       124
+           6       0.46      0.14      0.21       388
+           7       0.00      0.00      0.00       196
+           8       0.37      0.58      0.45       628
+
+    accuracy                           0.38      2980
+   macro avg       0.29      0.27      0.25      2980
+weighted avg       0.34      0.38      0.34      2980
+
+[Epoch 16] Validation Accuracy: 0.3805
+[Epoch 17] Training Loss: 1.5999
+Accuracy: 37.82%, F1 Score: 0.3453
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.10      0.01      0.02       159
+           1       0.33      0.46      0.38       391
+           2       0.33      0.37      0.35       116
+           3       0.41      0.42      0.41       269
+           4       0.41      0.52      0.46       709
+           5       0.00      0.00      0.00       124
+           6       0.38      0.31      0.34       388
+           7       0.00      0.00      0.00       196
+           8       0.38      0.49      0.42       628
+
+    accuracy                           0.38      2980
+   macro avg       0.26      0.29      0.27      2980
+weighted avg       0.32      0.38      0.35      2980
+
+[Epoch 17] Validation Accuracy: 0.3782
+[Epoch 18] Training Loss: 1.5964
+Accuracy: 37.89%, F1 Score: 0.3438
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       159
+           1       0.30      0.53      0.38       391
+           2       0.42      0.23      0.30       116
+           3       0.46      0.37      0.41       269
+           4       0.40      0.56      0.47       709
+           5       0.00      0.00      0.00       124
+           6       0.38      0.33      0.35       388
+           7       0.00      0.00      0.00       196
+           8       0.40      0.43      0.42       628
+
+    accuracy                           0.38      2980
+   macro avg       0.26      0.27      0.26      2980
+weighted avg       0.33      0.38      0.34      2980
+
+[Epoch 18] Validation Accuracy: 0.3789
+Early stopping at epoch 18
+
+----- Starting Evaluation on Test Set -----
+
+Accuracy: 40.00%, F1 Score: 0.3660
+
+Detailed Report:
+               precision    recall  f1-score   support
+
+           0       0.25      0.01      0.02       352
+           1       0.34      0.58      0.43      1015
+           2       0.41      0.22      0.28       263
+           3       0.51      0.41      0.45       735
+           4       0.42      0.56      0.48      1666
+           5       0.00      0.00      0.00       300
+           6       0.38      0.32      0.35      1022
+           7       0.00      0.00      0.00       430
+           8       0.40      0.46      0.43      1667
+
+    accuracy                           0.40      7450
+   macro avg       0.30      0.28      0.27      7450
+weighted avg       0.36      0.40      0.37      7450
+

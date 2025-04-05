@@ -7,6 +7,8 @@ import os
 import random
 import numpy as np
 from sklearn.model_selection import train_test_split
+import sys
+sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
 from utils import clean_text, fetch_label_mapping
 
 # --- Helper Functions ---
