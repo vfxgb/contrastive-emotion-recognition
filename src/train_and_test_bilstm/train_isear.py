@@ -78,7 +78,7 @@ num_classes = 7
 num_epochs = model_config["num_epochs"]
 learning_rate = model_config["learning_rate"]
 # batch_size = model_config["batch_size"]
-batch_size = 256
+batch_size = 32
 device = model_config["device"]
 isear_finetune_save_path = model_config["isear_finetune_save_path"]
 
@@ -120,22 +120,16 @@ for run in range(num_runs):
                    model_config["lstm_layers"])
     
     # freeze bert and lstm layers and only train the final classification layer
-    # for param in model.bert.parameters():
-    #     param.requires_grad = False  # freeze all
-
-    # # unfreeze last 2 encoder layers
-    # for layer in model.bert.encoder.layer[-2:]:
-    #     for param in layer.parameters():
-    #         param.requires_grad = True
-            
-    # for param in model.lstm.parameters():
-    #     param.requires_grad = True
-    # for param in model.fc1.parameters():
-    #     param.requires_grad = True
-    # for param in model.fc2.parameters():
-    #     param.requires_grad = True
-    # for param in model.fc3.parameters():
-    #     param.requires_grad = True
+    for param in model.bert.parameters():
+        param.requires_grad = False  # freeze all
+    for param in model.lstm.parameters():
+        param.requires_grad = True
+    for param in model.fc1.parameters():
+        param.requires_grad = True
+    for param in model.fc2.parameters():
+        param.requires_grad = True
+    for param in model.fc3.parameters():
+        param.requires_grad = True
 
     model.to(device)
 
