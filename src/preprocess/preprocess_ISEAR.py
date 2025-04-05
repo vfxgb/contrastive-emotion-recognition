@@ -13,7 +13,7 @@ from utils import clean_text, fetch_label_mapping
 label_mapping = fetch_label_mapping(isear=True)
 
 # Initialize the BERT tokenizer
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
 
 def load_isear(csv_path, max_length=128):
     """

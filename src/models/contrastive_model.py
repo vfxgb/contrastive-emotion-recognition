@@ -13,7 +13,7 @@ class ContrastiveMambaEncoder(nn.Module):
         """
         super().__init__()
         # Load pretrained BERT model
-        self.bert = AutoModel.from_pretrained("bert-base-uncased")
+        self.bert = AutoModel.from_pretrained("bert-large-uncased")
         # Freeze BERT parameters 
         for param in self.bert.parameters():
             param.requires_grad = False

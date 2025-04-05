@@ -1,3 +1,5 @@
+import sys
+sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
@@ -97,7 +99,7 @@ def main():
                 'classifier': classifier.state_dict(),
             }, model_save_path)
             trigger_times = 0
-            print(f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f}")
+            print(f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}")
         else:
             trigger_times += 1
             if trigger_times >= patience:

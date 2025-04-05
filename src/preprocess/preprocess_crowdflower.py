@@ -9,10 +9,12 @@ import spacy
 import string
 from collections import Counter
 import random
+import sys
+sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
 from utils import clean_text
 
 # Initialize tokenizer and spaCy model
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
 nlp = spacy.load("en_core_web_sm")
 
 def load_crowdflower(path, max_length=128, min_samples=1000):

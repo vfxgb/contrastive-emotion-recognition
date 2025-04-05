@@ -1,23 +1,25 @@
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import torch.nn.functional as F
 from torch import nn
 import random
 import re
-import nlp
 import string
+import spacy 
 
-def visualize_embeddings(embeddings, labels):
-    tsne = TSNE(n_components=2, random_state=42)
-    reduced_emb = tsne.fit_transform(embeddings)
+nlp = spacy.load("en_core_web_sm")
+
+# def visualize_embeddings(embeddings, labels):
+#     tsne = TSNE(n_components=2, random_state=42)
+#     reduced_emb = tsne.fit_transform(embeddings)
     
-    plt.figure(figsize=(8, 8))
-    scatter = plt.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=labels, cmap='tab10', alpha=0.7)
-    plt.legend(*scatter.legend_elements(), title="Classes")
-    plt.title('t-SNE visualization of emotion embeddings')
-    plt.show()
+#     plt.figure(figsize=(8, 8))
+#     scatter = plt.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=labels, cmap='tab10', alpha=0.7)
+#     plt.legend(*scatter.legend_elements(), title="Classes")
+#     plt.title('t-SNE visualization of emotion embeddings')
+#     plt.show()
 
 def set_seed(seed):
     """
@@ -53,7 +55,7 @@ def fetch_label_mapping(isear = False, crowdflower = False, wassa = False):
             'surprise': 5
         }
 
-def clean_text(text, extended = False):
+def clean_text(text, extended = True):
     """
     Clean text by removing URLs, mentions, hashtags, extra whitespace,
     and converting to lowercase.
