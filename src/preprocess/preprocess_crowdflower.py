@@ -11,7 +11,7 @@ from collections import Counter
 import random
 
 # Initialize tokenizer and spaCy model
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
 nlp = spacy.load("en_core_web_sm")
 
 # Clean tweets/text
