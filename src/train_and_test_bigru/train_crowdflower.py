@@ -2,6 +2,7 @@ import re
 import string
 import numpy as np
 import spacy
+
 # import sys
 # sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition")
 # from tensorflow import keras
@@ -16,12 +17,14 @@ import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import classification_report, f1_score, accuracy_score
-import sys 
+import sys
+
 sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
 from models.bigru_model import BiGRU
 from config import bigru_config, CROWDFLOWER_CLASSES
 
 torch.serialization.add_safe_globals([TensorDataset])
+
 
 def main():
     # fetch bilstm model config
@@ -41,16 +44,18 @@ def main():
     print(f"Using device : {device}")
 
     print("Loading training data...")
-    train_ds = torch.load('data/preprocessed_dataset/crowdflower/train.pt', weights_only=False)
-    test_ds = torch.load('data/preprocessed_dataset/crowdflower/test.pt', weights_only=False)
+    train_ds = torch.load(
+        "data/preprocessed_dataset/crowdflower/train.pt", weights_only=False
+    )
+    test_ds = torch.load(
+        "data/preprocessed_dataset/crowdflower/test.pt", weights_only=False
+    )
 
     train_len = int(0.90 * len(train_ds))
     val_len = len(train_ds) - train_len
     train_ds, val_ds = random_split(
-        train_ds,
-        [train_len, val_len],
-        generator=torch.Generator().manual_seed(42)
-    )   
+        train_ds, [train_len, val_len], generator=torch.Generator().manual_seed(42)
+    )
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
@@ -61,22 +66,28 @@ def main():
         hidden_dim=model_config["hidden_dim"],
         num_classes=CROWDFLOWER_CLASSES,
         dropout_rate=model_config["dropout_rate"],
-        gru_layers=model_config["gru_layers"]
+        gru_layers=model_config["gru_layers"],
     )
     model.to(device)
-    
+
     # initialse loss function
     criterion = nn.CrossEntropyLoss()
 
     # initialise optimiser
-    optimizer = optim.Adam(model.parameters(), lr = learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     for epoch in range(num_epochs):
         model.train()
         total_loss = 0
 
-        for input_ids, attention_mask, labels in tqdm(train_loader,desc=f"Epoch {epoch+1}"):
-            input_ids, attention_mask, labels = input_ids.to(device), attention_mask.to(device), labels.to(device)
+        for input_ids, attention_mask, labels in tqdm(
+            train_loader, desc=f"Epoch {epoch+1}"
+        ):
+            input_ids, attention_mask, labels = (
+                input_ids.to(device),
+                attention_mask.to(device),
+                labels.to(device),
+            )
 
             optimizer.zero_grad()
 
@@ -84,27 +95,29 @@ def main():
             loss = criterion(logits, labels)
             loss.backward()
 
-            optimizer.step()            
+            optimizer.step()
 
             total_loss += loss.item()
-        
+
         avg_loss = total_loss / len(train_loader)
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
         val_accuracy = evaluate(model, val_loader, device)
         print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
-        if val_accuracy > best_accuracy :
+        if val_accuracy > best_accuracy:
             best_accuracy = val_accuracy
-            torch.save(model.state_dict(), model_save_path)  
-            trigger_times = 0 
-            print(f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}")
+            torch.save(model.state_dict(), model_save_path)
+            trigger_times = 0
+            print(
+                f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+            )
         else:
-            trigger_times += 1 
+            trigger_times += 1
             if trigger_times >= patience:
                 print(f"Early stopping at epoch {epoch+1}")
                 break
-    
+
     print("\n----- Starting Evaluation on Test Set -----\n")
     evaluate(model, test_loader, device)
 
@@ -112,18 +125,22 @@ def main():
 def evaluate(model, dataloader, device):
     model.eval()
     all_labels = []
-    all_preds = [] 
-    
+    all_preds = []
+
     with torch.no_grad():
         for input_ids, attention_mask, labels in tqdm(dataloader, desc="Validation"):
-            input_ids, attention_mask, labels = input_ids.to(device), attention_mask.to(device), labels.to(device)
-            
+            input_ids, attention_mask, labels = (
+                input_ids.to(device),
+                attention_mask.to(device),
+                labels.to(device),
+            )
+
             logits = model(input_ids, attention_mask)
 
             _, predicted = logits.max(1)
             all_labels.extend(labels.cpu().numpy())
             all_preds.extend(predicted.cpu().numpy())
-    
+
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average="weighted")
 
@@ -131,6 +148,7 @@ def evaluate(model, dataloader, device):
     print("\nDetailed Report:\n", classification_report(all_labels, all_preds))
 
     return accuracy
+
 
 if __name__ == "__main__":
     main()

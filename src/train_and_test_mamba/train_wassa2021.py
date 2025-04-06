@@ -18,6 +18,7 @@ num_epochs = 10
 learning_rate = 6e-5
 num_runs = 5
 
+
 def evaluate(encoder, classifier, dataloader, device):
     encoder.eval()
     classifier.eval()
@@ -34,9 +35,10 @@ def evaluate(encoder, classifier, dataloader, device):
             all_labels.extend(labels.cpu().numpy())
 
     acc = accuracy_score(all_labels, all_preds)
-    recall = recall_score(all_labels, all_preds, average='macro')
-    f1 = f1_score(all_labels, all_preds, average='macro')
+    recall = recall_score(all_labels, all_preds, average="macro")
+    f1 = f1_score(all_labels, all_preds, average="macro")
     return acc, recall, f1
+
 
 test_acc_list = []
 test_recall_list = []
@@ -48,9 +50,17 @@ for run in range(num_runs):
     set_seed(42 + run)
 
     # Load the preprocessed WASSA datasets (ensure these paths match your saved files)
-    train_ds = torch.load('data/preprocessed_dataset/wassa/train.pt', map_location=device, weights_only=False)
-    test_ds = torch.load('data/preprocessed_dataset/wassa/test.pt', map_location=device, weights_only=False)
-    
+    train_ds = torch.load(
+        "data/preprocessed_dataset/wassa/train.pt",
+        map_location=device,
+        weights_only=False,
+    )
+    test_ds = torch.load(
+        "data/preprocessed_dataset/wassa/test.pt",
+        map_location=device,
+        weights_only=False,
+    )
+
     # Further split training set into train and validation splits (90/10 split)
     # Split original training data first
     train_len = int(0.90 * len(train_ds))
@@ -58,7 +68,7 @@ for run in range(num_runs):
     train_subset, val_subset = random_split(
         train_ds,
         [train_len, val_len],
-        generator=torch.Generator().manual_seed(42 + run)
+        generator=torch.Generator().manual_seed(42 + run),
     )
 
     # Apply augmentation ONLY to training subset
@@ -75,14 +85,18 @@ for run in range(num_runs):
 
     # Load the pre-trained checkpoint for the encoder trained on crowdflower
     # Ensure the checkpoint is appropriate for WASSA
-    checkpoint = torch.load('results/mamba/contrastive_mamba_decoupled.pt', map_location=device)
-    encoder.load_state_dict(checkpoint['encoder'])
-     # for param in encoder.parameters():
+    checkpoint = torch.load(
+        "results/mamba/contrastive_mamba_decoupled.pt", map_location=device
+    )
+    encoder.load_state_dict(checkpoint["encoder"])
+    # for param in encoder.parameters():
     #     param.requires_grad = False
 
     criterion_cls = CrossEntropyLoss()
     criterion_contrastive = SupConLoss()
-    optimizer = torch.optim.AdamW(list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate)
+    optimizer = torch.optim.AdamW(
+        list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
+    )
 
     best_val_f1 = 0.0
     patience, trigger_times = 50, 0
@@ -92,7 +106,9 @@ for run in range(num_runs):
         classifier.train()
         total_loss = 0
 
-        for view1, view2, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", leave=False):
+        for view1, view2, labels in tqdm(
+            train_loader, desc=f"Epoch {epoch+1}", leave=False
+        ):
             view1, view2, labels = view1.to(device), view2.to(device), labels.to(device)
             emb1 = encoder(view1)
             emb2 = encoder(view2)
@@ -100,7 +116,7 @@ for run in range(num_runs):
 
             loss_cls = criterion_cls(classifier(emb1), labels)
             loss_contrastive = criterion_contrastive(features, labels)
-            loss = 0.9*loss_cls + 0.1*loss_contrastive 
+            loss = 0.9 * loss_cls + 0.1 * loss_contrastive
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -118,18 +134,23 @@ for run in range(num_runs):
             best_val_f1 = val_f1
             best_encoder = encoder.state_dict()
             best_classifier = classifier.state_dict()
-            torch.save({
-                'encoder': best_encoder,
-                'classifier': best_classifier,
-                'val_f1': best_val_f1,
-                'epoch': epoch + 1
-            }, 'results/mamba/mamba_wassa.pt')
+            torch.save(
+                {
+                    "encoder": best_encoder,
+                    "classifier": best_classifier,
+                    "val_f1": best_val_f1,
+                    "epoch": epoch + 1,
+                },
+                "results/mamba/mamba_wassa.pt",
+            )
             trigger_times = 0
             print(f"✅ Best model saved at epoch {epoch+1} with val F1: {val_f1:.4f}")
         else:
             trigger_times += 1
             if trigger_times >= patience:
-                print(f"⏹️ Early stopping at epoch {epoch+1} due to no improvement in val F1")
+                print(
+                    f"⏹️ Early stopping at epoch {epoch+1} due to no improvement in val F1"
+                )
                 break
 
     encoder.load_state_dict(best_encoder)
@@ -151,5 +172,7 @@ mean_f1 = np.mean(test_f1_list)
 std_f1 = np.std(test_f1_list)
 
 print(f"\n📊 Final Test Accuracy over {num_runs} runs: {mean_acc:.4f} ± {std_acc:.4f}")
-print(f"📊 Final Test Recall over {num_runs} runs: {mean_recall:.4f} ± {std_recall:.4f}")
+print(
+    f"📊 Final Test Recall over {num_runs} runs: {mean_recall:.4f} ± {std_recall:.4f}"
+)
 print(f"📊 Final Test F1 Score over {num_runs} runs: {mean_f1:.4f} ± {std_f1:.4f}")

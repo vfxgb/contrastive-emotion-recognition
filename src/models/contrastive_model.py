@@ -3,14 +3,16 @@ import torch.nn as nn
 from transformers import AutoModel
 from mamba_ssm import Mamba2
 
+
 class AttentionPooling(nn.Module):
     """
-    Attention pooling layer that computes a weighted averages of token 
+    Attention pooling layer that computes a weighted averages of token
     embedding using attention scores.
 
     Args:
         d_model(int): dimension of the input embeddings.
     """
+
     def __init__(self, d_model):
         super().__init__()
 
@@ -27,18 +29,22 @@ class AttentionPooling(nn.Module):
             torch.Tensor: Pooled embedding tensor after applying attention. (batch_size, d_model).
         """
         # Compute attention weights over the sequence tokens
-        weights = torch.softmax(self.attn(embeddings), dim=1)  # shape: (batch, seq_len, 1)
+        weights = torch.softmax(
+            self.attn(embeddings), dim=1
+        )  # shape: (batch, seq_len, 1)
         pooled_emb = (embeddings * weights).sum(dim=1)
         return pooled_emb
 
+
 class ContrastiveMambaEncoder(nn.Module):
     """
-        Uses BERT to generate embeddings which are then processed by Mamba.
-        Args:
-            mamba_args (dict): Configuration for the Mamba2 module.
-            embed_dim (int): Dimension of the final embedding space.
+    Uses BERT to generate embeddings which are then processed by Mamba.
+    Args:
+        mamba_args (dict): Configuration for the Mamba2 module.
+        embed_dim (int): Dimension of the final embedding space.
 
     """
+
     def __init__(self, mamba_args, embed_dim=2048):
         super().__init__()
 
@@ -55,17 +61,17 @@ class ContrastiveMambaEncoder(nn.Module):
                 param.requires_grad = True
 
         # Project BERT's 1024-dim output to Mamba's d_model dimension
-        self.proj_bert = nn.Linear(1024, mamba_args['d_model'])
-        
+        self.proj_bert = nn.Linear(1024, mamba_args["d_model"])
+
         # Process the sequence with Mamba2
         self.mamba = Mamba2(**mamba_args)
-        
-        # Use attention pooling over the sequence dimension 
-        self.pooling = AttentionPooling(mamba_args['d_model'])
-        
-        # Projection layer from mamba's d_model to final embedding space 
-        self.projection = nn.Linear(mamba_args['d_model'], embed_dim)
-        
+
+        # Use attention pooling over the sequence dimension
+        self.pooling = AttentionPooling(mamba_args["d_model"])
+
+        # Projection layer from mamba's d_model to final embedding space
+        self.projection = nn.Linear(mamba_args["d_model"], embed_dim)
+
         # Dropout for regularization
         self.dropout = nn.Dropout(0.1)
 
@@ -76,7 +82,7 @@ class ContrastiveMambaEncoder(nn.Module):
         Args:
             input_ids (torch.Tensor): Input tensor of shape (batch_size, seq_len).
             attention_mask (torch.Tensor, optional): Attention mask tensor of shape (batch_size, seq_len).
-        
+
         Returns:
             torch.Tensor: Final emotion embedding of shape (batch_size, embed_dim).
         """
@@ -101,6 +107,7 @@ class ContrastiveMambaEncoder(nn.Module):
 
         return emotion_emb
 
+
 class ClassifierHead(nn.Module):
     """
     3-layer feedforward neural network with hidden dimensions [2048, 768, num_emotions].
@@ -111,23 +118,24 @@ class ClassifierHead(nn.Module):
         num_emotions (int): Number of classes for classification.
 
     """
+
     def __init__(self, embed_dim=2048, num_emotions=7):
         super().__init__()
 
         self.classifier = nn.Sequential(
-            nn.Linear(embed_dim, 2048), # first layer from embed_dim to 2048
+            nn.Linear(embed_dim, 2048),  # first layer from embed_dim to 2048
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(2048, 768), # second layer from 2048 to 768
+            nn.Linear(2048, 768),  # second layer from 2048 to 768
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(768, num_emotions) # final layer from 768 to num_emotions
+            nn.Linear(768, num_emotions),  # final layer from 768 to num_emotions
         )
 
     def forward(self, emotion_emb):
         """
         Forward pass for the classifier head.
-        
+
         Args:
             emotion_emb (torch.Tensor): Input tensor of shape (batch_size, embed_dim).
 

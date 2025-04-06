@@ -6,17 +6,17 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "torch==2.6.0",         
+        "torch==2.6.0",
         "numpy>=1.24.0",
         "scikit-learn>=1.3.0",
         "tqdm>=4.65.0",
-        "mamba-ssm==2.2.4",      
-        "causal-conv1d==1.5.0.post8", 
+        "mamba-ssm==2.2.4",
+        "causal-conv1d==1.5.0.post8",
         "einops==0.8.1",
         "transformers==4.50.2",
         "matplotlib",
         "spacy==3.8.4",
-        "pyodbc==5.2.0", 
-        "pydantic<2.0"
+        "pyodbc==5.2.0",
+        "pydantic<2.0",
     ],
 )

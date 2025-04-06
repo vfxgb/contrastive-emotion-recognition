@@ -6,7 +6,8 @@ from torch import nn
 import random
 import re
 import string
-import spacy 
+import spacy
+
 # import matplotlib.pyplot as plt
 
 
@@ -15,12 +16,13 @@ nlp = spacy.load("en_core_web_sm")
 # def visualize_embeddings(embeddings, labels):
 #     tsne = TSNE(n_components=2, random_state=42)
 #     reduced_emb = tsne.fit_transform(embeddings)
-    
+
 #     plt.figure(figsize=(8, 8))
 #     scatter = plt.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=labels, cmap='tab10', alpha=0.7)
 #     plt.legend(*scatter.legend_elements(), title="Classes")
 #     plt.title('t-SNE visualization of emotion embeddings')
 #     plt.show()
+
 
 def set_seed(seed):
     """
@@ -33,54 +35,57 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-def fetch_label_mapping(isear = False, crowdflower = False, wassa = False):
+
+def fetch_label_mapping(isear=False, crowdflower=False, wassa=False):
     if isear:
         # return label mapping for isear dataset
         return {
-            'anger': 0,
-            'sadness': 1,
-            'disgust': 2,
-            'shame': 3,
-            'fear': 4,
-            'joy': 5,
-            'guilt': 6
+            "anger": 0,
+            "sadness": 1,
+            "disgust": 2,
+            "shame": 3,
+            "fear": 4,
+            "joy": 5,
+            "guilt": 6,
         }
     elif wassa:
         # return label mapping for wassa dataset
         return {
-            'anger': 0,
-            'sadness': 1,
-            'disgust': 2,
-            'fear': 3,
-            'joy': 4,
-            'surprise': 5
+            "anger": 0,
+            "sadness": 1,
+            "disgust": 2,
+            "fear": 3,
+            "joy": 4,
+            "surprise": 5,
         }
 
-def clean_text(text, extended = True):
+
+def clean_text(text, extended=True):
     """
     Clean text by removing URLs, mentions, hashtags, extra whitespace,
     and converting to lowercase.
     Args:
         text : the text that is to be cleaned.
-        extended : if True, applies lematisation and removes 
+        extended : if True, applies lematisation and removes
             punctuations
     """
-    text = re.sub(r'http\S+', '', text)    # Remove URLs
-    text = re.sub(r'@\w+', '', text)         # Remove mentions
-    text = re.sub(r'#', '', text)            # Remove hashtag symbols
-    text = re.sub(r'\s+', ' ', text).strip() # Remove extra spaces
+    text = re.sub(r"http\S+", "", text)  # Remove URLs
+    text = re.sub(r"@\w+", "", text)  # Remove mentions
+    text = re.sub(r"#", "", text)  # Remove hashtag symbols
+    text = re.sub(r"\s+", " ", text).strip()  # Remove extra spaces
     if not extended:
         return text.lower()
-    
+
     doc = nlp(text.lower())
 
     tokens = [
         token.lemma_
         for token in doc
-        if token.text not in string.punctuation 
+        if token.text not in string.punctuation
         # and not token.is_stop
     ]
     return " ".join(tokens)
+
 
 class SupConLoss(nn.Module):
     def __init__(self, temperature=0.07, eps=1e-8):
@@ -116,6 +121,7 @@ class SupConLoss(nn.Module):
         if valid.sum() == 0:
             return torch.tensor(0.0, device=device)
 
-        loss = -torch.log((numerator[valid] + self.eps) / (denominator[valid] + self.eps))
+        loss = -torch.log(
+            (numerator[valid] + self.eps) / (denominator[valid] + self.eps)
+        )
         return loss.mean()
-

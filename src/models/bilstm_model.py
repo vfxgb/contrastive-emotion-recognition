@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import BertModel
 
+
 class BiLSTM(nn.Module):
     """
     BiLSTM model for text classification using BERT embeddings.
@@ -16,8 +17,8 @@ class BiLSTM(nn.Module):
         hidden_dim (int): Hidden dimension size for the LSTM layer.
         num_classes (int): Number of output classes for classification.
         dropout_rate (float): Dropout rate for regularization.
-        lstm_layers (int): Number of layers in the LSTM. 
-    
+        lstm_layers (int): Number of layers in the LSTM.
+
     Attributes:
         bert (BertModel): Pre-trained BERT model used for embeddings.
         lstm (nn.LSTM): Bidirectional LSTM layer for sequence modeling.
@@ -28,14 +29,16 @@ class BiLSTM(nn.Module):
         dropout (nn.Dropout): Dropout layer for regularization.
 
     """
-    def __init__(self, bert_model_name, hidden_dim, num_classes, 
-                 dropout_rate, lstm_layers ):
+
+    def __init__(
+        self, bert_model_name, hidden_dim, num_classes, dropout_rate, lstm_layers
+    ):
         super(BiLSTM, self).__init__()
 
         # Initialize BERT model
         self.bert = BertModel.from_pretrained(bert_model_name)
 
-        # Freeze BERT parameters 
+        # Freeze BERT parameters
         for param in self.bert.parameters():
             param.requires_grad = False
 
@@ -48,11 +51,11 @@ class BiLSTM(nn.Module):
 
         # Bidirectional LSTM layer
         self.lstm = nn.LSTM(
-            input_size=input_size, 
-            hidden_size=hidden_dim, 
+            input_size=input_size,
+            hidden_size=hidden_dim,
             num_layers=lstm_layers,
-            bidirectional=True, 
-            batch_first=True
+            bidirectional=True,
+            batch_first=True,
         )
 
         # Global max pooling layer
@@ -60,9 +63,9 @@ class BiLSTM(nn.Module):
 
         # fully connected layers for classification
         self.fc1 = nn.Linear(hidden_dim * 2, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim//2)
-        self.fc3 = nn.Linear(hidden_dim//2, num_classes)
-        
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim // 2)
+        self.fc3 = nn.Linear(hidden_dim // 2, num_classes)
+
         # Dropout layer for regularization
         self.dropout = nn.Dropout(dropout_rate)
 
@@ -74,17 +77,17 @@ class BiLSTM(nn.Module):
             attention_mask (torch.Tensor): Attention mask for the input tensor.
         Returns:
             torch.Tensor: Output logits for classification.
-            
+
         """
         # get BERT embeddings
         bert_outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         embeddings = bert_outputs.last_hidden_state
-        
+
         # Pass through LSTM layer
-        lstm_out, _ = self.lstm(embeddings) 
+        lstm_out, _ = self.lstm(embeddings)
 
         # Apply global max pooling
-        max_pool_output = torch.max(lstm_out, dim=1)[0] 
+        max_pool_output = torch.max(lstm_out, dim=1)[0]
 
         # Fully connected layers for classification
         # Dropout layer for regularization
