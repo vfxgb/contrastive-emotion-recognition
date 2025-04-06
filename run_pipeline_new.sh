@@ -38,8 +38,8 @@ export PYTHONNOUSERSITE=1
 LOG_DIR="logs"
 declare -A PREPROCESS_SCRIPTS=(
     ["crowdflower"]="src/preprocess/preprocess_crowdflower.py"
-    ["isear"]="src/preprocess/preprocess_ISEAR.py"
-    ["wassa"]="src/preprocess/preprocess_WASSA2021.py"
+    ["isear"]="src/preprocess/preprocess_isear.py"
+    ["wassa"]="src/preprocess/preprocess_wassa2021.py"
 )
 
 declare -A TRAIN_SCRIPTS=(
