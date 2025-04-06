@@ -6,8 +6,8 @@ from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from preprocess.preprocess_WASSA2021 import DualViewDataset
-from utils import set_seed, SupConLoss
+from utils import set_seed, SupConLoss, DualViewDataset
+from config import F1_AVERAGE_METRIC
 
 # Configurations
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -35,8 +35,8 @@ def evaluate(encoder, classifier, dataloader, device):
             all_labels.extend(labels.cpu().numpy())
 
     acc = accuracy_score(all_labels, all_preds)
-    recall = recall_score(all_labels, all_preds, average="macro")
-    f1 = f1_score(all_labels, all_preds, average="macro")
+    recall = recall_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
+    f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
     return acc, recall, f1
 
 
