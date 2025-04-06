@@ -5,25 +5,28 @@ CROWDFLOWER_CLASSES = 9
 CROWDFLOWER_PATH = "data/CrowdFlower/text_emotion.csv"
 CROWDFLOWER_TRAIN_DS_PATH = "data/preprocessed_dataset/crowdflower/train.pt"
 CROWDFLOWER_TEST_DS_PATH = "data/preprocessed_dataset/crowdflower/test.pt"
+CROWDFLOWER_GLOVE_EMBEDDINGS_PATH = "data/preprocessed_dataset/crowdflower/glove_embedding_matrix.npy"
 
 # Configuration for ISEAR dataset
 ISEAR_CLASSES = 7
 ISEAR_PATH = "data/ISEAR/isear_data.csv"
 ISEAR_TRAIN_DS_PATH = "data/preprocessed_dataset/isear/train.pt"
 ISEAR_TEST_DS_PATH = "data/preprocessed_dataset/isear/test.pt"
+ISEAR_GLOVE_EMBEDDINGS_PATH = "data/preprocessed_dataset/isear/glove_embedding_matrix.npy"
 
 # Configuration for WASSA dataset
 WASSA_CLASSES = 6
 WASSA_PATH = "data/WASSA2021/wassa_2021.tsv"
 WASSA_TRAIN_DS_PATH = "data/preprocessed_dataset/wassa/train.pt"
 WASSA_TEST_DS_PATH = "data/preprocessed_dataset/wassa/test.pt"
+WASSA_GLOVE_EMBEDDINGS_PATH = "data/preprocessed_dataset/wassa/glove_embedding_matrix.npy"
 
 # Configuration for BERT and spaCy models
 BERT_MODEL = "bert-large-uncased"
 SPACY_MODEL = "en_core_web_sm"
+GLOVE_PATH = "glove/glove.840B.300d.txt"
 
 F1_AVERAGE_METRIC = "macro"
-
 
 def bilstm_config():
     """

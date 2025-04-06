@@ -3,17 +3,16 @@ import torch
 from torch.utils.data import TensorDataset
 from transformers import AutoTokenizer
 import os
-from utils import clean_text, fetch_label_mapping, split_dataset
-from config import BERT_MODEL, WASSA_PATH, WASSA_TEST_DS_PATH, WASSA_TRAIN_DS_PATH
-
-# Initialize the BERT tokenizer
-tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
+from utils import clean_text, fetch_label_mapping, split_dataset, load_glove_embeddings
+from config import BERT_MODEL, WASSA_PATH, WASSA_TEST_DS_PATH, WASSA_TRAIN_DS_PATH, WASSA_GLOVE_EMBEDDINGS_PATH
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # get label mapping for WASSA dataset
 label_mapping = fetch_label_mapping(wassa=True)
+with_glove = False
 
-
-def load_wassa(tsv_path, max_length=128):
+def load_wassa_with_glove(tsv_path, max_length=128):
     """
     Load and preprocess the WASSA 2021 dataset from a TSV file.
     Renames 'emotion_labels' to 'Emotion' and 'essays' to 'Text'.
@@ -21,6 +20,58 @@ def load_wassa(tsv_path, max_length=128):
     cleans the text, tokenizes it, and maps the labels.
     Returns a TensorDataset.
     """
+    tokenizer = Tokenizer(num_words=5000,oov_token="<UNK>")
+
+    print("Loading TSV from:", tsv_path)
+    df = pd.read_csv(tsv_path, sep="\t")
+    print("Original dataset shape:", df.shape)
+    print("Columns in dataset:", df.columns.tolist())
+
+    # Rename columns for consistency
+    df = df.rename(columns={"emotion_label": "Emotion", "essay": "Text"})
+    print("Renamed columns: 'emotion_labels' -> 'Emotion', 'essays' -> 'Text'")
+
+    # Show original label distribution
+    print("Original label distribution in 'Emotion':")
+    print(df["Emotion"].value_counts())
+
+    # Filter to keep only rows with desired emotions (exclude others such as 'neutral')
+    df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
+    print("Filtered dataset shape:", df.shape)
+    print("Filtered label distribution:")
+    print(df["Emotion"].value_counts())
+
+    # Clean the text in the 'Text' column
+    df["content"] = df["Text"].apply(clean_text, extended = True)
+    print("Sample cleaned text:", df["content"].iloc[0])
+    texts = df["content"].tolist()
+    # Tokenize the cleaned text using the BERT tokenizer
+    tokenizer.fit_on_texts(texts)
+    sequences = tokenizer.texts_to_sequences(texts) # Convert text to numerical sequences
+    padded_sequences = pad_sequences(sequences, maxlen=max_length, padding="post", truncating="post")
+    input_tensor = torch.tensor(padded_sequences)
+
+    # Map emotion labels to integers using the defined mapping
+    labels = torch.tensor(df["Emotion"].map(label_mapping).values)
+    print("Labels tensor shape:", labels.shape)
+    print("Unique label mapping:", label_mapping)
+
+    # Create and return a TensorDataset
+    dataset = TensorDataset(input_tensor, labels)
+    print(f"WASSA 2021 dataset loaded: {len(dataset)} samples")
+    return dataset, tokenizer
+
+def load_wassa_without_glove(tsv_path, max_length=128):
+    """
+    Load and preprocess the WASSA 2021 dataset from a TSV file.
+    Renames 'emotion_labels' to 'Emotion' and 'essays' to 'Text'.
+    Filters to keep only rows with one of the six Ekman emotions,
+    cleans the text, tokenizes it, and maps the labels.
+    Returns a TensorDataset.
+    """
+    # Initialize the BERT tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
+
     print("Loading TSV from:", tsv_path)
     df = pd.read_csv(tsv_path, sep="\t")
     print("Original dataset shape:", df.shape)
@@ -79,16 +130,11 @@ if __name__ == "__main__":
 
     print("[Main] Loading and processing WASSA 2021 dataset...")
 
-    # Load the dataset
-    wassa_dataset = load_wassa(WASSA_PATH, max_length=128)
-
-    # Debug: print a sample from the dataset
-    sample_idx = 0
-    sample_input_ids, sample_attention, sample_label = wassa_dataset[sample_idx]
-    print("\nSample from dataset:")
-    print("Input IDs:", sample_input_ids.tolist())
-    print("Attention mask:", sample_attention.tolist())
-    print("Label:", sample_label.item())
+    if with_glove:
+        wassa_dataset, tokenizer = load_wassa_with_glove(WASSA_PATH, max_length=128)
+        load_glove_embeddings(WASSA_GLOVE_EMBEDDINGS_PATH, tokenizer)
+    else:
+        wassa_dataset = load_wassa_without_glove(WASSA_PATH, max_length=128)
 
     total_samples = len(wassa_dataset)
     wassa_train, wassa_test = split_dataset(wassa_dataset, split_ratio=0.8)

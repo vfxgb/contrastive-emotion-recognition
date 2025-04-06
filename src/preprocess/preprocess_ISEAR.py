@@ -6,6 +6,7 @@ import os
 from utils import (
     clean_text,
     fetch_label_mapping,
+    load_glove_embeddings,
     random_dropout_tokens,
     split_dataset,
     DualViewDataset,
@@ -16,16 +17,16 @@ from config import (
     ISEAR_PATH,
     ISEAR_TEST_DS_PATH,
     ISEAR_TRAIN_DS_PATH,
+    ISEAR_GLOVE_EMBEDDINGS_PATH
 )
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+with_glove = False
 # fetch label mapping for ISEAR dataset
 label_mapping = fetch_label_mapping(isear=True)
 
-# Initialize the BERT tokenizer
-tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
-
-
-def load_isear(csv_path, max_length=128):
+def load_isear_with_glove(csv_path, max_length=128):
     """
     Load and preprocess the ISEAR dataset from a CSV file.
     Assumes the CSV has columns 'Field1' and 'SIT'.
@@ -40,6 +41,69 @@ def load_isear(csv_path, max_length=128):
         TensorDataset: Dataset object containing input_ids, attention_masks, and labels.
 
     """
+    # Initialize the BERT tokenizer
+    tokenizer = Tokenizer(num_words=5000,oov_token="<UNK>")
+
+    # Load CSV using latin1 encoding and comma separator
+    df = pd.read_csv(csv_path, encoding="latin1", sep=",")
+    print(f"[Isear] Loaded {len(df)} rows from {csv_path}")
+    print("Original dataset shape:", df.shape)
+    print("Columns in dataset:", df.columns.tolist())
+
+    # Rename columns: use 'Field1' as 'Emotion' and 'SIT' as 'Text'
+    df = df.rename(columns={"Field1": "Emotion", "SIT": "Text"})
+    print("Renamed columns: 'Field1' -> 'Emotion', 'SIT' -> 'Text'")
+
+    # Show original label distribution based on 'Emotion'
+    print("Original label distribution in 'Emotion':")
+    print(df["Emotion"].value_counts())
+
+    # Filter to keep only rows with desired emotions
+    df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
+    print("Filtered dataset shape:", df.shape)
+    print("Filtered label distribution:")
+    print(df["Emotion"].value_counts())
+
+    # Clean the text in the 'Text' column
+    df["content"] = df["Text"].apply(clean_text, extended=True)
+    print("Sample cleaned text:", df["content"].iloc[0])
+
+    texts = df["content"].tolist()
+    tokenizer.fit_on_texts(texts)
+    sequences = tokenizer.texts_to_sequences(texts) # Convert text to numerical sequences
+    padded_sequences = pad_sequences(sequences, maxlen=max_length, padding="post", truncating="post")
+    
+    print("Tokenization complete.")
+
+    # Map emotion labels to integers
+    input_tensor = torch.tensor(padded_sequences)
+    labels = torch.tensor(df["Emotion"].map(label_mapping).values)
+    print("Labels tensor shape:", labels.shape)
+    print("Unique label mapping:", label_mapping)
+
+    # Create and return a TensorDataset
+    dataset = TensorDataset(input_tensor, labels)
+    print(f"ISEAR dataset loaded: {len(dataset)} samples")
+
+    return dataset, tokenizer
+
+def load_isear_without_glove(csv_path, max_length=128):
+    """
+    Load and preprocess the ISEAR dataset from a CSV file.
+    Assumes the CSV has columns 'Field1' and 'SIT'.
+    'Field1' is used as the label and 'SIT' as the text.
+    Only rows with labels present in label_mapping are kept.
+
+    Args:
+        csv_path (str): Path to the CSV file.
+        max_length (int): Maximum sequence length for tokenization.
+
+    Returns:
+        TensorDataset: Dataset object containing input_ids, attention_masks, and labels.
+
+    """
+    # Initialize the BERT tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
 
     # Load CSV using latin1 encoding and comma separator
     df = pd.read_csv(csv_path, encoding="latin1", sep=",")
@@ -95,15 +159,11 @@ if __name__ == "__main__":
     print("[Main] Loading and processing ISEAR dataset...")
 
     # Load the dataset
-    isear_dataset = load_isear(ISEAR_PATH, max_length=128)
-
-    # Debug: print a sample from the dataset
-    sample_idx = 0
-    sample_input_ids, sample_attention, sample_label = isear_dataset[sample_idx]
-    print("\nSample from dataset:")
-    print("Input IDs:", sample_input_ids.tolist())
-    print("Attention mask:", sample_attention.tolist())
-    print("Label:", sample_label.item())
+    if with_glove:
+        isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
+        load_glove_embeddings(ISEAR_GLOVE_EMBEDDINGS_PATH, tokenizer)
+    else:
+        isear_dataset = load_isear_without_glove(ISEAR_PATH, max_length=128)
 
     # Split dataset into train (80%) and test (20%) sets
     total_samples = len(isear_dataset)
@@ -118,12 +178,6 @@ if __name__ == "__main__":
     print("Total samples:", total_samples)
     print("Train size:", len(isear_train))
     print("Test size:", len(isear_test))
-
-    # Check for overlapping samples between train and test sets
-    train_ids = set([tuple(isear_dataset[i][0].tolist()) for i in isear_train.indices])
-    test_ids = set([tuple(isear_dataset[i][0].tolist()) for i in isear_test.indices])
-    overlap = train_ids.intersection(test_ids)
-    print("Overlap between train and test indices (should be empty):", len(overlap))
 
     # Check label distributions in train and test splits
     def get_label_distribution(subset):
