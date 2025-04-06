@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-# import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import torch.nn.functional as F
 from torch import nn
@@ -8,6 +7,8 @@ import random
 import re
 import string
 import spacy 
+# import matplotlib.pyplot as plt
+
 
 nlp = spacy.load("en_core_web_sm")
 

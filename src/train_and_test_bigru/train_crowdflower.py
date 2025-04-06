@@ -2,8 +2,8 @@ import re
 import string
 import numpy as np
 import spacy
-import sys
-sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition")
+# import sys
+# sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition")
 # from tensorflow import keras
 # from tensorflow.keras.preprocessing.text import Tokenizer
 # from transformers import BertTokenizer, BertModel
@@ -16,10 +16,11 @@ import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import classification_report, f1_score, accuracy_score
-# from sklearn.model_selection import train_test_split
-# from models.bilstm_model import BiLSTM
-from src.models.bigru_model import BiGRU
-from src.config import bigru_config
+import sys 
+sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
+from models.bigru_model import BiGRU
+from config import bigru_config, CROWDFLOWER_CLASSES
+
 torch.serialization.add_safe_globals([TensorDataset])
 
 def main():
@@ -58,7 +59,7 @@ def main():
     model = BiGRU(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
-        num_classes=model_config["num_classes"],
+        num_classes=CROWDFLOWER_CLASSES,
         dropout_rate=model_config["dropout_rate"],
         gru_layers=model_config["gru_layers"]
     )

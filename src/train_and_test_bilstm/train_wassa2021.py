@@ -1,13 +1,6 @@
-import re
-import string
 import numpy as np
-import spacy
-import sys
-sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition")
-# from tensorflow import keras
-# from tensorflow.keras.preprocessing.text import Tokenizer
-# from transformers import BertTokenizer, BertModel
-# from tensorflow.keras.preprocessing.sequence import pad_sequences
+import sys 
+sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
 from torch.utils.data import DataLoader, TensorDataset, Subset, random_split
 import torch
 import torch.nn as nn
@@ -16,11 +9,9 @@ import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import classification_report, f1_score, accuracy_score, recall_score, precision_score
-# from sklearn.model_selection import train_test_split
-# from models.bilstm_model import BiLSTM
-from src.models.bilstm_model import BiLSTM
-from src.utils import set_seed
-from src.config import bilstm_config
+from models.bilstm_model import BiLSTM
+from utils import set_seed
+from config import WASSA_CLASSES, bilstm_config
 torch.serialization.add_safe_globals([TensorDataset])
 
 
@@ -74,11 +65,10 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
 # Configurations
 model_config = bilstm_config()
 
-num_classes = 6  # For WASSA: anger, sadness, disgust, fear, joy, surprise
+num_classes = WASSA_CLASSES  # For WASSA: anger, sadness, disgust, fear, joy, surprise
 num_epochs = model_config["num_epochs"]
 learning_rate = model_config["learning_rate"]
-# batch_size = model_config["batch_size"]
-batch_size = 32
+batch_size = model_config["finetune_batch_size"]
 device = model_config["device"]
 isear_finetune_save_path = model_config["wassa21_finetune_save_path"]
 

@@ -1,25 +1,16 @@
-import re
-import string
-import numpy as np
-import spacy
 import sys
 sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition")
-# from tensorflow import keras
-# from tensorflow.keras.preprocessing.text import Tokenizer
-# from transformers import BertTokenizer, BertModel
-# from tensorflow.keras.preprocessing.sequence import pad_sequences
-from torch.utils.data import DataLoader, TensorDataset, Subset, random_split
+from torch.utils.data import DataLoader, TensorDataset, random_split
 import torch
 import torch.nn as nn
-import pandas as pd
 import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import classification_report, f1_score, accuracy_score
-# from sklearn.model_selection import train_test_split
-# from models.bilstm_model import BiLSTM
-from src.models.bilstm_model import BiLSTM
-from src.config import bilstm_config
+import sys 
+sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
+from models.bilstm_model import BiLSTM
+from config import bilstm_config, CROWDFLOWER_CLASSES
 torch.serialization.add_safe_globals([TensorDataset])
 
 def main():
@@ -58,7 +49,7 @@ def main():
     model = BiLSTM(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
-        num_classes=model_config["num_classes"],
+        num_classes=CROWDFLOWER_CLASSES,
         dropout_rate=model_config["dropout_rate"],
         lstm_layers=model_config["lstm_layers"]
     )

@@ -1,17 +1,26 @@
+import re
+import string
+import numpy as np
+import spacy
 import sys
 sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition")
-from torch.utils.data import DataLoader, TensorDataset, random_split
+# from tensorflow import keras
+# from tensorflow.keras.preprocessing.text import Tokenizer
+# from transformers import BertTokenizer, BertModel
+# from tensorflow.keras.preprocessing.sequence import pad_sequences
+from torch.utils.data import DataLoader, TensorDataset, Subset, random_split
 import torch
 import torch.nn as nn
+import pandas as pd
 import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import classification_report, f1_score, accuracy_score, recall_score, precision_score
 import sys 
 sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
-from models.bilstm_model import BiLSTM
+from models.bigru_model import BiGRU
 from utils import set_seed
-from config import ISEAR_CLASSES, bilstm_config
+from config import bigru_config, ISEAR_CLASSES
 torch.serialization.add_safe_globals([TensorDataset])
 
 
@@ -44,12 +53,12 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     pretrained_state_dict = torch.load(pretrained_model_path, map_location=device)
 
     # Create a new model instance
-    new_model = BiLSTM(
+    new_model = BiGRU(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
         num_classes=num_classes,
         dropout_rate=model_config["dropout_rate"], 
-        lstm_layers=model_config["lstm_layers"],
+        gru_layers=model_config["gru_layers"],
     )
 
     # load parameters from pretrained model
@@ -63,7 +72,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     return new_model
 
 # Configurations
-model_config = bilstm_config()
+model_config = bigru_config()
 
 num_classes = ISEAR_CLASSES
 num_epochs = model_config["num_epochs"]
@@ -103,16 +112,16 @@ for run in range(num_runs):
 
     # initialise model
     model = load_and_adapt_model(model_config["model_save_path"], num_classes = num_classes, model_config = model_config)
-    model = BiLSTM(model_config["bert_model_name"], 
+    model = BiGRU(model_config["bert_model_name"], 
                    model_config["hidden_dim"], 
                    num_classes, 
                    model_config["dropout_rate"], 
-                   model_config["lstm_layers"])
+                   model_config["gru_layers"])
     
     # freeze bert and lstm layers and only train the final classification layer
     for param in model.bert.parameters():
         param.requires_grad = False  # freeze all
-    for param in model.lstm.parameters():
+    for param in model.gru.parameters():
         param.requires_grad = True
     for param in model.fc1.parameters():
         param.requires_grad = True

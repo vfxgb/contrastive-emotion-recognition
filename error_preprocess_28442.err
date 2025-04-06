@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/UG/bhargavi005/contrastive-emotion-recognition/src/train_and_test_bigru/train_crowdflower.py", line 22, in <module>
+    from models.bigru_model import BiGRU
+ModuleNotFoundError: No module named 'models'

@@ -46,4 +46,6 @@ echo "Running script"
 # python /home/UG/bhargavi005/contrastive-emotion-recognition/src/preprocess/preprocess_WASSA2021.py
 # python /home/UG/bhargavi005/contrastive-emotion-recognition/src/train_and_test_bilstm/train_isear.py
 # python /home/UG/bhargavi005/contrastive-emotion-recognition/src/train_and_test_bilstm/train_wassa2021.py
+# python /home/UG/bhargavi005/contrastive-emotion-recognition/src/train_and_test_bigru/train_crowdflower.py
+# python /home/UG/bhargavi005/contrastive-emotion-recognition/src/train_and_test_bigru/train_isear.py
 python /home/UG/bhargavi005/contrastive-emotion-recognition/src/train_and_test_bigru/train_crowdflower.py
