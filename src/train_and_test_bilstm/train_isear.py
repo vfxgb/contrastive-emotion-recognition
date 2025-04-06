@@ -238,26 +238,14 @@ def main():
         test_f1_list.append(test_f1)
 
     mean_test_acc, std_test_acc = np.mean(test_acc_list), np.std(test_acc_list)
-    mean_test_recall, std_test_recall = np.mean(test_recall_list), np.std(
-        test_recall_list
-    )
-    mean_test_precision, std_test_precision = np.mean(test_precision_list), np.std(
-        test_precision_list
-    )
+    mean_test_recall, std_test_recall = np.mean(test_recall_list), np.std(test_recall_list)
+    mean_test_precision, std_test_precision = np.mean(test_precision_list), np.std(test_precision_list)
     mean_test_f1, std_test_f1 = np.mean(test_f1_list), np.std(test_f1_list)
 
-    print(
-        f"\nFinal Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}"
-    )
-    print(
-        f"Final Test Recall over {num_runs} runs: {mean_test_recall:.4f} ± {std_test_recall:.4f}"
-    )
-    print(
-        f"Final Test Precision over {num_runs} runs: {mean_test_precision:.4f} ± {std_test_precision:.4f}"
-    )
-    print(
-        f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}"
-    )
+    print(f"\nFinal Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}")
+    print(f"Final Test Recall over {num_runs} runs: {mean_test_recall:.4f} ± {std_test_recall:.4f}")
+    print(f"Final Test Precision over {num_runs} runs: {mean_test_precision:.4f} ± {std_test_precision:.4f}")
+    print(f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")
 
 
 if __name__ == "__main__":

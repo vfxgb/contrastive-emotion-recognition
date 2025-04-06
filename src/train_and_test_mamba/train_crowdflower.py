@@ -1,7 +1,6 @@
 from torch.utils.data import DataLoader, TensorDataset, random_split
 import torch
 import torch.nn as nn
-from utils import SupConLoss
 from tqdm import tqdm
 from sklearn.metrics import (
     classification_report,
@@ -17,7 +16,7 @@ from config import (
     CROWDFLOWER_TRAIN_DS_PATH,
     CROWDFLOWER_TEST_DS_PATH,
 )
-from utils import DualViewDataset
+from utils import DualViewDataset, SupConLoss
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 torch.serialization.add_safe_globals([TensorDataset])
 
