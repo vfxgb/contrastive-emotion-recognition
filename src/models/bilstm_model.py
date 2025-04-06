@@ -17,6 +17,15 @@ class BiLSTM(nn.Module):
         num_classes (int): Number of output classes for classification.
         dropout_rate (float): Dropout rate for regularization.
         lstm_layers (int): Number of layers in the LSTM. 
+    
+    Attributes:
+        bert (BertModel): Pre-trained BERT model used for embeddings.
+        lstm (nn.LSTM): Bidirectional LSTM layer for sequence modeling.
+        global_max_pool (function): Function for performing global max pooling.
+        fc1 (nn.Linear): Fully connected layer for classification.
+        fc2 (nn.Linear): Second fully connected layer for classification.
+        fc3 (nn.Linear): Output fully connected layer for classification.
+        dropout (nn.Dropout): Dropout layer for regularization.
 
     """
     def __init__(self, bert_model_name, hidden_dim, num_classes, 
