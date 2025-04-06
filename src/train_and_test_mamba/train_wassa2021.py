@@ -25,6 +25,7 @@ from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 
 torch.serialization.add_safe_globals([TensorDataset])
 
+
 def evaluate(encoder, classifier, dataloader, device, test=False):
     """
     Evaluates model.
@@ -71,6 +72,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     print("\nDetailed Report:\n", classification_report(all_labels, all_preds))
 
     return accuracy, f1, recall, precision
+
 
 def main():
     # Configurations
@@ -139,7 +141,11 @@ def main():
             for view1, view2, labels in tqdm(
                 train_loader, desc=f"Epoch {epoch+1}", leave=False
             ):
-                view1, view2, labels = view1.to(device), view2.to(device), labels.to(device)
+                view1, view2, labels = (
+                    view1.to(device),
+                    view2.to(device),
+                    labels.to(device),
+                )
                 emb1 = encoder(view1)
                 emb2 = encoder(view2)
                 features = torch.stack([emb1, emb2], dim=1)
@@ -156,8 +162,12 @@ def main():
             print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
             # Validation step
-            val_accuracy, val_f1, val_recall, val_precision = evaluate(encoder, classifier, val_loader, device)
-            print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f} Val F1 Macro: {val_f1:.4f}")
+            val_accuracy, val_f1, val_recall, val_precision = evaluate(
+                encoder, classifier, val_loader, device
+            )
+            print(
+                f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f} Val F1 Macro: {val_f1:.4f}"
+            )
 
             # Save model based on best val F1
             if val_f1 > best_f1:

@@ -18,6 +18,7 @@ from config import (
 )
 from utils import DualViewDataset, SupConLoss
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
+
 torch.serialization.add_safe_globals([TensorDataset])
 
 
@@ -140,8 +141,12 @@ def main():
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
         # Validation step
-        val_accuracy, val_f1, val_recall, val_precision = evaluate(encoder, classifier, val_loader, device)
-        print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f} Val F1 Macro: {val_f1:.4f}")
+        val_accuracy, val_f1, val_recall, val_precision = evaluate(
+            encoder, classifier, val_loader, device
+        )
+        print(
+            f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f} Val F1 Macro: {val_f1:.4f}"
+        )
 
         # Early stopping logic
         if val_f1 > best_f1:
@@ -164,7 +169,7 @@ def main():
                 break
 
     print("\n----- Starting Evaluation on Test Set -----\n")
-    
+
     # Initialize test model with new classifier head for test emotions
     test_encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     test_classifier = ClassifierHead(embed_dim, CROWDFLOWER_CLASSES).to(device)
@@ -175,6 +180,7 @@ def main():
     test_encoder.load_state_dict(checkpoint["encoder"])
     test_classifier.load_state_dict(checkpoint["classifier"])
     evaluate(test_encoder, test_classifier, test_loader, device=device, test=True)
+
 
 if __name__ == "__main__":
     main()

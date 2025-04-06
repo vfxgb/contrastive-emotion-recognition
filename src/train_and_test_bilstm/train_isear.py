@@ -211,7 +211,9 @@ def main():
             avg_loss = total_loss / len(train_loader)
             print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
-            val_accuracy, val_f1, val_recall, val_precision = evaluate(model, val_loader, device)
+            val_accuracy, val_f1, val_recall, val_precision = evaluate(
+                model, val_loader, device
+            )
             print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
             if val_f1 > best_val_f1:

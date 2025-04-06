@@ -22,6 +22,7 @@ from config import (
 
 torch.serialization.add_safe_globals([TensorDataset])
 
+
 def evaluate(model, dataloader, device, test=False):
     """
     Evaluates model.

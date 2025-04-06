@@ -55,17 +55,17 @@ def mamba_config():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_config = {
         "device": device,
-        "embed_dim" : 1024, 
-        "batch_size" : 128, 
-        "num_epochs" : 30, 
-        "learning_rate" : 6e-5,
-        "mamba_args" : dict(
+        "embed_dim": 1024,
+        "batch_size": 128,
+        "num_epochs": 30,
+        "learning_rate": 6e-5,
+        "mamba_args": dict(
             d_model=2048,
             d_state=256,
             d_conv=4,
             expand=2,
         ),
-        "model_save_path": "results/mamba/contrastive_mamba_decoupled.pt", 
+        "model_save_path": "results/mamba/contrastive_mamba_decoupled.pt",
         "isear_finetune_save_path": "results/mamba/isear_finetune_contrastive_mamba_decoupled.pt",
         "wassa21_finetune_save_path": "results/mamba/wassa21_finetune_contrastive_mamba_decoupled.pt",
     }
