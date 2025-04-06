@@ -1,8 +1,20 @@
 import torch
 
-WASSA_CLASSES = 6
-ISEAR_CLASSES = 7 
+# Configuration for CrowdFlower dataset
 CROWDFLOWER_CLASSES = 9
+CROWDFLOWER_PATH = "data/CrowdFlower/text_emotion.csv"
+CROWDFLOWER_TRAIN_DS_PATH = "data/preprocessed_dataset/crowdflower/train.pt"
+CROWDFLOWER_TEST_DS_PATH = "data/preprocessed_dataset/crowdflower/test.pt"
+
+# Configuration for ISEAR dataset 
+ISEAR_CLASSES = 7 
+
+# Configuration for WASSA dataset 
+WASSA_CLASSES = 6
+
+# Configuration for BERT and spaCy models
+BERT_MODEL = "bert-large-uncased"
+SPACY_MODEL = "en_core_web_sm"
 
 def bilstm_config():
     """
