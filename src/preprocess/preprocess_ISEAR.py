@@ -1,31 +1,28 @@
 import pandas as pd
 import torch
-from torch.utils.data import TensorDataset, random_split, Subset, Dataset
+from torch.utils.data import TensorDataset, random_split
 from transformers import AutoTokenizer
-import re
 import os
-import random
-import numpy as np
-from sklearn.model_selection import train_test_split
-import sys
+from utils import (
+    clean_text,
+    fetch_label_mapping,
+    random_dropout_tokens,
+    split_dataset,
+    DualViewDataset,
+)
+from config import (
+    BERT_MODEL,
+    SPACY_MODEL,
+    ISEAR_PATH,
+    ISEAR_TEST_DS_PATH,
+    ISEAR_TRAIN_DS_PATH,
+)
 
-sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
-from utils import clean_text, fetch_label_mapping
-
-# --- Helper Functions ---
+# fetch label mapping for ISEAR dataset
 label_mapping = fetch_label_mapping(isear=True)
 
-"""To compare with other papers"""
-# label_mapping = {
-#     'anger': 0,
-#     'sadness': 1,
-#     'disgust': 2,
-#     'fear': 3,
-#     'joy': 4,
-# }
-
 # Initialize the BERT tokenizer
-tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
+tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
 
 
 def load_isear(csv_path, max_length=128):
@@ -34,10 +31,19 @@ def load_isear(csv_path, max_length=128):
     Assumes the CSV has columns 'Field1' and 'SIT'.
     'Field1' is used as the label and 'SIT' as the text.
     Only rows with labels present in label_mapping are kept.
+
+    Args:
+        csv_path (str): Path to the CSV file.
+        max_length (int): Maximum sequence length for tokenization.
+
+    Returns:
+        TensorDataset: Dataset object containing input_ids, attention_masks, and labels.
+
     """
-    print("Loading CSV from:", csv_path)
+
     # Load CSV using latin1 encoding and comma separator
     df = pd.read_csv(csv_path, encoding="latin1", sep=",")
+    print(f"[Isear] Loaded {len(df)} rows from {csv_path}")
     print("Original dataset shape:", df.shape)
     print("Columns in dataset:", df.columns.tolist())
 
@@ -79,101 +85,17 @@ def load_isear(csv_path, max_length=128):
     # Create and return a TensorDataset
     dataset = TensorDataset(encodings["input_ids"], encodings["attention_mask"], labels)
     print(f"ISEAR dataset loaded: {len(dataset)} samples")
+
     return dataset
 
-
-def split_dataset(dataset, split_ratio=0.8, seed=42):
-    """
-    Split a TensorDataset into train and test subsets using stratified sampling.
-    This function uses the input_ids as a proxy for uniqueness.
-    """
-    # Get tensors from dataset
-    input_ids = dataset.tensors[0]
-    labels = dataset.tensors[2]
-
-    # Convert each row to a tuple (for immutability) to identify unique samples
-    text_ids = [tuple(row.tolist()) for row in input_ids]
-    _, indices = np.unique(text_ids, return_index=True, axis=0)
-
-    # Stratified split using sklearn
-    X_train_idx, X_test_idx = train_test_split(
-        indices,
-        train_size=split_ratio,
-        random_state=seed,
-        stratify=labels[indices].numpy(),
-    )
-
-    from torch.utils.data import Subset
-
-    train_ds = Subset(dataset, X_train_idx)
-    test_ds = Subset(dataset, X_test_idx)
-
-    print(f"[Split] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
-    return train_ds, test_ds
-
-
-def random_dropout_tokens(token_ids, dropout_prob=0.1):
-    """
-    Simple augmentation: randomly drop tokens (except special tokens).
-    Assumes special tokens: [CLS]=101, [SEP]=102, [PAD]=0.
-    """
-    return [
-        tok
-        for tok in token_ids
-        if random.random() > dropout_prob or tok in [101, 102, 0]
-    ]
-
-
-class DualViewDataset(torch.utils.data.Dataset):
-    def __init__(self, subset, dropout_prob=0.1):
-        """
-        Handles both TensorDataset and Subset objects
-        """
-        if isinstance(subset, torch.utils.data.Subset):
-            self.dataset = subset.dataset
-            self.indices = subset.indices
-        else:
-            self.dataset = subset
-            self.indices = list(range(len(subset)))
-
-        self.dropout_prob = dropout_prob
-
-    def __len__(self):
-        return len(self.indices)
-
-    def __getitem__(self, idx):
-        # Get original sample
-        original_idx = self.indices[idx]
-        input_ids, attention_mask, label = self.dataset[original_idx]
-
-        # Create two augmented views
-        view1 = random_dropout_tokens(input_ids.tolist(), self.dropout_prob)
-        view2 = random_dropout_tokens(input_ids.tolist(), self.dropout_prob)
-
-        # Pad to original length
-        max_len = input_ids.size(0)
-        view1 = view1 + [0] * (max_len - len(view1))
-        view2 = view2 + [0] * (max_len - len(view2))
-
-        return torch.tensor(view1), torch.tensor(view2), label
-
-
-# --- Main Execution ---
 
 if __name__ == "__main__":
     os.makedirs("data", exist_ok=True)
 
     print("[Main] Loading and processing ISEAR dataset...")
-    isear_csv_path = "data/ISEAR/isear_data.csv"
-
-    # Print first 10 lines for debugging
-    print("First 10 lines of the CSV file:")
-    with open(isear_csv_path, "rb") as f:
-        for i in range(10):
-            print(f.readline())
 
     # Load the dataset
-    isear_dataset = load_isear(isear_csv_path, max_length=128)
+    isear_dataset = load_isear(ISEAR_PATH, max_length=128)
 
     # Debug: print a sample from the dataset
     sample_idx = 0
@@ -214,8 +136,8 @@ if __name__ == "__main__":
     print(get_label_distribution(isear_test))
 
     # Save final datasets
-    torch.save(isear_train, "data/preprocessed_dataset/isear/train.pt")
-    torch.save(isear_test, "data/preprocessed_dataset/isear/test.pt")
+    torch.save(isear_train, ISEAR_TRAIN_DS_PATH)
+    torch.save(isear_test, ISEAR_TEST_DS_PATH)
 
     print("\nDatasets prepared and saved:")
     print(f"- ISEAR train: {len(isear_train)} samples")

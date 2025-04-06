@@ -8,9 +8,15 @@ CROWDFLOWER_TEST_DS_PATH = "data/preprocessed_dataset/crowdflower/test.pt"
 
 # Configuration for ISEAR dataset
 ISEAR_CLASSES = 7
+ISEAR_PATH = "data/ISEAR/isear_data.csv"
+ISEAR_TRAIN_DS_PATH = "data/preprocessed_dataset/isear/train.pt"
+ISEAR_TEST_DS_PATH = "data/preprocessed_dataset/isear/test.pt"
 
 # Configuration for WASSA dataset
 WASSA_CLASSES = 6
+WASSA_PATH = "data/WASSA2021/wassa_2021.tsv"
+WASSA_TRAIN_DS_PATH = "data/preprocessed_dataset/wassa/train.pt"
+WASSA_TEST_DS_PATH = "data/preprocessed_dataset/wassa/test.pt"
 
 # Configuration for BERT and spaCy models
 BERT_MODEL = "bert-large-uncased"
