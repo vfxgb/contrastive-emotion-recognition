@@ -16,10 +16,10 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     embed_dim = 1024
     num_emotions = 9 
-    batch_size = 1024
-    num_epochs = 1000
-    learning_rate = 2e-5
-    patience = 30
+    batch_size = 128
+    num_epochs = 10
+    learning_rate = 6e-5
+    patience = 3
     model_save_path = 'results/mamba/contrastive_mamba_decoupled.pt'
     torch.serialization.add_safe_globals([TensorDataset])
 
@@ -44,8 +44,8 @@ def main():
 
     # Mamba config
     mamba_args = dict(
-        d_model=256,
-        d_state=128,
+        d_model=2048,
+        d_state=256,
         d_conv=4,
         expand=2,
     )
@@ -76,7 +76,7 @@ def main():
             emb1, emb2 = encoder(view1), encoder(view2)
             features = torch.stack([emb1, emb2], dim=1)
             
-            loss = criterion_cls(classifier(emb1), labels) + criterion_contrastive(features, labels)
+            loss = 0.9*criterion_cls(classifier(emb1), labels) + 0.1*criterion_contrastive(features, labels)
             
             optimizer.zero_grad()
             loss.backward()

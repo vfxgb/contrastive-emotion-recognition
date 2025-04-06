@@ -14,6 +14,15 @@ from utils import clean_text, fetch_label_mapping
 # --- Helper Functions ---
 label_mapping = fetch_label_mapping(isear=True)
 
+"""To compare with other papers"""
+# label_mapping = {
+#     'anger': 0,  
+#     'sadness': 1,  
+#     'disgust': 2, 
+#     'fear': 3, 
+#     'joy': 4, 
+# }
+
 # Initialize the BERT tokenizer
 tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased")
 

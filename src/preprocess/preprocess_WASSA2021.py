@@ -178,5 +178,5 @@ if __name__ == "__main__":
     torch.save(wassa_test, 'data/preprocessed_dataset/wassa/test.pt')
     
     print("\nDatasets prepared and saved:")
-    print(f"- WASSA 2021 dual-view train: {len(wassa_train)} samples")
+    print(f"- WASSA 2021 train: {len(wassa_train)} samples")
     print(f"- WASSA 2021 test: {len(wassa_test)} samples")
