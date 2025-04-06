@@ -74,6 +74,7 @@ class BiLSTM(nn.Module):
             attention_mask (torch.Tensor): Attention mask for the input tensor.
         Returns:
             torch.Tensor: Output logits for classification.
+            
         """
         # get BERT embeddings
         bert_outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
