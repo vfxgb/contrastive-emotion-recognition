@@ -123,7 +123,7 @@ def main():
     device = model_config["device"]
     isear_finetune_save_path = model_config["isear_finetune_save_path"]
 
-    best_accuracy = 0
+    best_val_f1 = 0
     trigger_times = 0
     patience = 5
     num_runs = 5
@@ -211,11 +211,11 @@ def main():
             avg_loss = total_loss / len(train_loader)
             print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
-            val_accuracy, _, _, _ = evaluate(model, val_loader, device)
+            val_accuracy, val_f1, val_recall, val_precision = evaluate(model, val_loader, device)
             print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
-            if val_accuracy > best_accuracy:
-                best_accuracy = val_accuracy
+            if val_f1 > best_val_f1:
+                best_val_f1 = val_f1
                 torch.save(model.state_dict(), isear_finetune_save_path)
                 trigger_times = 0
                 print(
@@ -228,6 +228,8 @@ def main():
                     break
 
         print("\n----- Starting Evaluation on Test Set -----\n")
+        state_dict = torch.load(isear_finetune_save_path, map_location=device)
+        model.load_state_dict(state_dict)
         test_accuracy, test_f1, test_recall, test_precision = evaluate(
             model, test_loader, device, test=True
         )

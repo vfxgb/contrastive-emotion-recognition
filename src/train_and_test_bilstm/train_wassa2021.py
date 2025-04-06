@@ -123,7 +123,7 @@ def main():
     device = model_config["device"]
     wassa21_finetune_save_path = model_config["wassa21_finetune_save_path"]
 
-    best_accuracy = 0
+    best_val_f1 = 0
     trigger_times = 0
     patience = 5
     num_runs = 5
@@ -211,11 +211,11 @@ def main():
             avg_loss = total_loss / len(train_loader)
             print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
-            val_accuracy, _, _, _ = evaluate(model, val_loader, device)
+            val_accuracy, val_f1, val_recall, val_precision = evaluate(model, val_loader, device)
             print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
-            if val_accuracy > best_accuracy:
-                best_accuracy = val_accuracy
+            if val_f1 > best_val_f1:
+                best_val_f1 = val_f1
                 torch.save(model.state_dict(), wassa21_finetune_save_path)
                 trigger_times = 0
                 print(
@@ -228,6 +228,8 @@ def main():
                     break
 
         print("\n----- Starting Evaluation on Test Set -----\n")
+        state_dict = torch.load(wassa21_finetune_save_path, map_location=device)
+        model.load_state_dict(state_dict)
         test_accuracy, test_f1, test_recall, test_precision = evaluate(
             model, test_loader, device, test=True
         )
@@ -238,26 +240,14 @@ def main():
         test_f1_list.append(test_f1)
 
     mean_test_acc, std_test_acc = np.mean(test_acc_list), np.std(test_acc_list)
-    mean_test_recall, std_test_recall = np.mean(test_recall_list), np.std(
-        test_recall_list
-    )
-    mean_test_precision, std_test_precision = np.mean(test_precision_list), np.std(
-        test_precision_list
-    )
+    mean_test_recall, std_test_recall = np.mean(test_recall_list), np.std(test_recall_list)
+    mean_test_precision, std_test_precision = np.mean(test_precision_list), np.std(test_precision_list)
     mean_test_f1, std_test_f1 = np.mean(test_f1_list), np.std(test_f1_list)
 
-    print(
-        f"\nFinal Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}"
-    )
-    print(
-        f"Final Test Recall over {num_runs} runs: {mean_test_recall:.4f} ± {std_test_recall:.4f}"
-    )
-    print(
-        f"Final Test Precision over {num_runs} runs: {mean_test_precision:.4f} ± {std_test_precision:.4f}"
-    )
-    print(
-        f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}"
-    )
+    print(f"\nFinal Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}")
+    print(f"Final Test Recall over {num_runs} runs: {mean_test_recall:.4f} ± {std_test_recall:.4f}")
+    print(f"Final Test Precision over {num_runs} runs: {mean_test_precision:.4f} ± {std_test_precision:.4f}")
+    print(f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")
 
 
 if __name__ == "__main__":
