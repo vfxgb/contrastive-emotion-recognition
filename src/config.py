@@ -22,6 +22,8 @@ WASSA_TEST_DS_PATH = "data/preprocessed_dataset/wassa/test.pt"
 BERT_MODEL = "bert-large-uncased"
 SPACY_MODEL = "en_core_web_sm"
 
+F1_AVERAGE_METRIC = "macro"
+
 
 def bilstm_config():
     """
