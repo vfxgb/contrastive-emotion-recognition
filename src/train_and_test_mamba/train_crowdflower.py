@@ -1,42 +1,96 @@
-import sys
-
-sys.path.append("/home/UG/bhargavi005/contrastive-emotion-recognition/src")
+from torch.utils.data import DataLoader, TensorDataset, random_split
 import torch
-from torch.utils.data import DataLoader, TensorDataset
-from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
+import torch.nn as nn
 from utils import SupConLoss
-from torch.nn import CrossEntropyLoss
 from tqdm import tqdm
-import numpy as np
-from sklearn.metrics import accuracy_score, f1_score, classification_report
-from preprocess.preprocess_crowdflower import (
-    load_crowdflower,
-    split_dataset,
-    DualViewDataset,
+from sklearn.metrics import (
+    classification_report,
+    f1_score,
+    accuracy_score,
+    recall_score,
+    precision_score,
 )
-from torch.utils.data import DataLoader, random_split
+from config import (
+    F1_AVERAGE_METRIC,
+    mamba_config,
+    CROWDFLOWER_CLASSES,
+    CROWDFLOWER_TRAIN_DS_PATH,
+    CROWDFLOWER_TEST_DS_PATH,
+)
+from utils import DualViewDataset
+from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
+torch.serialization.add_safe_globals([TensorDataset])
+
+
+def evaluate(encoder, classifier, dataloader, device, test=False):
+    """
+    Evaluates model.
+
+    Args:
+        model : The model to evaluate
+        dataloader : dataloader for val or test dataset
+        device : the device to perform computation on. ( cuda or cpu )
+        test : whether evaluting on test or train ds.
+
+    Returns:
+        tuple: A tuple containing:
+            - accuracy (float): The accuracy of the model on the dataset.
+            - f1 (float): The F1 score (macro) of the model on the dataset.
+            - recall (float): The recall (macro) of the model on the dataset.
+            - precision (float): The precision (macro) of the model on the dataset.
+    """
+    encoder.eval()
+    classifier.eval()
+
+    all_labels = []
+    all_preds = []
+    desc = "Test" if test else "Validation"
+
+    with torch.no_grad():
+        for input_ids, _, labels in tqdm(dataloader, desc=desc):
+            input_ids, labels = input_ids.to(device), labels.to(device)
+
+            embeddings = encoder(input_ids)
+            logits = classifier(embeddings)
+
+            _, predicted = logits.max(1)
+            all_labels.extend(labels.cpu().numpy())
+            all_preds.extend(predicted.cpu().numpy())
+
+    accuracy = accuracy_score(all_labels, all_preds)
+    f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
+    recall = recall_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
+    precision = precision_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
+
+    print(
+        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}, Recall: {recall:.4f}, Precision: {predicted:.4f}"
+    )
+    print("\nDetailed Report:\n", classification_report(all_labels, all_preds))
+
+    return accuracy, f1, recall, precision
 
 
 def main():
-    # Configs
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    embed_dim = 1024
-    num_emotions = 9
-    batch_size = 128
-    num_epochs = 10
-    learning_rate = 6e-5
-    patience = 3
-    model_save_path = "results/mamba/contrastive_mamba_decoupled.pt"
-    torch.serialization.add_safe_globals([TensorDataset])
+    # fetch bilstm model config
+    model_config = mamba_config()
+    mamba_args = model_config["mamba_args"]
+    device = model_config["device"]
+    embed_dim = model_config["embed_dim"]
+    batch_size = model_config["batch_size"]
+    num_epochs = model_config["num_epochs"]
+    learning_rate = model_config["learning_rate"]
+    model_save_path = model_config["model_save_path"]
 
-    # Load datasets
+    # early stopping parameters
+    best_f1 = 0
+    trigger_times = 0
+    patience = 3
+
+    print(f"Using device : {device}")
+
     print("Loading training data...")
-    train_ds = torch.load(
-        "data/preprocessed_dataset/crowdflower/train.pt", weights_only=False
-    )
-    test_ds = torch.load(
-        "data/preprocessed_dataset/crowdflower/test.pt", weights_only=False
-    )
+    train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH, weights_only=False)
+    test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH, weights_only=False)
 
     train_len = int(0.90 * len(train_ds))
     val_len = len(train_ds) - train_len
@@ -48,32 +102,19 @@ def main():
     val_ds = val_subset
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
-
-    # Mamba config
-    mamba_args = dict(
-        d_model=2048,
-        d_state=256,
-        d_conv=4,
-        expand=2,
-    )
+    test_loader = DataLoader(test_ds, batch_size=32, shuffle=False)
 
     # Initialize encoder & classifier for training
     print("Initializing models...")
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
-    classifier = ClassifierHead(embed_dim, num_emotions).to(device)
+    classifier = ClassifierHead(embed_dim, CROWDFLOWER_CLASSES).to(device)
 
     # Losses & optimizer
-    criterion_cls = CrossEntropyLoss()
+    criterion_cls = nn.CrossEntropyLoss()
     criterion_contrastive = SupConLoss()
     optimizer = torch.optim.AdamW(
         list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
     )
-
-    # Training loop with validation
-    print("Starting training...")
-    best_accuracy = 0
-    trigger_times = 0
 
     for epoch in range(num_epochs):
         encoder.train()
@@ -100,12 +141,12 @@ def main():
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
         # Validation step
-        val_accuracy = evaluate(encoder, classifier, val_loader, device)
-        print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
+        val_accuracy, val_f1, val_recall, val_precision = evaluate(encoder, classifier, val_loader, device)
+        print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f} Val F1 Macro: {val_f1:.4f}")
 
         # Early stopping logic
-        if val_accuracy > best_accuracy:
-            best_accuracy = val_accuracy
+        if val_f1 > best_f1:
+            best_f1 = val_f1
             torch.save(
                 {
                     "encoder": encoder.state_dict(),
@@ -115,7 +156,7 @@ def main():
             )
             trigger_times = 0
             print(
-                f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f} val F1 Macro: {val_f1:.4f}"
             )
         else:
             trigger_times += 1
@@ -123,71 +164,18 @@ def main():
                 print(f"Early stopping at epoch {epoch+1}")
                 break
 
-    # Evaluation on test set
     print("\n----- Starting Evaluation on Test Set -----\n")
-
-    # Load test dataset
-    print("Loading test data...")
-    test_dataset = torch.load(
-        "data/preprocessed_dataset/crowdflower/test.pt", weights_only=False
-    )
-    test_loader = DataLoader(test_dataset, batch_size=32)
-
+    
     # Initialize test model with new classifier head for test emotions
     test_encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
-    test_classifier = ClassifierHead(embed_dim, num_emotions).to(device)
+    test_classifier = ClassifierHead(embed_dim, CROWDFLOWER_CLASSES).to(device)
 
     # Load model weights
     print("Loading best model weights...")
     checkpoint = torch.load(model_save_path, map_location=device)
     test_encoder.load_state_dict(checkpoint["encoder"])
-
-    checkpoint_test = torch.load(
-        "results/mamba/contrastive_mamba_decoupled.pt", map_location=device
-    )
-    test_classifier.load_state_dict(checkpoint_test["classifier"])
-
-    # Evaluation loop
-    test_encoder.eval()
-    test_classifier.eval()
-
-    preds, truths = [], []
-    with torch.no_grad():
-        for input_ids, _, labels in tqdm(test_loader, desc="Evaluating Test Set"):
-            input_ids = input_ids.to(device)
-            labels = labels.to(device)
-
-            # Forward pass
-            emotion_emb = test_encoder(input_ids)
-            logits = test_classifier(emotion_emb)
-            predictions = logits.argmax(dim=-1)
-
-            preds.extend(predictions.cpu().numpy())
-            truths.extend(labels.cpu().numpy())
-
-    # Final metrics
-    acc = accuracy_score(truths, preds)
-    f1 = f1_score(truths, preds, average="weighted")
-    print(f"\n✅ Test Accuracy: {acc:.4f}, F1 Score: {f1:.4f}")
-    print("\nDetailed Report:\n", classification_report(truths, preds))
-
-
-def evaluate(encoder, classifier, dataloader, device):
-    """Evaluate model on dataloader"""
-    encoder.eval()
-    classifier.eval()
-
-    correct, total = 0, 0
-    with torch.no_grad():
-        for input_ids, _, labels in tqdm(dataloader, desc="Validation"):
-            input_ids, labels = input_ids.to(device), labels.to(device)
-            embeddings = encoder(input_ids)
-            logits = classifier(embeddings)
-            preds = torch.argmax(logits, dim=1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
-    return correct / total
-
+    test_classifier.load_state_dict(checkpoint["classifier"])
+    evaluate(test_encoder, test_classifier, test_loader, device=device, test=True)
 
 if __name__ == "__main__":
     main()

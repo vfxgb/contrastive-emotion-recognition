@@ -48,24 +48,23 @@ def bilstm_config():
     return model_config
 
 
-def bigru_config():
+def mamba_config():
     """
-    Configuration for the BiLSTM model.
+    Configuration for the Mamba model.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_config = {
-        "bert_model_name": "bert-large-uncased",
-        "hidden_dim": 256,
-        "dropout_rate": 0.3,
-        "gru_layers": 2,
-        "num_epochs": 30,
-        "learning_rate": 0.001,
-        "batch_size": 32,
-        "finetune_batch_size": 32,
-        "device": device,
-        "model_save_path": "results/bigru/bigru.pt",
-        "isear_finetune_save_path": "results/bigru/isear_finetune_bigru.pt",
-        "wassa21_finetune_save_path": "results/bigru/wassa21_finetune_bigru.pt",
+        "embed_dim" : 1024, 
+        "batch_size" : 128, 
+        "num_epochs" : 30, 
+        "learning_rate" : 6e-5,
+        "model_save_path": "results/mamba/contrastive_mamba_decoupled.pt", 
+        "mamba_args" : dict(
+        d_model=2048,
+        d_state=256,
+        d_conv=4,
+        expand=2,
+        )
     }
 
     return model_config
