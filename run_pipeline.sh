@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/bash 
 
-# run_pipeline.sh
-# Usage:
-#   ./run_pipeline.sh [--all] [--preprocess] [--train_test] [<dataset>]
-#   Available datasets: crowdflower, isear, wassa
+# run_pipeline_new.sh
+# # Usage:
+# #   ./run_pipeline_new.sh [--all] [--preprocess] [--train_test] [<dataset>] [<model>]
+# #   Available datasets: crowdflower, isear, wassa
+# #   Available models: lstm, mamba
 
 # Configuration
 LOG_DIR="logs"
@@ -12,69 +13,83 @@ declare -A PREPROCESS_SCRIPTS=(
     ["isear"]="src/preprocess/preprocess_ISEAR.py"
     ["wassa"]="src/preprocess/preprocess_WASSA2021.py"
 )
+
 declare -A TRAIN_SCRIPTS=(
-    ["crowdflower"]="src/train_and_test_bigru/train_crowdflower.py"
-    ["isear"]="src/train_and_test_bigru/train_isear.py"
-    ["wassa"]="src/train_and_test_bigru/train_wassa2021.py"
+    # bilstm model
+    ["crowdflower:bilstm"]="src/train_and_test_bilstm/train_crowdflower.py"
+    ["isear:bilstm"]="src/train_and_test_bilstm/train_isear.py"
+    ["wassa:bilstm"]="src/train_and_test_bilstm/train_wassa2021.py"
+
+    # mamba model
+    ["crowdflower:mamba"]="src/train_and_test_mamba/train_crowdflower.py"
+    ["isear:mamba"]="src/train_and_test_mamba/train_isear.py"
+    ["wassa:mamba"]="src/train_and_test_mamba/train_wassa2021.py"
 )
+
+
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 ALL_DATASETS=("crowdflower" "isear" "wassa")
+ALL_MODELS=("bilstm" "mamba")
 
 # Create log directory
 mkdir -p $LOG_DIR
 
-preprocess() {
+preprocess(){
     local dataset=$1
     echo "Starting preprocessing for $dataset..."
     script=${PREPROCESS_SCRIPTS[$dataset]}
+
     log_file="$LOG_DIR/${dataset}_preprocess_${TIMESTAMP}.log"
-    
+
     if [ -z "$script" ]; then
         echo "No preprocessing script found for $dataset"
         return 1
     fi
-    
     python $script 2>&1 | tee $log_file
     return ${PIPESTATUS[0]}
 }
 
-train_and_test() {
+train_and_test(){
     local dataset=$1
-    echo "Starting training/testing for $dataset..."
-    script=${TRAIN_SCRIPTS[$dataset]}
-    log_file="$LOG_DIR/${dataset}_train_${TIMESTAMP}.log"
-    
+    local model=$2
+    echo "Starting training/testing for $dataset with model $model..."
+    script=${TRAIN_SCRIPTS["$dataset:$model"]}
+
+    log_file="$LOG_DIR/${dataset}_${model}_train_${TIMESTAMP}.log"
+
     if [ -z "$script" ]; then
-        echo "No training script found for $dataset"
+        echo "No training script found for $dataset with model $model"
         return 1
     fi
-    
+
     python $script 2>&1 | tee $log_file
     return ${PIPESTATUS[0]}
 }
 
-usage() {
-    echo "Usage: $0 [--all] [--preprocess] [--train_test] [<dataset>]"
+usage(){
+    echo "Usage: $0 [--all] [--preprocess] [--train_test] [<dataset>] [<model>]"
     echo "  Options:"
     echo "    --all           Process all datasets"
     echo "    --preprocess    Run only preprocessing"
     echo "    --train_test    Run only training/testing"
     echo "  Datasets: ${!PREPROCESS_SCRIPTS[@]}"
+    echo "  Models: ${ALL_MODELS[@]}"
     echo "  Default: Run both preprocessing and training/testing"
     exit 1
 }
 
 process_dataset() {
     local dataset=$1
-    local do_preprocess=$2
-    local do_train_test=$3
+    local model=$2
+    local do_preprocess=$3
+    local do_train_test=$4
 
     if $do_preprocess; then
         preprocess $dataset || return 1
     fi
-    
+
     if $do_train_test; then
-        train_and_test $dataset || return 1
+        train_and_test $dataset $model || return 1
     fi
 }
 
@@ -83,6 +98,7 @@ main() {
     local do_train_test=false
     local process_all=false
     local dataset=""
+    local model=""
 
     # Parse flags
     while [ $# -gt 0 ]; do
@@ -106,25 +122,31 @@ main() {
             *)
                 if [[ -z "$dataset" ]]; then
                     dataset=$1
-                    shift
+                elif [[ -z "$model" ]]; then
+                    model=$1
                 else
                     echo "Unexpected argument: $1"
                     usage
                 fi
+                shift
                 ;;
         esac
     done
 
-    # Validate arguments
+    # Validate argument combinations
     if $process_all && [[ -n "$dataset" ]]; then
         echo "Error: Cannot specify both --all and dataset"
         usage
     fi
 
-    # Default to both operations if none specified
     if ! $do_preprocess && ! $do_train_test; then
         do_preprocess=true
         do_train_test=true
+    fi
+
+    if $do_train_test && [[ -z "$model" ]]; then
+        echo "Error: --train_test requires specifying a model (bilstm, mamba)"
+        usage
     fi
 
     # Determine datasets to process
@@ -147,7 +169,7 @@ main() {
     for ds in "${datasets[@]}"; do
         echo "========================================"
         echo "Processing dataset: $ds"
-        process_dataset $ds $do_preprocess $do_train_test || exit 1
+        process_dataset $ds $model $do_preprocess $do_train_test || exit 1
     done
 
     echo "========================================"
