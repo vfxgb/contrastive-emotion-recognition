@@ -1,13 +1,18 @@
-#!/bin/bash 
+#!/bin/bash
 
 # run_pipeline_new.sh
-# # Usage:
-# #   ./run_pipeline_new.sh [--all] [--preprocess] [--train_test] [<dataset>] [<model>]
-# #   Available datasets: crowdflower, isear, wassa
-# #   Available models: lstm, mamba
+# Usage:
+#   ./run_pipeline_new.sh [--all] [--preprocess] [--train_test] [<dataset>] [<model>]
+#   Available datasets: crowdflower, isear, wassa
+#   Available models: lstm, mamba
 
 # Configuration
 LOG_DIR="logs"
+GLOVE_DIR="glove"
+GLOVE_FILE="$GLOVE_DIR/glove.840B.300d.txt"
+GLOVE_ZIP_URL="http://nlp.stanford.edu/data/glove.840B.300d.zip"
+GLOVE_ZIP="$GLOVE_DIR/glove.840B.300d.zip"
+
 declare -A PREPROCESS_SCRIPTS=(
     ["crowdflower"]="src/preprocess/preprocess_crowdflower.py"
     ["isear"]="src/preprocess/preprocess_ISEAR.py"
@@ -26,13 +31,38 @@ declare -A TRAIN_SCRIPTS=(
     ["wassa:mamba"]="src/train_and_test_mamba/train_wassa2021.py"
 )
 
-
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 ALL_DATASETS=("crowdflower" "isear" "wassa")
 ALL_MODELS=("bilstm" "mamba")
 
 # Create log directory
 mkdir -p $LOG_DIR
+
+download_glove() {
+    if [ -f "$GLOVE_FILE" ]; then
+        echo "GloVe embeddings already exist at $GLOVE_FILE"
+        return 0
+    fi
+
+    echo "GloVe embeddings not found. Downloading..."
+    mkdir -p "$GLOVE_DIR"
+    wget -O "$GLOVE_ZIP" "$GLOVE_ZIP_URL"
+
+    if [ $? -ne 0 ]; then
+        echo "Error downloading GloVe embeddings."
+        exit 1
+    fi
+
+    echo "Unzipping GloVe embeddings..."
+    unzip "$GLOVE_ZIP" -d "$GLOVE_DIR"
+
+    if [ ! -f "$GLOVE_FILE" ]; then
+        echo "Failed to unzip or find $GLOVE_FILE"
+        exit 1
+    fi
+
+    echo "GloVe embeddings downloaded and extracted to $GLOVE_FILE"
+}
 
 preprocess(){
     local dataset=$1
@@ -148,6 +178,9 @@ main() {
         echo "Error: --train_test requires specifying a model (bilstm, mamba)"
         usage
     fi
+
+    # Download GloVe if not present
+    download_glove
 
     # Determine datasets to process
     local datasets=()
