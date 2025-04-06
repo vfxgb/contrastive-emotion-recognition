@@ -22,7 +22,6 @@ from config import (
 
 torch.serialization.add_safe_globals([TensorDataset])
 
-
 def evaluate(model, dataloader, device, test=False):
     """
     Evaluates model.
@@ -83,7 +82,7 @@ def main():
     device = model_config["device"]
 
     # early stopping parameters
-    best_accuracy = 0
+    best_val_f1 = 0
     trigger_times = 0
     patience = 5
 
@@ -145,16 +144,16 @@ def main():
         avg_loss = total_loss / len(train_loader)
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
-        val_accuracy, f1, recall_score, precision_score = evaluate(
+        val_accuracy, val_f1, val_recall, val_precision = evaluate(
             model, val_loader, device
         )
 
-        if val_accuracy > best_accuracy:
-            best_accuracy = val_accuracy
+        if val_f1 > best_val_f1:
+            best_val_f1 = val_f1
             torch.save(model.state_dict(), model_save_path)
             trigger_times = 0
             print(
-                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and val: {val_f1:.4f}"
             )
         else:
             trigger_times += 1
@@ -163,7 +162,9 @@ def main():
                 break
 
     print("\n----- Starting Evaluation on Test Set -----\n")
-    evaluate(model, test_loader, device, True)
+    state_dict = torch.load(model_save_path, map_location=device)
+    model.load_state_dict(state_dict)
+    evaluate(model, test_loader, device, test=True)
 
 
 if __name__ == "__main__":
