@@ -7,7 +7,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "torch==2.6.0",
-        "numpy>=1.24.0",
+        "numpy==1.24.0",
         "scikit-learn>=1.3.0",
         "tqdm>=4.65.0",
         "mamba-ssm==2.2.4",
