@@ -165,8 +165,11 @@ def main():
                 break
 
     print("\n----- Starting Evaluation on Test Set -----\n")
+    # load the best model
     state_dict = torch.load(model_save_path, map_location=device)
     model.load_state_dict(state_dict)
+
+    # fetch results on the test set
     evaluate(model, test_loader, device, test=True)
 
 
