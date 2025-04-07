@@ -65,7 +65,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     print(
         f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}, Recall: {recall:.4f}, Precision: {precision:.4f}"
     )
-    print("\nDetailed Report:\n", classification_report(all_labels, all_preds))
+    print("\nDetailed Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
     return accuracy, f1, recall, precision
 
