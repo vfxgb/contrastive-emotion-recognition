@@ -10,6 +10,7 @@ import spacy
 from torch.utils.data.dataset import Subset
 from sklearn.model_selection import train_test_split
 from config import GLOVE_PATH
+
 # import matplotlib.pyplot as plt
 # def visualize_embeddings(embeddings, labels):
 #     tsne = TSNE(n_components=2, random_state=42)
@@ -22,6 +23,7 @@ from config import GLOVE_PATH
 #     plt.show()
 
 nlp = spacy.load("en_core_web_sm")
+
 
 def random_dropout_tokens(token_ids, dropout_prob=0.1):
     """
@@ -91,6 +93,7 @@ def split_dataset(dataset, split_ratio=0.8, seed=42, glove=True):
     print(f"[Split] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
     return train_ds, test_ds
 
+
 class DualViewDataset(torch.utils.data.Dataset):
     """
     A dataset class used for contrastive learning, where each sample consists of two augmented views.
@@ -135,7 +138,7 @@ class DualViewDataset(torch.utils.data.Dataset):
 def set_seed(seed):
     """
     Sets random seed.
-    
+
     Args:
         seed(int) : random seed
     """
@@ -146,6 +149,7 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+
 def load_glove_embeddings(tokenizer, embeddings_file_path):
     print("Loading GloVe embeddings...")
     embeddings_index = {}
@@ -155,17 +159,25 @@ def load_glove_embeddings(tokenizer, embeddings_file_path):
             values = line.split()
             word = values[0]
             vector = np.asarray(values[1:], dtype="float32")
-            embeddings_index[word] = vector # reads the GLOVE file and gets all the embedding for each word
+            embeddings_index[word] = (
+                vector  # reads the GLOVE file and gets all the embedding for each word
+            )
 
     vocab_size = len(tokenizer.word_index) + 1
     embedding_matrix = np.zeros((vocab_size, 300))
 
     for word, i in tokenizer.word_index.items():
         embedding_vector = embeddings_index.get(word)
-        embedding_matrix[i] = embedding_vector if embedding_vector is not None else np.random.randn(300)
+        embedding_matrix[i] = (
+            embedding_vector if embedding_vector is not None else np.random.randn(300)
+        )
 
     vocab_size = len(tokenizer.word_index) + 1
-    np.save(embeddings_file_path, {"embedding_matrix": embedding_matrix, "vocab_size": vocab_size})
+    np.save(
+        embeddings_file_path,
+        {"embedding_matrix": embedding_matrix, "vocab_size": vocab_size},
+    )
+
 
 def fetch_label_mapping(isear=False, crowdflower=False, wassa=False):
     """

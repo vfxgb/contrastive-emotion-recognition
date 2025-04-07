@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from transformers import BertModel
 import numpy as np
 
+
 class BiLSTM_bert(nn.Module):
     """
     BiLSTM_with_bert model for text classification using BERT embeddings.
@@ -96,8 +97,9 @@ class BiLSTM_bert(nn.Module):
 
         return logits
 
+
 class BiLSTM_glove(nn.Module):
-    
+
     def __init__(
         self, embedding_matrix_path, hidden_dim, num_classes, dropout_rate, lstm_layers
     ):
@@ -111,7 +113,9 @@ class BiLSTM_glove(nn.Module):
 
         self.embedding = nn.Embedding(vocab_size, embed_dim)
         if embedding_matrix is not None:
-            self.embedding.weight.data.copy_(torch.tensor(embedding_matrix, dtype=torch.float))
+            self.embedding.weight.data.copy_(
+                torch.tensor(embedding_matrix, dtype=torch.float)
+            )
             self.embedding.weight.requires_grad = True  # dont freeze embeddings
 
         # Bidirectional LSTM layer

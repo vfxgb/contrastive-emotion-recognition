@@ -4,7 +4,7 @@ from transformers import AutoTokenizer
 from torch.utils.data import TensorDataset
 import os
 import spacy
-import numpy as np 
+import numpy as np
 from config import (
     BERT_MODEL,
     SPACY_MODEL,
@@ -12,9 +12,9 @@ from config import (
     CROWDFLOWER_PATH,
     CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
     CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
-    CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE, 
+    CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE,
-    CROWDFLOWER_GLOVE_EMBEDDINGS_PATH
+    CROWDFLOWER_GLOVE_EMBEDDINGS_PATH,
 )
 from utils import clean_text, split_dataset, load_glove_embeddings
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -22,6 +22,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import argparse
 
 nlp = spacy.load(SPACY_MODEL)
+
 
 def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     """
@@ -39,7 +40,7 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
         dict: Mapping from original labels to new label indices.
 
     """
-    tokenizer = Tokenizer(num_words=5000,oov_token="<UNK>")
+    tokenizer = Tokenizer(num_words=5000, oov_token="<UNK>")
 
     df = pd.read_csv(path)
     print(f"[CrowdFlower] Loaded {len(df)} rows from {path}")
@@ -71,8 +72,12 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     labels = df_filtered["label"].tolist()
 
     tokenizer.fit_on_texts(texts)
-    sequences = tokenizer.texts_to_sequences(texts) # Convert text to numerical sequences
-    padded_sequences = pad_sequences(sequences, maxlen=max_length, padding="post", truncating="post")
+    sequences = tokenizer.texts_to_sequences(
+        texts
+    )  # Convert text to numerical sequences
+    padded_sequences = pad_sequences(
+        sequences, maxlen=max_length, padding="post", truncating="post"
+    )
 
     input_tensor = torch.tensor(padded_sequences)
     label_tensor = torch.tensor(labels)
@@ -82,6 +87,7 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     print(f"[Final Label Mapping] {new_label_map}")
 
     return dataset, tokenizer
+
 
 def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
     """
@@ -148,9 +154,12 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
 
     return dataset
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--with_glove", action="store_true", help="Use GloVe embeddings")
+    parser.add_argument(
+        "--with_glove", action="store_true", help="Use GloVe embeddings"
+    )
     args = parser.parse_args()
     with_glove = args.with_glove
 
@@ -163,7 +172,9 @@ if __name__ == "__main__":
         load_glove_embeddings(tokenizer, CROWDFLOWER_GLOVE_EMBEDDINGS_PATH)
 
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset(crowdflower_dataset, split_ratio=0.8, glove=True)
+        train_ds, test_ds = split_dataset(
+            crowdflower_dataset, split_ratio=0.8, glove=True
+        )
 
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE)
@@ -173,10 +184,12 @@ if __name__ == "__main__":
         crowdflower_dataset = load_crowdflower_without_glove(CROWDFLOWER_PATH)
 
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset(crowdflower_dataset, split_ratio=0.8, glove=False)
-    
+        train_ds, test_ds = split_dataset(
+            crowdflower_dataset, split_ratio=0.8, glove=False
+        )
+
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE)
         torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE)
-    
+
     print("[Main] Done.")

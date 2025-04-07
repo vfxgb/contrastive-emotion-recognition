@@ -24,6 +24,7 @@ from config import (
 
 torch.serialization.add_safe_globals([TensorDataset])
 
+
 def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     """
     Loads a pretrained model's state dictionary, adapts it by exluding the final classification layer,
@@ -138,7 +139,9 @@ def main():
         train_ds = torch.load(WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
         test_ds = torch.load(WASSA_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
-        train_ds, val_ds = split_dataset(dataset=train_ds, split_ratio=0.9, seed=42+run, glove=False)
+        train_ds, val_ds = split_dataset(
+            dataset=train_ds, split_ratio=0.9, seed=42 + run, glove=False
+        )
 
         train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
@@ -218,7 +221,7 @@ def main():
         print("\n----- Starting Evaluation on Test Set -----\n")
         state_dict = torch.load(wassa21_finetune_save_path, map_location=device)
         model.load_state_dict(state_dict)
-        
+
         test_accuracy, test_f1, test_recall, test_precision = evaluate(
             model, test_loader, device, test=True
         )
@@ -228,7 +231,10 @@ def main():
         test_precision_list.append(test_precision)
         test_f1_list.append(test_f1)
 
-    print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs)
+    print_test_stats(
+        test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs
+    )
+
 
 if __name__ == "__main__":
     main()

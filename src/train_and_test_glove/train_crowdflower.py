@@ -18,11 +18,12 @@ from config import (
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE,
-    CROWDFLOWER_GLOVE_EMBEDDINGS_PATH
+    CROWDFLOWER_GLOVE_EMBEDDINGS_PATH,
 )
 from utils import split_dataset
 
 torch.serialization.add_safe_globals([TensorDataset])
+
 
 def evaluate(model, dataloader, device, test=False):
     """
@@ -42,7 +43,7 @@ def evaluate(model, dataloader, device, test=False):
             - precision (float): The precision (macro) of the model on the dataset.
     """
     model.eval()
-    
+
     all_labels = []
     all_preds = []
     desc = "Test" if test else "Validation"
@@ -71,6 +72,7 @@ def evaluate(model, dataloader, device, test=False):
     print("\nDetailed Report:\n", classification_report(all_labels, all_preds))
 
     return accuracy, f1, recall, precision
+
 
 def main():
     # fetch bilstm model config
@@ -119,9 +121,7 @@ def main():
         model.train()
         total_loss = 0
 
-        for input_ids, labels in tqdm(
-            train_loader, desc=f"Epoch {epoch+1}"
-        ):
+        for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
             input_ids, labels = (
                 input_ids.to(device),
                 labels.to(device),

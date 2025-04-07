@@ -20,7 +20,7 @@ from config import (
     WASSA_TEST_DS_PATH_WITH_GLOVE,
     bilstm_glove_config,
     F1_AVERAGE_METRIC,
-    WASSA_GLOVE_EMBEDDINGS_PATH
+    WASSA_GLOVE_EMBEDDINGS_PATH,
 )
 
 torch.serialization.add_safe_globals([TensorDataset])
@@ -139,7 +139,9 @@ def main():
         train_ds = torch.load(WASSA_TRAIN_DS_PATH_WITH_GLOVE, weights_only=False)
         test_ds = torch.load(WASSA_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
 
-        train_ds, val_ds = split_dataset(dataset=train_ds, split_ratio=0.9, seed=42+run, glove=True)
+        train_ds, val_ds = split_dataset(
+            dataset=train_ds, split_ratio=0.9, seed=42 + run, glove=True
+        )
 
         train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
@@ -154,7 +156,7 @@ def main():
 
         # freeze embedding and only train the lstm layers and the final classification layer
         for param in model.embedding.parameters():
-            param.requires_grad = False # freeze embeddings
+            param.requires_grad = False  # freeze embeddings
         for param in model.lstm.parameters():
             param.requires_grad = True
         for param in model.fc1.parameters():
@@ -176,9 +178,7 @@ def main():
             model.train()
             total_loss = 0
 
-            for input_ids, labels in tqdm(
-                train_loader, desc=f"Epoch {epoch+1}"
-            ):
+            for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
                 input_ids, labels = (
                     input_ids.to(device),
                     labels.to(device),
@@ -227,7 +227,9 @@ def main():
         test_precision_list.append(test_precision)
         test_f1_list.append(test_f1)
 
-    print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs)
+    print_test_stats(
+        test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs
+    )
 
 
 if __name__ == "__main__":

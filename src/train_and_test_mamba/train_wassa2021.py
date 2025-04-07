@@ -205,7 +205,10 @@ def main():
         test_precision_list.append(test_precision)
         test_f1_list.append(test_f1)
 
-    print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs)
+    print_test_stats(
+        test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs
+    )
+
 
 if __name__ == "__main__":
     main()

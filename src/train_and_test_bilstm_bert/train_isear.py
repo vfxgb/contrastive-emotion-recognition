@@ -24,6 +24,7 @@ from config import (
 
 torch.serialization.add_safe_globals([TensorDataset])
 
+
 def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     """
     Loads a pretrained model's state dictionary, adapts it by exluding the final classification layer,
@@ -60,6 +61,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     new_model.load_state_dict(model_dict)
 
     return new_model
+
 
 def evaluate(model, dataloader, device, test=False):
     """
@@ -137,7 +139,9 @@ def main():
         train_ds = torch.load(ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
         test_ds = torch.load(ISEAR_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
-        train_ds, val_ds = split_dataset(dataset=train_ds, split_ratio=0.9, seed=42+run, glove=False)
+        train_ds, val_ds = split_dataset(
+            dataset=train_ds, split_ratio=0.9, seed=42 + run, glove=False
+        )
 
         train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
@@ -149,7 +153,7 @@ def main():
             num_classes=num_classes,
             model_config=model_config,
         )
-        
+
         # freeze bert and lstm layers and only train the final classification layer
         for param in model.bert.parameters():
             param.requires_grad = False  # freeze all
@@ -226,7 +230,10 @@ def main():
         test_precision_list.append(test_precision)
         test_f1_list.append(test_f1)
 
-    print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs)
+    print_test_stats(
+        test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs
+    )
+
 
 if __name__ == "__main__":
     main()

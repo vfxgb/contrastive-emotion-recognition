@@ -34,6 +34,7 @@ GLOVE_PATH = "glove/glove.840B.300d.txt"
 
 F1_AVERAGE_METRIC = "macro"
 
+
 def bilstm_bert_config():
     """
     Configuration for the BiLSTM_without_glove model.
@@ -56,6 +57,7 @@ def bilstm_bert_config():
 
     return model_config
 
+
 def bilstm_glove_config():
     """
     Configuration for the BiLSTM_without_glove model.
@@ -77,6 +79,7 @@ def bilstm_glove_config():
     }
 
     return model_config
+
 
 def mamba_config():
     """

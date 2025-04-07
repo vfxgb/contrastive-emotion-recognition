@@ -23,6 +23,7 @@ from utils import split_dataset
 
 torch.serialization.add_safe_globals([TensorDataset])
 
+
 def evaluate(model, dataloader, device, test=False):
     """
     Evaluates model.

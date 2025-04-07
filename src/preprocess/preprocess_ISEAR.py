@@ -7,7 +7,7 @@ from utils import (
     clean_text,
     fetch_label_mapping,
     load_glove_embeddings,
-    split_dataset, 
+    split_dataset,
     DualViewDataset,
 )
 from config import (
@@ -16,9 +16,9 @@ from config import (
     ISEAR_PATH,
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
     ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE,
-    ISEAR_TRAIN_DS_PATH_WITH_GLOVE, 
+    ISEAR_TRAIN_DS_PATH_WITH_GLOVE,
     ISEAR_TEST_DS_PATH_WITH_GLOVE,
-    ISEAR_GLOVE_EMBEDDINGS_PATH
+    ISEAR_GLOVE_EMBEDDINGS_PATH,
 )
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -26,6 +26,7 @@ import argparse
 
 # fetch label mapping for ISEAR dataset
 label_mapping = fetch_label_mapping(isear=True)
+
 
 def load_isear_with_glove(csv_path, max_length=128):
     """
@@ -43,7 +44,7 @@ def load_isear_with_glove(csv_path, max_length=128):
 
     """
     # Initialize the BERT tokenizer
-    tokenizer = Tokenizer(num_words=5000,oov_token="<UNK>")
+    tokenizer = Tokenizer(num_words=5000, oov_token="<UNK>")
 
     # Load CSV using latin1 encoding and comma separator
     df = pd.read_csv(csv_path, encoding="latin1", sep=",")
@@ -65,8 +66,12 @@ def load_isear_with_glove(csv_path, max_length=128):
 
     texts = df["content"].tolist()
     tokenizer.fit_on_texts(texts)
-    sequences = tokenizer.texts_to_sequences(texts) # Convert text to numerical sequences
-    padded_sequences = pad_sequences(sequences, maxlen=max_length, padding="post", truncating="post")
+    sequences = tokenizer.texts_to_sequences(
+        texts
+    )  # Convert text to numerical sequences
+    padded_sequences = pad_sequences(
+        sequences, maxlen=max_length, padding="post", truncating="post"
+    )
 
     # Map emotion labels to integers
     input_tensor = torch.tensor(padded_sequences)
@@ -77,6 +82,7 @@ def load_isear_with_glove(csv_path, max_length=128):
     print(f"ISEAR dataset loaded: {len(dataset)} samples")
 
     return dataset, tokenizer
+
 
 def load_isear_without_glove(csv_path, max_length=128):
     """
@@ -131,9 +137,12 @@ def load_isear_without_glove(csv_path, max_length=128):
 
     return dataset
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--with_glove", action="store_true", help="Use GloVe embeddings")
+    parser.add_argument(
+        "--with_glove", action="store_true", help="Use GloVe embeddings"
+    )
     args = parser.parse_args()
     with_glove = args.with_glove
 
@@ -151,15 +160,15 @@ if __name__ == "__main__":
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITH_GLOVE)
         torch.save(test_ds, ISEAR_TEST_DS_PATH_WITH_GLOVE)
-        
+
     else:
         isear_dataset = load_isear_without_glove(ISEAR_PATH, max_length=128)
 
         print("[Main] Splitting dataset into train and test...")
         train_ds, test_ds = split_dataset(isear_dataset, split_ratio=0.8, glove=False)
-    
+
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE)
         torch.save(test_ds, ISEAR_TEST_DS_PATH_WITHOUT_GLOVE)
-        
+
     print("[Main] Done.")
