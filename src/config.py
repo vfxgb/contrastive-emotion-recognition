@@ -28,9 +28,9 @@ GLOVE_PATH = "glove/glove.840B.300d.txt"
 
 F1_AVERAGE_METRIC = "macro"
 
-def bilstm_config():
+def bilstm_without_glove_config():
     """
-    Configuration for the BiLSTM model.
+    Configuration for the BiLSTM_without_glove model.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_config = {

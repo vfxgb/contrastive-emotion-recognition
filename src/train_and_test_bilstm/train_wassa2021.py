@@ -12,13 +12,13 @@ from sklearn.metrics import (
     precision_score,
 )
 import numpy as np
-from models.bilstm_model import BiLSTM
+from models.bilstm_model import BiLSTM_without_glove
 from utils import set_seed
 from config import (
     WASSA_CLASSES,
     WASSA_TRAIN_DS_PATH,
     WASSA_TEST_DS_PATH,
-    bilstm_config,
+    bilstm_without_glove_config,
     F1_AVERAGE_METRIC,
 )
 
@@ -40,7 +40,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     )
 
     # Create a new model instance
-    new_model = BiLSTM(
+    new_model = BiLSTM_without_glove(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
         num_classes=num_classes,
@@ -114,7 +114,7 @@ def evaluate(model, dataloader, device, test=False):
 
 def main():
     # Configurations
-    model_config = bilstm_config()
+    model_config = bilstm_without_glove_config()
 
     num_classes = WASSA_CLASSES
     num_epochs = model_config["num_epochs"]
@@ -157,7 +157,7 @@ def main():
             num_classes=num_classes,
             model_config=model_config,
         )
-        model = BiLSTM(
+        model = BiLSTM_without_glove(
             model_config["bert_model_name"],
             model_config["hidden_dim"],
             num_classes,

@@ -12,7 +12,7 @@ from sklearn.metrics import (
     precision_score,
 )
 import numpy as np
-from models.bilstm_model import BiLSTM
+from models.bilstm_model import BiLSTM_without_glove
 from utils import set_seed, DualViewDataset, SupConLoss
 from config import (
     WASSA_CLASSES,

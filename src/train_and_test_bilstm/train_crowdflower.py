@@ -11,10 +11,10 @@ from sklearn.metrics import (
     recall_score,
     precision_score,
 )
-from models.bilstm_model import BiLSTM
+from models.bilstm_model import BiLSTM_without_glove
 from config import (
     F1_AVERAGE_METRIC,
-    bilstm_config,
+    bilstm_without_glove_config,
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH,
     CROWDFLOWER_TEST_DS_PATH,
@@ -74,7 +74,7 @@ def evaluate(model, dataloader, device, test=False):
 
 def main():
     # fetch bilstm model config
-    model_config = bilstm_config()
+    model_config = bilstm_without_glove_config()
 
     model_save_path = model_config["model_save_path"]
     num_epochs = model_config["num_epochs"]
@@ -104,7 +104,7 @@ def main():
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
     # initialise model
-    model = BiLSTM(
+    model = BiLSTM_without_glove(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
         num_classes=CROWDFLOWER_CLASSES,
