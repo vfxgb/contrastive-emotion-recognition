@@ -76,7 +76,8 @@ download_glove() {
 usage() {
     echo "Usage: $0 [--force_preprocess] <dataset> <model>"
     echo "  Options:"
-    echo "    --force_preprocess    Preprocesses data again if true, if false, preprocesses only if required"
+    echo "    --force_preprocess    if set, preprocesses data again"
+    echo "                          if not set, preprocesses data if not done before"
     echo "  Datasets: ${VALID_DATASETS[*]}"
     echo "  Models: ${VALID_MODELS[*]}"
     exit 1
@@ -114,6 +115,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown argument: $1"
+            usage
             exit 1
             ;;
     esac
