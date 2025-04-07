@@ -50,9 +50,9 @@ def bilstm_bert_config():
         "batch_size": 1024,
         "finetune_batch_size": 32,
         "device": device,
-        "model_save_path": "results/bilstm/bilstm_bert.pt",
-        "isear_finetune_save_path": "results/bilstm/isear_finetune_bilstm_bert.pt",
-        "wassa21_finetune_save_path": "results/bilstm/wassa21_finetune_bilstm_bert.pt",
+        "model_save_path": "results/bilstm_bert/bilstm_bert.pt",
+        "isear_finetune_save_path": "results/bilstm_bert/isear_finetune_bilstm_bert.pt",
+        "wassa21_finetune_save_path": "results/bilstm_bert/wassa21_finetune_bilstm_bert.pt",
     }
 
     return model_config
@@ -73,9 +73,9 @@ def bilstm_glove_config():
         "batch_size": 1024,
         "finetune_batch_size": 32,
         "device": device,
-        "model_save_path": "results/bilstm/bilstm_glove.pt",
-        "isear_finetune_save_path": "results/bilstm/isear_finetune_bilstm_glove.pt",
-        "wassa21_finetune_save_path": "results/bilstm/wassa21_finetune_bilstm_glove.pt",
+        "model_save_path": "results/bilstm_glove/bilstm_glove.pt",
+        "isear_finetune_save_path": "results/bilstm_glove/isear_finetune_bilstm_glove.pt",
+        "wassa21_finetune_save_path": "results/bilstm_glove/wassa21_finetune_bilstm_glove.pt",
     }
 
     return model_config
