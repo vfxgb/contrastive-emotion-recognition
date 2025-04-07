@@ -45,6 +45,16 @@ def random_dropout_tokens(token_ids, dropout_prob=0.1):
     ]
 
 def print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs):
+    """
+    Computes and prints the mean and standard deviation of evaluation metrics across multiple runs.
+
+    Args:
+        test_acc_list (list): List of test accuracy values for each run.
+        test_recall_list (list): List of test recall values for each run.
+        test_precision_list (list): List of test precision values for each run.
+        test_f1_list (list): List of test F1 score values for each run.
+        num_runs (int): Number of evaluation runs.
+    """
     mean_test_acc, std_test_acc = np.mean(test_acc_list), np.std(test_acc_list)
     mean_test_recall, std_test_recall = np.mean(test_recall_list), np.std(test_recall_list)
     mean_test_precision, std_test_precision = np.mean(test_precision_list), np.std(test_precision_list)
@@ -56,6 +66,24 @@ def print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_
     print(f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")
 
 def split_dataset(dataset, split_ratio=0.8, seed=42, glove=True):
+    """
+    Splits a TensorDataset (or its Subset) into training and testing subsets.
+
+    For GloVe-based datasets, it assumes a 2-tensor structure (input_ids, labels).
+    For BERT-based datasets, it assumes a 3-tensor structure (input_ids, attention_masks, labels).
+
+    Duplicate input sequences are removed before stratified splitting.
+
+    Args:
+        dataset (TensorDataset or Subset): The dataset to be split.
+        split_ratio (float): Proportion of the data to include in the train split (default: 0.8).
+        seed (int): Random seed for reproducibility (default: 42).
+        glove (bool): Whether the dataset format is GloVe-based (True) or BERT-based (False).
+
+    Returns:
+        Tuple[Subset, Subset]: A tuple containing the train and test subsets.
+
+    """
     if isinstance(dataset, torch.utils.data.Subset):
         base_dataset = dataset.dataset
         subset_indices = dataset.indices
@@ -146,6 +174,22 @@ def set_seed(seed):
 
 
 def load_glove_embeddings(tokenizer, embeddings_file_path):
+    """
+    Loads pre-trained GloVe word embeddings and constructs an embedding matrix 
+    aligned with the tokeniser's vocabulary
+
+    For each word in the tokeniser vocabulary, the corresponding GloVe embedding
+    is used. If the word is not found in gloVe, a random vector is assigned.
+
+    Args:
+        tokenizer (Tokenizer): Fitted Keras tokenizer with word_index.
+        embeddings_file_path (str): Path to save the geneerate .npy file containing the embedding matrix and vocab size.
+
+    Saves:
+        A NumPy `.npy` file with keys:
+            - "embedding_matrix": A matrix of shape (vocab_size, 300)
+            - "vocab_size": The size of the vocabulary   
+    """
     print("Loading GloVe embeddings...")
     embeddings_index = {}
 
