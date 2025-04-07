@@ -27,7 +27,8 @@ module load anaconda
 echo "Activating environment"
 #source activate working_env
 source /tc1apps/anaconda3/etc/profile.d/conda.sh
-conda activate working_env
+conda env create -f environment.yaml
+conda activate SC4001
 
 ### Set CUDA variables ###
 export CUDA_HOME=$(dirname $(dirname $(which nvcc)))
