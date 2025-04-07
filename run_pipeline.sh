@@ -10,9 +10,9 @@
 # === Configuration ===
 LOG_DIR="logs"
 GLOVE_DIR="glove"
-GLOVE_FILE="$GLOVE_DIR/glove.840B.300d.txt"
-GLOVE_ZIP_URL="http://nlp.stanford.edu/data/glove.840B.300d.zip"
-GLOVE_ZIP="$GLOVE_DIR/glove.840B.300d.zip"
+GLOVE_FILE="$GLOVE_DIR/glove.6B.300d.txt"
+GLOVE_ZIP_URL="https://www.kaggle.com/api/v1/datasets/download/thanakomsn/glove6b300dtxt"
+GLOVE_ZIP="$GLOVE_DIR/glove.6B.300d.zip"
 
 # === VALIDATION SETUP === 
 VALID_DATASETS=("crowdflower" "isear" "wassa")

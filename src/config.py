@@ -30,7 +30,7 @@ WASSA_GLOVE_EMBEDDINGS_PATH = "data/preprocessed_dataset/wassa/glove_embedding_m
 # Configuration for BERT and spaCy models
 BERT_MODEL = "bert-large-uncased"
 SPACY_MODEL = "en_core_web_sm"
-GLOVE_PATH = "glove/glove.840B.300d.txt"
+GLOVE_PATH = "glove/glove.6B.300d.txt"
 
 F1_AVERAGE_METRIC = "macro"
 
