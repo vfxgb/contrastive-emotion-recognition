@@ -16,7 +16,7 @@ from config import (
     CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_GLOVE_EMBEDDINGS_PATH
 )
-from utils import clean_text, split_dataset_w_glove, split_dataset_wo_glove, load_glove_embeddings
+from utils import clean_text, split_dataset, load_glove_embeddings
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import argparse
@@ -87,7 +87,7 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     print(f"[CrowdFlower] Final FILTERED dataset shape: {len(dataset)} samples")
     print(f"[Final Label Mapping] {new_label_map}")
 
-    return dataset, texts, labels, new_label_map, tokenizer
+    return dataset, tokenizer
 
 def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
     """
@@ -158,7 +158,7 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
     print(f"[CrowdFlower] Final FILTERED dataset shape: {len(dataset)} samples")
     print(f"[Final Label Mapping] {new_label_map}")
 
-    return dataset, texts, labels, new_label_map
+    return dataset
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -171,21 +171,24 @@ if __name__ == "__main__":
     print("[Main] Loading and processing CrowdFlower dataset...")
 
     if with_glove:
-        full_dataset, all_texts, all_labels, label_map, tokenizer = load_crowdflower_with_glove(CROWDFLOWER_PATH)
+        crowdflower_dataset, tokenizer = load_crowdflower_with_glove(CROWDFLOWER_PATH)
         load_glove_embeddings(tokenizer, CROWDFLOWER_GLOVE_EMBEDDINGS_PATH)
+
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset_w_glove(full_dataset, split_ratio=0.8)
+        train_ds, test_ds = split_dataset(crowdflower_dataset, split_ratio=0.8, glove=True)
 
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE)
         torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE)
-        print("[Main] Done.")
+
     else:
-        full_dataset, all_texts, all_labels, label_map = load_crowdflower_without_glove(CROWDFLOWER_PATH)
+        crowdflower_dataset = load_crowdflower_without_glove(CROWDFLOWER_PATH)
+
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset_wo_glove(full_dataset, split_ratio=0.8)
+        train_ds, test_ds = split_dataset(crowdflower_dataset, split_ratio=0.8, glove=False)
     
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE)
         torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE)
-        print("[Main] Done.")
+    
+    print("[Main] Done.")

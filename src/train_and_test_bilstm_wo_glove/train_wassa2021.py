@@ -12,7 +12,7 @@ from sklearn.metrics import (
     precision_score,
 )
 import numpy as np
-from models.bilstm_model import BiLSTM_without_glove
+from models.bilstm_model import BiLSTM_bert
 from utils import set_seed
 from config import (
     WASSA_CLASSES,
@@ -40,7 +40,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     )
 
     # Create a new model instance
-    new_model = BiLSTM_without_glove(
+    new_model = BiLSTM_bert(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
         num_classes=num_classes,
@@ -157,7 +157,7 @@ def main():
             num_classes=num_classes,
             model_config=model_config,
         )
-        model = BiLSTM_without_glove(
+        model = BiLSTM_bert(
             model_config["bert_model_name"],
             model_config["hidden_dim"],
             num_classes,

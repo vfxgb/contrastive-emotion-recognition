@@ -6,9 +6,9 @@ import torch.nn.functional as F
 from transformers import BertModel
 import numpy as np
 
-class BiLSTM_without_glove(nn.Module):
+class BiLSTM_bert(nn.Module):
     """
-    BiLSTM_without_glove model for text classification using BERT embeddings.
+    BiLSTM_with_bert model for text classification using BERT embeddings.
     The model consists of a BERT encoder followed by a bidirectional LSTM layer,
     and a series of fully connected layers for classification.
 
@@ -33,7 +33,7 @@ class BiLSTM_without_glove(nn.Module):
     def __init__(
         self, bert_model_name, hidden_dim, num_classes, dropout_rate, lstm_layers
     ):
-        super(BiLSTM_without_glove, self).__init__()
+        super(BiLSTM_bert, self).__init__()
 
         # Initialize BERT model
         self.bert = BertModel.from_pretrained(bert_model_name)
@@ -147,7 +147,7 @@ class BiLSTM_glove(nn.Module):
             torch.Tensor: Output logits for classification.
 
         """
-        # get BERT embeddings
+        # get glove embeddings
         embeddings = self.embedding(input_ids)
 
         # Pass through LSTM layer

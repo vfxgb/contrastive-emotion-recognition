@@ -11,7 +11,7 @@ from sklearn.metrics import (
     recall_score,
     precision_score,
 )
-from models.bilstm_model import BiLSTM_without_glove
+from models.bilstm_model import BiLSTM_bert
 from config import (
     F1_AVERAGE_METRIC,
     bilstm_without_glove_config,
@@ -104,7 +104,7 @@ def main():
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
     # initialise model
-    model = BiLSTM_without_glove(
+    model = BiLSTM_bert(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
         num_classes=CROWDFLOWER_CLASSES,

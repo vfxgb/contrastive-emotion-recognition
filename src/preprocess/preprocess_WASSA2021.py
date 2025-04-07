@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import TensorDataset
 from transformers import AutoTokenizer
 import os
-from utils import clean_text, fetch_label_mapping, split_dataset_w_glove, split_dataset_wo_glove, load_glove_embeddings
+from utils import clean_text, fetch_label_mapping, split_dataset, load_glove_embeddings
 from config import BERT_MODEL, WASSA_PATH, WASSA_TEST_DS_PATH_WITHOUT_GLOVE, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, WASSA_GLOVE_EMBEDDINGS_PATH, WASSA_TEST_DS_PATH_WITH_GLOVE, WASSA_TRAIN_DS_PATH_WITH_GLOVE
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -29,11 +29,6 @@ def load_wassa_with_glove(tsv_path, max_length=128):
 
     # Rename columns for consistency
     df = df.rename(columns={"emotion_label": "Emotion", "essay": "Text"})
-    print("Renamed columns: 'emotion_labels' -> 'Emotion', 'essays' -> 'Text'")
-
-    # Show original label distribution
-    print("Original label distribution in 'Emotion':")
-    print(df["Emotion"].value_counts())
 
     # Filter to keep only rows with desired emotions (exclude others such as 'neutral')
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
@@ -43,8 +38,8 @@ def load_wassa_with_glove(tsv_path, max_length=128):
 
     # Clean the text in the 'Text' column
     df["content"] = df["Text"].apply(clean_text, extended = True)
-    print("Sample cleaned text:", df["content"].iloc[0])
     texts = df["content"].tolist()
+
     # Tokenize the cleaned text using the BERT tokenizer
     tokenizer.fit_on_texts(texts)
     sequences = tokenizer.texts_to_sequences(texts) # Convert text to numerical sequences
@@ -53,12 +48,11 @@ def load_wassa_with_glove(tsv_path, max_length=128):
 
     # Map emotion labels to integers using the defined mapping
     labels = torch.tensor(df["Emotion"].map(label_mapping).values)
-    print("Labels tensor shape:", labels.shape)
-    print("Unique label mapping:", label_mapping)
 
     # Create and return a TensorDataset
     dataset = TensorDataset(input_tensor, labels)
     print(f"WASSA 2021 dataset loaded: {len(dataset)} samples")
+
     return dataset, tokenizer
 
 def load_wassa_without_glove(tsv_path, max_length=128):
@@ -79,21 +73,12 @@ def load_wassa_without_glove(tsv_path, max_length=128):
 
     # Rename columns for consistency
     df = df.rename(columns={"emotion_label": "Emotion", "essay": "Text"})
-    print("Renamed columns: 'emotion_labels' -> 'Emotion', 'essays' -> 'Text'")
-
-    # Show original label distribution
-    print("Original label distribution in 'Emotion':")
-    print(df["Emotion"].value_counts())
 
     # Filter to keep only rows with desired emotions (exclude others such as 'neutral')
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
-    print("Filtered dataset shape:", df.shape)
-    print("Filtered label distribution:")
-    print(df["Emotion"].value_counts())
 
     # Clean the text in the 'Text' column
     df["content"] = df["Text"].apply(clean_text)
-    print("Sample cleaned text:", df["content"].iloc[0])
 
     # Tokenize the cleaned text using the BERT tokenizer
     encodings = tokenizer(
@@ -103,9 +88,6 @@ def load_wassa_without_glove(tsv_path, max_length=128):
         max_length=max_length,
         return_tensors="pt",
     )
-    print("Tokenization complete.")
-    print("Input IDs shape:", encodings["input_ids"].shape)
-    print("Attention mask shape:", encodings["attention_mask"].shape)
 
     # Map emotion labels to integers using the defined mapping
     labels = torch.tensor(df["Emotion"].map(label_mapping).values)
@@ -115,6 +97,7 @@ def load_wassa_without_glove(tsv_path, max_length=128):
     # Create and return a TensorDataset
     dataset = TensorDataset(encodings["input_ids"], encodings["attention_mask"], labels)
     print(f"WASSA 2021 dataset loaded: {len(dataset)} samples")
+
     return dataset
 
 if __name__ == "__main__":
@@ -130,22 +113,23 @@ if __name__ == "__main__":
 
     if with_glove:
         wassa_dataset, tokenizer = load_wassa_with_glove(WASSA_PATH, max_length=128)
-        load_glove_embeddings(WASSA_GLOVE_EMBEDDINGS_PATH, tokenizer)
+        load_glove_embeddings(tokenizer, WASSA_GLOVE_EMBEDDINGS_PATH)
 
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset_w_glove(wassa_dataset, split_ratio=0.8)
+        train_ds, test_ds = split_dataset(wassa_dataset, split_ratio=0.8, glove=True)
 
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, WASSA_TRAIN_DS_PATH_WITH_GLOVE )
         torch.save(test_ds, WASSA_TEST_DS_PATH_WITH_GLOVE)
-        print("[Main] Done.")
+        
     else:
         wassa_dataset = load_wassa_without_glove(WASSA_PATH, max_length=128)
 
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset_w_glove(wassa_dataset, split_ratio=0.8)
+        train_ds, test_ds = split_dataset(wassa_dataset, split_ratio=0.8, glove=False)
 
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE)
-        torch.save(test_ds, WASSA_TEST_DS_PATH_WITH_GLOVE)
-        print("[Main] Done.")
+        torch.save(test_ds, WASSA_TEST_DS_PATH_WITHOUT_GLOVE)
+
+    print("[Main] Done.")

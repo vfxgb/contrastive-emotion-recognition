@@ -7,9 +7,7 @@ from utils import (
     clean_text,
     fetch_label_mapping,
     load_glove_embeddings,
-    random_dropout_tokens,
-    split_dataset_w_glove, 
-    split_dataset_wo_glove,
+    split_dataset, 
     DualViewDataset,
 )
 from config import (
@@ -55,7 +53,6 @@ def load_isear_with_glove(csv_path, max_length=128):
 
     # Rename columns: use 'Field1' as 'Emotion' and 'SIT' as 'Text'
     df = df.rename(columns={"Field1": "Emotion", "SIT": "Text"})
-    print("Renamed columns: 'Field1' -> 'Emotion', 'SIT' -> 'Text'")
 
     # Show original label distribution based on 'Emotion'
     print("Original label distribution in 'Emotion':")
@@ -75,14 +72,10 @@ def load_isear_with_glove(csv_path, max_length=128):
     tokenizer.fit_on_texts(texts)
     sequences = tokenizer.texts_to_sequences(texts) # Convert text to numerical sequences
     padded_sequences = pad_sequences(sequences, maxlen=max_length, padding="post", truncating="post")
-    
-    print("Tokenization complete.")
 
     # Map emotion labels to integers
     input_tensor = torch.tensor(padded_sequences)
     labels = torch.tensor(df["Emotion"].map(label_mapping).values)
-    print("Labels tensor shape:", labels.shape)
-    print("Unique label mapping:", label_mapping)
 
     # Create and return a TensorDataset
     dataset = TensorDataset(input_tensor, labels)
@@ -116,7 +109,6 @@ def load_isear_without_glove(csv_path, max_length=128):
 
     # Rename columns: use 'Field1' as 'Emotion' and 'SIT' as 'Text'
     df = df.rename(columns={"Field1": "Emotion", "SIT": "Text"})
-    print("Renamed columns: 'Field1' -> 'Emotion', 'SIT' -> 'Text'")
 
     # Show original label distribution based on 'Emotion'
     print("Original label distribution in 'Emotion':")
@@ -130,7 +122,6 @@ def load_isear_without_glove(csv_path, max_length=128):
 
     # Clean the text in the 'Text' column
     df["content"] = df["Text"].apply(clean_text)
-    print("Sample cleaned text:", df["content"].iloc[0])
 
     # Tokenize the cleaned text using the BERT tokenizer
     encodings = tokenizer(
@@ -140,14 +131,9 @@ def load_isear_without_glove(csv_path, max_length=128):
         max_length=max_length,
         return_tensors="pt",
     )
-    print("Tokenization complete.")
-    print("Input IDs shape:", encodings["input_ids"].shape)
-    print("Attention mask shape:", encodings["attention_mask"].shape)
 
     # Map emotion labels to integers
     labels = torch.tensor(df["Emotion"].map(label_mapping).values)
-    print("Labels tensor shape:", labels.shape)
-    print("Unique label mapping:", label_mapping)
 
     # Create and return a TensorDataset
     dataset = TensorDataset(encodings["input_ids"], encodings["attention_mask"], labels)
@@ -167,22 +153,23 @@ if __name__ == "__main__":
 
     if with_glove:
         isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
-        load_glove_embeddings(ISEAR_GLOVE_EMBEDDINGS_PATH, tokenizer)
+        load_glove_embeddings(tokenizer, ISEAR_GLOVE_EMBEDDINGS_PATH)
 
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset_w_glove(isear_dataset, split_ratio=0.8)
+        train_ds, test_ds = split_dataset(isear_dataset, split_ratio=0.8, glove=True)
 
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITH_GLOVE)
         torch.save(test_ds, ISEAR_TEST_DS_PATH_WITH_GLOVE)
-        print("[Main] Done.")
+        
     else:
-        isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
+        isear_dataset = load_isear_without_glove(ISEAR_PATH, max_length=128)
 
         print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset_wo_glove(isear_dataset, split_ratio=0.8)
+        train_ds, test_ds = split_dataset(isear_dataset, split_ratio=0.8, glove=False)
     
         print("[Main] Saving datasets to disk...")
         torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE)
         torch.save(test_ds, ISEAR_TEST_DS_PATH_WITHOUT_GLOVE)
-        print("[Main] Done.")
+        
+    print("[Main] Done.")
