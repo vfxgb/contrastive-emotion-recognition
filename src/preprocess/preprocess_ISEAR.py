@@ -48,8 +48,6 @@ def load_isear_with_glove(csv_path, max_length=128):
     # Load CSV using latin1 encoding and comma separator
     df = pd.read_csv(csv_path, encoding="latin1", sep=",")
     print(f"[Isear] Loaded {len(df)} rows from {csv_path}")
-    print("Original dataset shape:", df.shape)
-    print("Columns in dataset:", df.columns.tolist())
 
     # Rename columns: use 'Field1' as 'Emotion' and 'SIT' as 'Text'
     df = df.rename(columns={"Field1": "Emotion", "SIT": "Text"})
@@ -60,9 +58,6 @@ def load_isear_with_glove(csv_path, max_length=128):
 
     # Filter to keep only rows with desired emotions
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
-    print("Filtered dataset shape:", df.shape)
-    print("Filtered label distribution:")
-    print(df["Emotion"].value_counts())
 
     # Clean the text in the 'Text' column
     df["content"] = df["Text"].apply(clean_text, extended=True)
@@ -104,8 +99,6 @@ def load_isear_without_glove(csv_path, max_length=128):
     # Load CSV using latin1 encoding and comma separator
     df = pd.read_csv(csv_path, encoding="latin1", sep=",")
     print(f"[Isear] Loaded {len(df)} rows from {csv_path}")
-    print("Original dataset shape:", df.shape)
-    print("Columns in dataset:", df.columns.tolist())
 
     # Rename columns: use 'Field1' as 'Emotion' and 'SIT' as 'Text'
     df = df.rename(columns={"Field1": "Emotion", "SIT": "Text"})
@@ -116,9 +109,6 @@ def load_isear_without_glove(csv_path, max_length=128):
 
     # Filter to keep only rows with desired emotions
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
-    print("Filtered dataset shape:", df.shape)
-    print("Filtered label distribution:")
-    print(df["Emotion"].value_counts())
 
     # Clean the text in the 'Text' column
     df["content"] = df["Text"].apply(clean_text)

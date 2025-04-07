@@ -61,12 +61,6 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     keep_classes = class_counts[class_counts >= min_samples].index.tolist()
     df_filtered = df[df["label"].isin(keep_classes)].reset_index(drop=True)
 
-    # print info filtered dataset
-    print(f"[Filtered Label Distribution (min {min_samples} per class)]")
-    print(df_filtered["label"].value_counts())
-    print("\n[Filtered Sentiment Distribution]")
-    print(df_filtered["sentiment"].value_counts())
-
     # Re-map labels to be consecutive
     new_label_map = {
         old: i for i, old in enumerate(sorted(df_filtered["label"].unique()))
@@ -126,12 +120,6 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
     class_counts = df["label"].value_counts()
     keep_classes = class_counts[class_counts >= min_samples].index.tolist()
     df_filtered = df[df["label"].isin(keep_classes)].reset_index(drop=True)
-
-    # print info filtered dataset
-    print(f"[Filtered Label Distribution (min {min_samples} per class)]")
-    print(df_filtered["label"].value_counts())
-    print("\n[Filtered Sentiment Distribution]")
-    print(df_filtered["sentiment"].value_counts())
 
     # Re-map labels to be consecutive
     new_label_map = {

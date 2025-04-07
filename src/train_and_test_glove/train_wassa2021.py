@@ -152,7 +152,7 @@ def main():
             model_config=model_config,
         )
 
-        # freeze embedding and lstm layers and only train the final classification layer
+        # freeze embedding and only train the lstm layers and the final classification layer
         for param in model.embedding.parameters():
             param.requires_grad = False # freeze embeddings
         for param in model.lstm.parameters():

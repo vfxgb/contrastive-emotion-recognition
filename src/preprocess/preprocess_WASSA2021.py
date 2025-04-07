@@ -32,12 +32,9 @@ def load_wassa_with_glove(tsv_path, max_length=128):
 
     # Filter to keep only rows with desired emotions (exclude others such as 'neutral')
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
-    print("Filtered dataset shape:", df.shape)
-    print("Filtered label distribution:")
-    print(df["Emotion"].value_counts())
 
     # Clean the text in the 'Text' column
-    df["content"] = df["Text"].apply(clean_text, extended = True)
+    df["content"] = df["Text"].apply(clean_text, extended=True)
     texts = df["content"].tolist()
 
     # Tokenize the cleaned text using the BERT tokenizer

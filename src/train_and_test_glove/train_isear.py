@@ -180,7 +180,7 @@ def main():
             ):
                 input_ids, labels = (
                     input_ids.to(device),
-                    labels.to(device),
+                    labels.to(device)
                 )
 
                 optimizer.zero_grad()
