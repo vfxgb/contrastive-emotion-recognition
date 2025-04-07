@@ -1,8 +1,7 @@
-from torch.utils.data import DataLoader, TensorDataset, random_split
+from torch.utils.data import DataLoader, TensorDataset
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import (
     classification_report,
@@ -11,7 +10,6 @@ from sklearn.metrics import (
     recall_score,
     precision_score,
 )
-import numpy as np
 from models.bilstm_model import BiLSTM_bert
 from utils import print_test_stats, set_seed, split_dataset
 from config import (
