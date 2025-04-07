@@ -136,9 +136,7 @@ fi
 # === GET SCRIPT TO RUN ===
 
 PREPROCESS_SCRIPT="${PREPROCESS_SCRIPTS[$DATASET]}"
-echo $PREPROCESS_SCRIPT
 TRAIN_SCRIPT="${TRAIN_SCRIPTS["$DATASET:$MODEL"]}"
-echo $TRAIN_SCRIPT
 
 if [ -z "$PREPROCESS_SCRIPT" ] || [ -z "$TRAIN_SCRIPT" ]; then
     echo "No script found for dataset=$DATASET and model=$MODEL"
@@ -151,8 +149,16 @@ mkdir -p $LOG_DIR
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="$LOG_DIR/${DATASET}_${MODEL}_${TIMESTAMP}.log"
 
-echo "Downloading spaCy model"
-python -m spacy download en_core_web_sm
+echo "Checking for spaCy model..."
+
+python -c "import spacy; spacy.load('en_core_web_sm')" 2>/dev/null
+
+if [ $? -ne 0 ]; then
+    echo "Downloading spaCy model en_core_web_sm..."
+    python -m spacy download en_core_web_sm
+else
+    echo "spaCy model en_core_web_sm already installed."
+fi
 
 # === CONDITIONAL PREPROCESSING ===
 if [ "$MODEL" = "bilstm_glove" ]; then
@@ -160,6 +166,7 @@ if [ "$MODEL" = "bilstm_glove" ]; then
 fi
 
 echo "Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
+
 if [ "$FORCE_PREPROCESS" = true ]; then
     if [ "$MODEL" = "bilstm_glove" ]; then
         echo "hi A"
@@ -169,8 +176,13 @@ if [ "$FORCE_PREPROCESS" = true ]; then
         python "$PREPROCESS_SCRIPT" --force_preprocess 2>&1 | tee -a "$LOG_FILE"
     fi
 else
-    echo "hi C"
-    python "$PREPROCESS_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
+    if [ "$MODEL" = "bilstm_glove" ]; then
+        echo "hi A"
+        python "$PREPROCESS_SCRIPT" --with_glove 2>&1 | tee -a "$LOG_FILE"
+    else
+        echo "hi B"
+        python "$PREPROCESS_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
+    fi
 fi
 
 # === TRAINING ===
