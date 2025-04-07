@@ -9,7 +9,7 @@ import numpy as np
 
 class BiLSTM_bert(nn.Module):
     """
-    BiLSTM_with_bert model for text classification using BERT embeddings.
+    BiLSTM_bert model for text classification using BERT embeddings.
     The model consists of a BERT encoder followed by a bidirectional LSTM layer,
     and a series of fully connected layers for classification.
 
@@ -23,7 +23,6 @@ class BiLSTM_bert(nn.Module):
     Attributes:
         bert (BertModel): Pre-trained BERT model used for embeddings.
         lstm (nn.LSTM): Bidirectional LSTM layer for sequence modeling.
-        global_max_pool (function): Function for performing global max pooling.
         fc1 (nn.Linear): Fully connected layer for classification.
         fc2 (nn.Linear): Second fully connected layer for classification.
         fc3 (nn.Linear): Output fully connected layer for classification.
@@ -99,7 +98,28 @@ class BiLSTM_bert(nn.Module):
 
 
 class BiLSTM_glove(nn.Module):
+    """
+    BiLSTM_glove model for text classification using GloVe embeddings.
+    The model uses pre-trained GloVe word embeddings as input, processes them 
+    through a bidirectional LSTM to capture sequential dependencies in both 
+    directions and applies a series of fully connected layers for final classification.
 
+    Args:
+        embedding_matrix_path (str): path to the .npy file that stores the embedding matrix and vocab size
+        hidden_dim (int): Hidden dimension size for the LSTM layer.
+        num_classes (int): Number of output classes for classification.
+        dropout_rate (float): Dropout rate for regularization.
+        lstm_layers (int): Number of layers in the LSTM.
+
+    Attributes:
+        embedding (nn.Embedding): Embedding layer initialized with GloVe vectors.
+        lstm (nn.LSTM): Bidirectional LSTM layer for sequence modeling.
+        fc1 (nn.Linear): Fully connected layer for classification.
+        fc2 (nn.Linear): Second fully connected layer for classification.
+        fc3 (nn.Linear): Output fully connected layer for classification.
+        dropout (nn.Dropout): Dropout layer for regularization.
+
+    """
     def __init__(
         self, embedding_matrix_path, hidden_dim, num_classes, dropout_rate, lstm_layers
     ):
@@ -139,8 +159,7 @@ class BiLSTM_glove(nn.Module):
         """
         Forward pass throught the model.
         Args:
-            input_ids (torch.Tensor): Input tensor containing token IDs.
-            attention_mask (torch.Tensor): Attention mask for the input tensor.
+            input_ids (torch.Tensor): Input tensor containing token ids.
         Returns:
             torch.Tensor: Output logits for classification.
 
