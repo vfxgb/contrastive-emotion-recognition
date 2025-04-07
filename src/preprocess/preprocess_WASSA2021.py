@@ -20,6 +20,7 @@ import argparse
 # get label mapping for WASSA dataset
 label_mapping = fetch_label_mapping(wassa=True)
 
+
 def load_wassa_with_glove(tsv_path, max_length=128):
     """
     Load and preprocess the WASSA 2021 dataset from a TSV file.
@@ -117,7 +118,9 @@ if __name__ == "__main__":
         "--with_glove", action="store_true", help="Use GloVe embeddings"
     )
     parser.add_argument(
-        "--force_preprocess", action="store_true", help="Force reprocessing even if files exist"
+        "--force_preprocess",
+        action="store_true",
+        help="Force reprocessing even if files exist",
     )
     args = parser.parse_args()
     with_glove = args.with_glove
@@ -129,7 +132,11 @@ if __name__ == "__main__":
     print("[Main] Loading and processing WASSA 2021 dataset...")
 
     if with_glove:
-        if not force_preprocess and os.path.exists(WASSA_TRAIN_DS_PATH_WITH_GLOVE) and os.path.exists(WASSA_TEST_DS_PATH_WITH_GLOVE):
+        if (
+            not force_preprocess
+            and os.path.exists(WASSA_TRAIN_DS_PATH_WITH_GLOVE)
+            and os.path.exists(WASSA_TEST_DS_PATH_WITH_GLOVE)
+        ):
             print("[Main] Dataset already preprocessed. Skipping...")
         else:
             print("[Main] Preprocessing Dataset.")
@@ -137,21 +144,29 @@ if __name__ == "__main__":
             load_glove_embeddings(tokenizer, WASSA_GLOVE_EMBEDDINGS_PATH)
 
             print("[Main] Splitting dataset into train and test...")
-            train_ds, test_ds = split_dataset(wassa_dataset, split_ratio=0.8, glove=True)
+            train_ds, test_ds = split_dataset(
+                wassa_dataset, split_ratio=0.8, glove=True
+            )
 
             print("[Main] Saving datasets to disk...")
             torch.save(train_ds, WASSA_TRAIN_DS_PATH_WITH_GLOVE)
             torch.save(test_ds, WASSA_TEST_DS_PATH_WITH_GLOVE)
 
     else:
-        if not force_preprocess and os.path.exists(WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE) and os.path.exists(WASSA_TEST_DS_PATH_WITHOUT_GLOVE):
+        if (
+            not force_preprocess
+            and os.path.exists(WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE)
+            and os.path.exists(WASSA_TEST_DS_PATH_WITHOUT_GLOVE)
+        ):
             print("[Main] Dataset already preprocessed. Skipping...")
         else:
             print("[Main] Preprocessing Dataset.")
             wassa_dataset = load_wassa_without_glove(WASSA_PATH, max_length=128)
 
             print("[Main] Splitting dataset into train and test...")
-            train_ds, test_ds = split_dataset(wassa_dataset, split_ratio=0.8, glove=False)
+            train_ds, test_ds = split_dataset(
+                wassa_dataset, split_ratio=0.8, glove=False
+            )
 
             print("[Main] Saving datasets to disk...")
             torch.save(train_ds, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE)

@@ -161,7 +161,9 @@ if __name__ == "__main__":
         "--with_glove", action="store_true", help="Use GloVe embeddings"
     )
     parser.add_argument(
-        "--force_preprocess", action="store_true", help="Force reprocessing even if files exist"
+        "--force_preprocess",
+        action="store_true",
+        help="Force reprocessing even if files exist",
     )
     args = parser.parse_args()
     with_glove = args.with_glove
@@ -172,11 +174,17 @@ if __name__ == "__main__":
     print("[Main] Loading and processing CrowdFlower dataset...")
 
     if with_glove:
-        if not force_preprocess and os.path.exists(CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE) and os.path.exists(CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE):
+        if (
+            not force_preprocess
+            and os.path.exists(CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE)
+            and os.path.exists(CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE)
+        ):
             print("[Main] Dataset already preprocessed. Skipping...")
         else:
             print("[Main] Preprocessing Dataset.")
-            crowdflower_dataset, tokenizer = load_crowdflower_with_glove(CROWDFLOWER_PATH)
+            crowdflower_dataset, tokenizer = load_crowdflower_with_glove(
+                CROWDFLOWER_PATH
+            )
             load_glove_embeddings(tokenizer, CROWDFLOWER_GLOVE_EMBEDDINGS_PATH)
 
             print("[Main] Splitting dataset into train and test...")
@@ -189,7 +197,11 @@ if __name__ == "__main__":
             torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE)
 
     else:
-        if not force_preprocess and os.path.exists(CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE) and os.path.exists(CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE):
+        if (
+            not force_preprocess
+            and os.path.exists(CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE)
+            and os.path.exists(CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE)
+        ):
             print("[Main] Dataset already preprocessed. Skipping...")
         else:
             print("[Main] Preprocessing Dataset.")
