@@ -169,7 +169,7 @@ if __name__ == "__main__":
     with_glove = args.with_glove
     force_preprocess = args.force_preprocess
 
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("data/preprocessed_dataset/crowdflower/", exist_ok=True)
 
     print("[Main] Loading and processing CrowdFlower dataset...")
 

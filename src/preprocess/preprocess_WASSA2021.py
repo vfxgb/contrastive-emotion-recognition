@@ -127,7 +127,7 @@ if __name__ == "__main__":
     force_preprocess = args.force_preprocess
 
     # Ensure the data folder exists
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("data/preprocessed_dataset/wassa/", exist_ok=True)
 
     print("[Main] Loading and processing WASSA 2021 dataset...")
 
