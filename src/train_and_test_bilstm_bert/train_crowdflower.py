@@ -66,7 +66,7 @@ def evaluate(model, dataloader, device, test=False):
     precision = precision_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
 
     print(
-        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}, Recall: {recall:.4f}, Precision: {predicted:.4f}"
+        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}, Recall: {recall:.4f}, Precision: {precision:.4f}"
     )
     print("\nDetailed Report:\n", classification_report(all_labels, all_preds))
 
