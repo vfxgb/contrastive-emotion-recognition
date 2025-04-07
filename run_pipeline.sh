@@ -70,6 +70,11 @@ download_glove() {
     fi
 
     echo "GloVe embeddings downloaded and extracted to $GLOVE_FILE"
+
+    # Delete the zip file after extraction
+    echo "Deleting the zip file..."
+    rm -f "$GLOVE_ZIP"
+    echo "Zip file deleted."
 }
 
 # === USAGE ===
@@ -80,6 +85,7 @@ usage() {
     echo "                          if not set, preprocesses data if not done before"
     echo "  Datasets: ${VALID_DATASETS[*]}"
     echo "  Models: ${VALID_MODELS[*]}"
+    echo "  Please first train on crowdflower and then finetune on isear and wassa."
     exit 1
 }
 
@@ -130,7 +136,9 @@ fi
 # === GET SCRIPT TO RUN ===
 
 PREPROCESS_SCRIPT="${PREPROCESS_SCRIPTS[$DATASET]}"
+echo $PREPROCESS_SCRIPT
 TRAIN_SCRIPT="${TRAIN_SCRIPTS["$DATASET:$MODEL"]}"
+echo $TRAIN_SCRIPT
 
 if [ -z "$PREPROCESS_SCRIPT" ] || [ -z "$TRAIN_SCRIPT" ]; then
     echo "No script found for dataset=$DATASET and model=$MODEL"
@@ -143,20 +151,25 @@ mkdir -p $LOG_DIR
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="$LOG_DIR/${DATASET}_${MODEL}_${TIMESTAMP}.log"
 
-echo "Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
+echo "Downloading spaCy model"
+python -m spacy download en_core_web_sm
 
 # === CONDITIONAL PREPROCESSING ===
 if [ "$MODEL" = "bilstm_glove" ]; then
     download_glove
 fi
 
+echo "Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
 if [ "$FORCE_PREPROCESS" = true ]; then
     if [ "$MODEL" = "bilstm_glove" ]; then
+        echo "hi A"
         python "$PREPROCESS_SCRIPT" --with_glove --force_preprocess 2>&1 | tee -a "$LOG_FILE"
     else
+        echo "hi B"
         python "$PREPROCESS_SCRIPT" --force_preprocess 2>&1 | tee -a "$LOG_FILE"
     fi
 else
+    echo "hi C"
     python "$PREPROCESS_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
 fi
 
