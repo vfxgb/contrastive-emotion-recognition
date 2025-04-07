@@ -18,7 +18,7 @@ from config import (
     ISEAR_CLASSES,
     ISEAR_TRAIN_DS_PATH_WITH_GLOVE,
     ISEAR_TEST_DS_PATH_WITH_GLOVE,
-    bilstm_with_glove_config,
+    bilstm_glove_config,
     ISEAR_GLOVE_EMBEDDINGS_PATH,
     F1_AVERAGE_METRIC,
 )
@@ -114,7 +114,7 @@ def evaluate(model, dataloader, device, test=False):
 
 def main():
     # Configurations
-    model_config = bilstm_with_glove_config()
+    model_config = bilstm_glove_config()
 
     num_classes = ISEAR_CLASSES
     num_epochs = model_config["num_epochs"]

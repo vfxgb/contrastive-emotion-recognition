@@ -18,7 +18,7 @@ from config import (
     WASSA_CLASSES,
     WASSA_TRAIN_DS_PATH_WITH_GLOVE,
     WASSA_TEST_DS_PATH_WITH_GLOVE,
-    bilstm_with_glove_config,
+    bilstm_glove_config,
     F1_AVERAGE_METRIC,
     WASSA_GLOVE_EMBEDDINGS_PATH
 )
@@ -115,7 +115,7 @@ def evaluate(model, dataloader, device, test=False):
 
 def main():
     # Configurations
-    model_config = bilstm_with_glove_config()
+    model_config = bilstm_glove_config()
 
     num_classes = WASSA_CLASSES
     num_epochs = model_config["num_epochs"]

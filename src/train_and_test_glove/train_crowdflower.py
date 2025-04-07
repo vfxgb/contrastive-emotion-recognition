@@ -14,7 +14,7 @@ from sklearn.metrics import (
 from models.bilstm_model import BiLSTM_glove
 from config import (
     F1_AVERAGE_METRIC,
-    bilstm_with_glove_config,
+    bilstm_glove_config,
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE,
@@ -73,7 +73,7 @@ def evaluate(model, dataloader, device, test=False):
 
 def main():
     # fetch bilstm model config
-    model_config = bilstm_with_glove_config()
+    model_config = bilstm_glove_config()
 
     model_save_path = model_config["model_save_path"]
     num_epochs = model_config["num_epochs"]

@@ -14,14 +14,14 @@ from sklearn.metrics import (
 from models.bilstm_model import BiLSTM_bert
 from config import (
     F1_AVERAGE_METRIC,
-    bilstm_without_glove_config,
+    bilstm_bert_config,
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
 )
+from utils import split_dataset
 
 torch.serialization.add_safe_globals([TensorDataset])
-
 
 def evaluate(model, dataloader, device, test=False):
     """
@@ -74,7 +74,7 @@ def evaluate(model, dataloader, device, test=False):
 
 def main():
     # fetch bilstm model config
-    model_config = bilstm_without_glove_config()
+    model_config = bilstm_bert_config()
 
     model_save_path = model_config["model_save_path"]
     num_epochs = model_config["num_epochs"]
@@ -93,11 +93,7 @@ def main():
     train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
     test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
-    train_len = int(0.90 * len(train_ds))
-    val_len = len(train_ds) - train_len
-    train_ds, val_ds = random_split(
-        train_ds, [train_len, val_len], generator=torch.Generator().manual_seed(42)
-    )
+    train_ds, val_ds = split_dataset(train_ds, split_ratio=0.9, glove=False)
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)

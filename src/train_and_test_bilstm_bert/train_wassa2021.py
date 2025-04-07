@@ -13,17 +13,16 @@ from sklearn.metrics import (
 )
 import numpy as np
 from models.bilstm_model import BiLSTM_bert
-from utils import set_seed
+from utils import set_seed, split_dataset
 from config import (
     WASSA_CLASSES,
     WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE,
     WASSA_TEST_DS_PATH_WITHOUT_GLOVE,
-    bilstm_without_glove_config,
+    bilstm_bert_config,
     F1_AVERAGE_METRIC,
 )
 
 torch.serialization.add_safe_globals([TensorDataset])
-
 
 def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     """
@@ -114,7 +113,7 @@ def evaluate(model, dataloader, device, test=False):
 
 def main():
     # Configurations
-    model_config = bilstm_without_glove_config()
+    model_config = bilstm_bert_config()
 
     num_classes = WASSA_CLASSES
     num_epochs = model_config["num_epochs"]
@@ -139,13 +138,7 @@ def main():
         train_ds = torch.load(WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
         test_ds = torch.load(WASSA_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
-        train_len = int(0.90 * len(train_ds))
-        val_len = len(train_ds) - train_len
-        train_ds, val_ds = random_split(
-            train_ds,
-            [train_len, val_len],
-            generator=torch.Generator().manual_seed(42 + run),
-        )
+        train_ds, val_ds = split_dataset(dataset=train_ds, split_ratio=0.9, seed=42+run, glove=False)
 
         train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
@@ -156,13 +149,6 @@ def main():
             model_config["model_save_path"],
             num_classes=num_classes,
             model_config=model_config,
-        )
-        model = BiLSTM_bert(
-            model_config["bert_model_name"],
-            model_config["hidden_dim"],
-            num_classes,
-            model_config["dropout_rate"],
-            model_config["lstm_layers"],
         )
 
         # freeze bert and lstm layers and only train the final classification layer
@@ -232,6 +218,7 @@ def main():
         print("\n----- Starting Evaluation on Test Set -----\n")
         state_dict = torch.load(wassa21_finetune_save_path, map_location=device)
         model.load_state_dict(state_dict)
+        
         test_accuracy, test_f1, test_recall, test_precision = evaluate(
             model, test_loader, device, test=True
         )
