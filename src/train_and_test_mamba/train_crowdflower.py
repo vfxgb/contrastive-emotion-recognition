@@ -21,7 +21,6 @@ from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 
 torch.serialization.add_safe_globals([TensorDataset])
 
-
 def evaluate(encoder, classifier, dataloader, device, test=False):
     """
     Evaluates model.

@@ -42,6 +42,17 @@ def random_dropout_tokens(token_ids, dropout_prob=0.1):
         if random.random() > dropout_prob or tok in [101, 102, 0]
     ]
 
+def print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_f1_list, num_runs):
+    mean_test_acc, std_test_acc = np.mean(test_acc_list), np.std(test_acc_list)
+    mean_test_recall, std_test_recall = np.mean(test_recall_list), np.std(test_recall_list)
+    mean_test_precision, std_test_precision = np.mean(test_precision_list), np.std(test_precision_list)
+    mean_test_f1, std_test_f1 = np.mean(test_f1_list), np.std(test_f1_list)
+
+    print(f"\nFinal Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}")
+    print(f"Final Test Recall over {num_runs} runs: {mean_test_recall:.4f} ± {std_test_recall:.4f}")
+    print(f"Final Test Precision over {num_runs} runs: {mean_test_precision:.4f} ± {std_test_precision:.4f}")
+    print(f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")
+
 def split_dataset(dataset, split_ratio=0.8, seed=42, glove=True):
     """
     Splits the dataset into training and test sets while maintaining label distribution using stratified sampling.
