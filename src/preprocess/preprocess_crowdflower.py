@@ -26,7 +26,7 @@ nlp = spacy.load(SPACY_MODEL)
 
 def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     """
-    Load and preprocess the CrowdFlower dataset.
+    Load and preprocess the CrowdFlower dataset for use with GloVe embeddings.
 
     Args:
         path (str): Path to the CSV file.
@@ -34,10 +34,8 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
         min_samples (int): Minimum number of samples required per class to include in the dataset.
 
     Returns:
-        TensorDataset: Dataset object containing input_ids, attention_masks, and labels.
-        list: Original text data.
-        list: Original labels.
-        dict: Mapping from original labels to new label indices.
+        TensorDataset: Dataset object containing input_ids and labels.
+        Tokenizer: Fitted Keras Tokeniser object
 
     """
     tokenizer = Tokenizer(num_words=5000, oov_token="<UNK>")
@@ -100,9 +98,6 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
 
     Returns:
         TensorDataset: Dataset object containing input_ids, attention_masks, and labels.
-        list: Original text data.
-        list: Original labels.
-        dict: Mapping from original labels to new label indices.
 
     """
     tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
@@ -157,14 +152,19 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    
+    # when --with_glove is set, the dataset is preprocessed for use with GloVe embeddings.
     parser.add_argument(
         "--with_glove", action="store_true", help="Use GloVe embeddings"
     )
+
+    # when --force_preprocess is set, the dataset is processed again even when the train.pt and test.pt are present  
     parser.add_argument(
         "--force_preprocess",
         action="store_true",
         help="Force reprocessing even if files exist",
     )
+    
     args = parser.parse_args()
     with_glove = args.with_glove
     force_preprocess = args.force_preprocess
