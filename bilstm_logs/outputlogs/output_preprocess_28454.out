@@ -1,9 +1,0 @@
-Activating environment
-CUDA_HOME is set to: /tc1apps/cuda/11.8
-========================================
-Processing dataset: crowdflower
-Starting training/testing for crowdflower with model bigru...
-Traceback (most recent call last):
-  File "/home/UG/bhargavi005/contrastive-emotion-recognition/src/train_and_test_bigru/train_crowdflower.py", line 22, in <module>
-    from models.bigru_model import BiGRU
-ModuleNotFoundError: No module named 'models'
