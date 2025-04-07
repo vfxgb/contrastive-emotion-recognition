@@ -8,7 +8,8 @@ from utils import (
     fetch_label_mapping,
     load_glove_embeddings,
     random_dropout_tokens,
-    split_dataset,
+    split_dataset_w_glove, 
+    split_dataset_wo_glove,
     DualViewDataset,
 )
 from config import (
@@ -17,12 +18,14 @@ from config import (
     ISEAR_PATH,
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
     ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE,
+    ISEAR_TRAIN_DS_PATH_WITH_GLOVE, 
+    ISEAR_TEST_DS_PATH_WITH_GLOVE,
     ISEAR_GLOVE_EMBEDDINGS_PATH
 )
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import argparse
 
-with_glove = False
 # fetch label mapping for ISEAR dataset
 label_mapping = fetch_label_mapping(isear=True)
 
@@ -152,47 +155,34 @@ def load_isear_without_glove(csv_path, max_length=128):
 
     return dataset
 
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--with_glove", action="store_true", help="Use GloVe embeddings")
+    args = parser.parse_args()
+    with_glove = args.with_glove
+
     os.makedirs("data", exist_ok=True)
 
     print("[Main] Loading and processing ISEAR dataset...")
 
-    # Load the dataset
     if with_glove:
         isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
         load_glove_embeddings(ISEAR_GLOVE_EMBEDDINGS_PATH, tokenizer)
+
+        print("[Main] Splitting dataset into train and test...")
+        train_ds, test_ds = split_dataset_w_glove(isear_dataset, split_ratio=0.8)
+
+        print("[Main] Saving datasets to disk...")
+        torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITH_GLOVE)
+        torch.save(test_ds, ISEAR_TEST_DS_PATH_WITH_GLOVE)
+        print("[Main] Done.")
     else:
-        isear_dataset = load_isear_without_glove(ISEAR_PATH, max_length=128)
+        isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
 
-    # Split dataset into train (80%) and test (20%) sets
-    total_samples = len(isear_dataset)
-    train_size = int(0.8 * total_samples)
-    test_size = total_samples - train_size
-    isear_train, isear_test = random_split(
-        isear_dataset,
-        [train_size, test_size],
-        generator=torch.Generator().manual_seed(42),
-    )
-    print("\nTrain/Test split:")
-    print("Total samples:", total_samples)
-    print("Train size:", len(isear_train))
-    print("Test size:", len(isear_test))
-
-    # Check label distributions in train and test splits
-    def get_label_distribution(subset):
-        labels_list = [isear_dataset[idx][2].item() for idx in subset.indices]
-        return pd.Series(labels_list).value_counts().sort_index()
-
-    print("\nTrain label distribution:")
-    print(get_label_distribution(isear_train))
-    print("\nTest label distribution:")
-    print(get_label_distribution(isear_test))
-
-    # Save final datasets
-    torch.save(isear_train, ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE)
-    torch.save(isear_test, ISEAR_TEST_DS_PATH_WITHOUT_GLOVE)
-
-    print("\nDatasets prepared and saved:")
-    print(f"- ISEAR train: {len(isear_train)} samples")
-    print(f"- ISEAR test: {len(isear_test)} samples")
+        print("[Main] Splitting dataset into train and test...")
+        train_ds, test_ds = split_dataset_wo_glove(isear_dataset, split_ratio=0.8)
+    
+        print("[Main] Saving datasets to disk...")
+        torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE)
+        torch.save(test_ds, ISEAR_TEST_DS_PATH_WITHOUT_GLOVE)
+        print("[Main] Done.")

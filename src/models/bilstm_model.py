@@ -102,7 +102,7 @@ class BiLSTM_without_glove(nn.Module):
 class BiLSTM_glove(nn.Module):
     
     def __init__(
-        self, embedding_matrix_path, bert_model_name, hidden_dim, num_classes, dropout_rate, lstm_layers
+        self, embedding_matrix_path, hidden_dim, num_classes, dropout_rate, lstm_layers
     ):
         super(BiLSTM_glove, self).__init__()
 

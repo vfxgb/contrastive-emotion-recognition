@@ -3,14 +3,14 @@ import torch
 from torch.utils.data import TensorDataset
 from transformers import AutoTokenizer
 import os
-from utils import clean_text, fetch_label_mapping, split_dataset, load_glove_embeddings
-from config import BERT_MODEL, WASSA_PATH, WASSA_TEST_DS_PATH_WITHOUT_GLOVE, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, WASSA_GLOVE_EMBEDDINGS_PATH
+from utils import clean_text, fetch_label_mapping, split_dataset_w_glove, split_dataset_wo_glove, load_glove_embeddings
+from config import BERT_MODEL, WASSA_PATH, WASSA_TEST_DS_PATH_WITHOUT_GLOVE, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, WASSA_GLOVE_EMBEDDINGS_PATH, WASSA_TEST_DS_PATH_WITH_GLOVE, WASSA_TRAIN_DS_PATH_WITH_GLOVE
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import argparse
 
 # get label mapping for WASSA dataset
 label_mapping = fetch_label_mapping(wassa=True)
-with_glove = False
 
 def load_wassa_with_glove(tsv_path, max_length=128):
     """
@@ -117,14 +117,12 @@ def load_wassa_without_glove(tsv_path, max_length=128):
     print(f"WASSA 2021 dataset loaded: {len(dataset)} samples")
     return dataset
 
-
-# Check label distribution in train and test splits
-def _get_label_distribution(subset):
-    labels_list = [wassa_dataset[idx][2].item() for idx in subset.indices]
-    return pd.Series(labels_list).value_counts().sort_index()
-
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--with_glove", action="store_true", help="Use GloVe embeddings")
+    args = parser.parse_args()
+    with_glove = args.with_glove
+    
     # Ensure the data folder exists
     os.makedirs("data", exist_ok=True)
 
@@ -133,25 +131,21 @@ if __name__ == "__main__":
     if with_glove:
         wassa_dataset, tokenizer = load_wassa_with_glove(WASSA_PATH, max_length=128)
         load_glove_embeddings(WASSA_GLOVE_EMBEDDINGS_PATH, tokenizer)
+
+        print("[Main] Splitting dataset into train and test...")
+        train_ds, test_ds = split_dataset_w_glove(wassa_dataset, split_ratio=0.8)
+
+        print("[Main] Saving datasets to disk...")
+        torch.save(train_ds, WASSA_TRAIN_DS_PATH_WITH_GLOVE )
+        torch.save(test_ds, WASSA_TEST_DS_PATH_WITH_GLOVE)
+        print("[Main] Done.")
     else:
         wassa_dataset = load_wassa_without_glove(WASSA_PATH, max_length=128)
 
-    total_samples = len(wassa_dataset)
-    wassa_train, wassa_test = split_dataset(wassa_dataset, split_ratio=0.8)
-    print("\nTrain/Test split:")
-    print("Total samples:", total_samples)
-    print("Train size:", len(wassa_train))
-    print("Test size:", len(wassa_test))
+        print("[Main] Splitting dataset into train and test...")
+        train_ds, test_ds = split_dataset_w_glove(wassa_dataset, split_ratio=0.8)
 
-    print("\nTrain label distribution:")
-    print(_get_label_distribution(wassa_train))
-    print("\nTest label distribution:")
-    print(_get_label_distribution(wassa_test))
-
-    # Save final datasets
-    torch.save(wassa_train, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE)
-    torch.save(wassa_test, WASSA_TEST_DS_PATH_WITHOUT_GLOVE)
-
-    print("\nDatasets prepared and saved:")
-    print(f"- WASSA 2021 train: {len(wassa_train)} samples")
-    print(f"- WASSA 2021 test: {len(wassa_test)} samples")
+        print("[Main] Saving datasets to disk...")
+        torch.save(train_ds, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE)
+        torch.save(test_ds, WASSA_TEST_DS_PATH_WITH_GLOVE)
+        print("[Main] Done.")

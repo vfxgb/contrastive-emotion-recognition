@@ -157,14 +157,7 @@ def main():
             num_classes=num_classes,
             model_config=model_config,
         )
-        model = BiLSTM_without_glove(
-            model_config["bert_model_name"],
-            model_config["hidden_dim"],
-            num_classes,
-            model_config["dropout_rate"],
-            model_config["lstm_layers"],
-        )
-
+        
         # freeze bert and lstm layers and only train the final classification layer
         for param in model.bert.parameters():
             param.requires_grad = False  # freeze all

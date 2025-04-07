@@ -21,9 +21,9 @@ declare -A PREPROCESS_SCRIPTS=(
 
 declare -A TRAIN_SCRIPTS=(
     # bilstm model
-    ["crowdflower:bilstm"]="src/train_and_test_bilstm/train_crowdflower.py"
-    ["isear:bilstm"]="src/train_and_test_bilstm/train_isear.py"
-    ["wassa:bilstm"]="src/train_and_test_bilstm/train_wassa2021.py"
+    ["crowdflower:bilstm"]="src/train_and_test_bilstm_wo_glove/train_crowdflower.py"
+    ["isear:bilstm"]="src/train_and_test_bilstm_wo_glove/train_isear.py"
+    ["wassa:bilstm"]="src/train_and_test_bilstm_wo_glove/train_wassa2021.py"
 
     # mamba model
     ["crowdflower:mamba"]="src/train_and_test_mamba/train_crowdflower.py"

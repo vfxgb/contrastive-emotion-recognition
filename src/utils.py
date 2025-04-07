@@ -44,7 +44,7 @@ def random_dropout_tokens(token_ids, dropout_prob=0.1):
     ]
 
 
-def split_dataset(dataset, split_ratio=0.8, seed=42):
+def split_dataset_wo_glove(dataset, split_ratio=0.8, seed=42):
     """
     Splits the dataset into training and test sets while maintaining label distribution using stratified sampling.
 
@@ -57,12 +57,11 @@ def split_dataset(dataset, split_ratio=0.8, seed=42):
         tuple: A tuple containing the training and test datasets as Subset objects.
     """
     input_ids = dataset.tensors[0]
-    attention_mask = dataset.tensors[1]
     labels = dataset.tensors[2]
 
     # Convert to list of text tokens to ensure no overlaps
     text_ids = [tuple(row.tolist()) for row in input_ids]  # immutable for hashing
-    unique_texts, indices = np.unique(text_ids, return_index=True, axis=0)
+    _, indices = np.unique(text_ids, return_index=True, axis=0)
 
     X_train_idx, X_test_idx = train_test_split(
         indices,
@@ -79,6 +78,39 @@ def split_dataset(dataset, split_ratio=0.8, seed=42):
     print(f"[Split] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
     return train_ds, test_ds
 
+def split_dataset_w_glove(dataset, split_ratio=0.8, seed=42):
+    """
+    Splits the dataset into training and test sets while maintaining label distribution using stratified sampling.
+
+    Args:
+        dataset (TensorDataset): The dataset to split.
+        split_ratio (float): The ratio of the data to be used for training.
+        seed (int): The random seed for reproducibility.
+
+    Returns:
+        tuple: A tuple containing the training and test datasets as Subset objects.
+    """
+    input_ids = dataset.tensors[0]
+    labels = dataset.tensors[1]
+
+    # Convert to list of text tokens to ensure no overlaps
+    text_ids = [tuple(row.tolist()) for row in input_ids]  # immutable for hashing
+    _, indices = np.unique(text_ids, return_index=True, axis=0)
+
+    X_train_idx, X_test_idx = train_test_split(
+        indices,
+        train_size=split_ratio,
+        random_state=seed,
+        stratify=labels[
+            indices
+        ].numpy(),  # Stratified sampling to maintain label distribution
+    )
+
+    train_ds = Subset(dataset, X_train_idx)
+    test_ds = Subset(dataset, X_test_idx)
+
+    print(f"[Split] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
+    return train_ds, test_ds
 
 class DualViewDataset(torch.utils.data.Dataset):
     """
