@@ -16,8 +16,8 @@ from config import (
     F1_AVERAGE_METRIC,
     bilstm_without_glove_config,
     CROWDFLOWER_CLASSES,
-    CROWDFLOWER_TRAIN_DS_PATH,
-    CROWDFLOWER_TEST_DS_PATH,
+    CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
+    CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
 )
 
 torch.serialization.add_safe_globals([TensorDataset])
@@ -90,8 +90,8 @@ def main():
     print(f"Using device : {device}")
 
     print("Loading training data...")
-    train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH, weights_only=False)
-    test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH, weights_only=False)
+    train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
+    test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
     train_len = int(0.90 * len(train_ds))
     val_len = len(train_ds) - train_len

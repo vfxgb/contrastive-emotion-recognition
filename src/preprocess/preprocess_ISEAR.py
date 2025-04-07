@@ -15,8 +15,8 @@ from config import (
     BERT_MODEL,
     SPACY_MODEL,
     ISEAR_PATH,
-    ISEAR_TEST_DS_PATH,
-    ISEAR_TRAIN_DS_PATH,
+    ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
+    ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE,
     ISEAR_GLOVE_EMBEDDINGS_PATH
 )
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -190,8 +190,8 @@ if __name__ == "__main__":
     print(get_label_distribution(isear_test))
 
     # Save final datasets
-    torch.save(isear_train, ISEAR_TRAIN_DS_PATH)
-    torch.save(isear_test, ISEAR_TEST_DS_PATH)
+    torch.save(isear_train, ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE)
+    torch.save(isear_test, ISEAR_TEST_DS_PATH_WITHOUT_GLOVE)
 
     print("\nDatasets prepared and saved:")
     print(f"- ISEAR train: {len(isear_train)} samples")

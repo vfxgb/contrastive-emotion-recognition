@@ -3,22 +3,28 @@ import torch
 # Configuration for CrowdFlower dataset
 CROWDFLOWER_CLASSES = 9
 CROWDFLOWER_PATH = "data/CrowdFlower/text_emotion.csv"
-CROWDFLOWER_TRAIN_DS_PATH = "data/preprocessed_dataset/crowdflower/train.pt"
-CROWDFLOWER_TEST_DS_PATH = "data/preprocessed_dataset/crowdflower/test.pt"
+CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE = "data/preprocessed_dataset/crowdflower/train_wo_glove.pt"
+CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE = "data/preprocessed_dataset/crowdflower/test_wo_glove.pt"
+CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE = "data/preprocessed_dataset/crowdflower/train_w_glove.pt"
+CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE = "data/preprocessed_dataset/crowdflower/test_w_glove.pt"
 CROWDFLOWER_GLOVE_EMBEDDINGS_PATH = "data/preprocessed_dataset/crowdflower/glove_embedding_matrix.npy"
 
 # Configuration for ISEAR dataset
 ISEAR_CLASSES = 7
 ISEAR_PATH = "data/ISEAR/isear_data.csv"
-ISEAR_TRAIN_DS_PATH = "data/preprocessed_dataset/isear/train.pt"
-ISEAR_TEST_DS_PATH = "data/preprocessed_dataset/isear/test.pt"
+ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE = "data/preprocessed_dataset/isear/train_wo_glove.pt"
+ISEAR_TEST_DS_PATH_WITHOUT_GLOVE = "data/preprocessed_dataset/isear/test_wo_glove.pt"
+ISEAR_TRAIN_DS_PATH_WITH_GLOVE = "data/preprocessed_dataset/isear/train_w_glove.pt"
+ISEAR_TEST_DS_PATH_WITH_GLOVE = "data/preprocessed_dataset/isear/test_w_glove.pt"
 ISEAR_GLOVE_EMBEDDINGS_PATH = "data/preprocessed_dataset/isear/glove_embedding_matrix.npy"
 
 # Configuration for WASSA dataset
 WASSA_CLASSES = 6
 WASSA_PATH = "data/WASSA2021/wassa_2021.tsv"
-WASSA_TRAIN_DS_PATH = "data/preprocessed_dataset/wassa/train.pt"
-WASSA_TEST_DS_PATH = "data/preprocessed_dataset/wassa/test.pt"
+WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE = "data/preprocessed_dataset/wassa/train_wo_glove.pt"
+WASSA_TEST_DS_PATH_WITHOUT_GLOVE = "data/preprocessed_dataset/wassa/test_wo_glove.pt"
+WASSA_TRAIN_DS_PATH_WITH_GLOVE = "data/preprocessed_dataset/wassa/train_w_glove.pt"
+WASSA_TEST_DS_PATH_WITH_GLOVE = "data/preprocessed_dataset/wassa/test_w_glove.pt"
 WASSA_GLOVE_EMBEDDINGS_PATH = "data/preprocessed_dataset/wassa/glove_embedding_matrix.npy"
 
 # Configuration for BERT and spaCy models
@@ -43,13 +49,34 @@ def bilstm_without_glove_config():
         "batch_size": 1024,
         "finetune_batch_size": 32,
         "device": device,
-        "model_save_path": "results/bilstm/bilstm.pt",
-        "isear_finetune_save_path": "results/bilstm/isear_finetune_bilstm.pt",
-        "wassa21_finetune_save_path": "results/bilstm/wassa21_finetune_bilstm.pt",
+        "model_save_path": "results/bilstm/bilstm_wo_glove.pt",
+        "isear_finetune_save_path": "results/bilstm/isear_finetune_bilstm_wo_glove.pt",
+        "wassa21_finetune_save_path": "results/bilstm/wassa21_finetune_bilstm_wo_glove.pt",
     }
 
     return model_config
 
+def bilstm_with_glove_config():
+    """
+    Configuration for the BiLSTM_without_glove model.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model_config = {
+        "bert_model_name": "bert-large-uncased",
+        "hidden_dim": 256,
+        "dropout_rate": 0.3,
+        "lstm_layers": 1,
+        "num_epochs": 30,
+        "learning_rate": 0.001,
+        "batch_size": 1024,
+        "finetune_batch_size": 32,
+        "device": device,
+        "model_save_path": "results/bilstm/bilstm_w_glove.pt",
+        "isear_finetune_save_path": "results/bilstm/isear_finetune_bilstm_w_glove.pt",
+        "wassa21_finetune_save_path": "results/bilstm/wassa21_finetune_bilstm_w_glove.pt",
+    }
+
+    return model_config
 
 def mamba_config():
     """

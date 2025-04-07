@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset
 from transformers import AutoTokenizer
 import os
 from utils import clean_text, fetch_label_mapping, split_dataset, load_glove_embeddings
-from config import BERT_MODEL, WASSA_PATH, WASSA_TEST_DS_PATH, WASSA_TRAIN_DS_PATH, WASSA_GLOVE_EMBEDDINGS_PATH
+from config import BERT_MODEL, WASSA_PATH, WASSA_TEST_DS_PATH_WITHOUT_GLOVE, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, WASSA_GLOVE_EMBEDDINGS_PATH
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -149,8 +149,8 @@ if __name__ == "__main__":
     print(_get_label_distribution(wassa_test))
 
     # Save final datasets
-    torch.save(wassa_train, WASSA_TRAIN_DS_PATH)
-    torch.save(wassa_test, WASSA_TEST_DS_PATH)
+    torch.save(wassa_train, WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE)
+    torch.save(wassa_test, WASSA_TEST_DS_PATH_WITHOUT_GLOVE)
 
     print("\nDatasets prepared and saved:")
     print(f"- WASSA 2021 train: {len(wassa_train)} samples")

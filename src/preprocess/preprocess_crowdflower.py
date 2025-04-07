@@ -10,8 +10,8 @@ from config import (
     SPACY_MODEL,
     GLOVE_PATH,
     CROWDFLOWER_PATH,
-    CROWDFLOWER_TEST_DS_PATH,
-    CROWDFLOWER_TRAIN_DS_PATH,
+    CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
+    CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
     CROWDFLOWER_GLOVE_EMBEDDINGS_PATH
 )
 from utils import clean_text, split_dataset, load_glove_embeddings
@@ -174,6 +174,6 @@ if __name__ == "__main__":
 
    
     print("[Main] Saving datasets to disk...")
-    torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH)
-    torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH)
+    torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE)
+    torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE)
     print("[Main] Done.")

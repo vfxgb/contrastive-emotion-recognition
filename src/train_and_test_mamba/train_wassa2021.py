@@ -16,8 +16,8 @@ from models.bilstm_model import BiLSTM_without_glove
 from utils import set_seed, DualViewDataset, SupConLoss
 from config import (
     WASSA_CLASSES,
-    WASSA_TRAIN_DS_PATH,
-    WASSA_TEST_DS_PATH,
+    WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE,
+    WASSA_TEST_DS_PATH_WITHOUT_GLOVE,
     mamba_config,
     F1_AVERAGE_METRIC,
 )
@@ -102,8 +102,8 @@ def main():
         print(f"\n🔁 Run {run+1}/{num_runs}")
         set_seed(42 + run)
 
-        train_ds = torch.load(WASSA_TRAIN_DS_PATH, weights_only=False)
-        test_ds = torch.load(WASSA_TEST_DS_PATH, weights_only=False)
+        train_ds = torch.load(WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
+        test_ds = torch.load(WASSA_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
         train_len = int(0.90 * len(train_ds))
         val_len = len(train_ds) - train_len
