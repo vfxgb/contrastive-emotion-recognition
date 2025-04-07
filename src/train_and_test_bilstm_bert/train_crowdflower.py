@@ -61,9 +61,9 @@ def evaluate(model, dataloader, device, test=False):
             all_preds.extend(predicted.cpu().numpy())
 
     accuracy = accuracy_score(all_labels, all_preds)
-    f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
-    recall = recall_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
-    precision = precision_score(all_labels, all_preds, average=F1_AVERAGE_METRIC)
+    f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
+    recall = recall_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
+    precision = precision_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
 
     print(
         f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}, Recall: {recall:.4f}, Precision: {precision:.4f}"
@@ -151,7 +151,7 @@ def main():
             torch.save(model.state_dict(), model_save_path)
             trigger_times = 0
             print(
-                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and val: {val_f1:.4f}"
+                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and f1 score: {val_f1:.4f}"
             )
         else:
             trigger_times += 1
