@@ -13,6 +13,9 @@ GLOVE_DIR="glove"
 GLOVE_FILE="$GLOVE_DIR/glove.6B.300d.txt"
 GLOVE_ZIP_URL="https://www.kaggle.com/api/v1/datasets/download/thanakomsn/glove6b300dtxt"
 GLOVE_ZIP="$GLOVE_DIR/glove.6B.300d.zip"
+BILSTM_BERT_RESULTS_DIR="results/bilstm_bert"
+BILSTM_GLOVE_RESULTS_DIR="results/bilstm_glove"
+MAMBA_RESULTS_DIR="results/mamba"
 
 # === VALIDATION SETUP === 
 VALID_DATASETS=("crowdflower" "isear" "wassa")
@@ -161,8 +164,14 @@ else
 fi
 
 # === CONDITIONAL PREPROCESSING ===
+
 if [ "$MODEL" = "bilstm_glove" ]; then
     download_glove
+    mkdir -p "$BILSTM_GLOVE_RESULTS_DIR"
+elif [ "$MODEL" = "bilstm_bert" ]; then 
+    mkdir -p "$BILSTM_BERT_RESULTS_DIR"
+elif [ "$MODEL" = "mamba" ]; then 
+    mkdir -p "$MAMBA_RESULTS_DIR"
 fi
 
 echo "Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
