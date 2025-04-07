@@ -100,8 +100,8 @@ class BiLSTM_bert(nn.Module):
 class BiLSTM_glove(nn.Module):
     """
     BiLSTM_glove model for text classification using GloVe embeddings.
-    The model uses pre-trained GloVe word embeddings as input, processes them 
-    through a bidirectional LSTM to capture sequential dependencies in both 
+    The model uses pre-trained GloVe word embeddings as input, processes them
+    through a bidirectional LSTM to capture sequential dependencies in both
     directions and applies a series of fully connected layers for final classification.
 
     Args:
@@ -120,6 +120,7 @@ class BiLSTM_glove(nn.Module):
         dropout (nn.Dropout): Dropout layer for regularization.
 
     """
+
     def __init__(
         self, embedding_matrix_path, hidden_dim, num_classes, dropout_rate, lstm_layers
     ):

@@ -146,13 +146,13 @@ if __name__ == "__main__":
         "--with_glove", action="store_true", help="Use GloVe embeddings"
     )
 
-    # when --force_preprocess is set, the dataset is processed again even when the train.pt and test.pt are present  
+    # when --force_preprocess is set, the dataset is processed again even when the train.pt and test.pt are present
     parser.add_argument(
         "--force_preprocess",
         action="store_true",
         help="Force reprocessing even if files exist",
     )
-    
+
     args = parser.parse_args()
     with_glove = args.with_glove
     force_preprocess = args.force_preprocess

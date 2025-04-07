@@ -175,7 +175,7 @@ def set_seed(seed):
 
 def load_glove_embeddings(tokenizer, embeddings_file_path):
     """
-    Loads pre-trained GloVe word embeddings and constructs an embedding matrix 
+    Loads pre-trained GloVe word embeddings and constructs an embedding matrix
     aligned with the tokeniser's vocabulary
 
     For each word in the tokeniser vocabulary, the corresponding GloVe embedding
@@ -188,7 +188,7 @@ def load_glove_embeddings(tokenizer, embeddings_file_path):
     Saves:
         A NumPy `.npy` file with keys:
             - "embedding_matrix": A matrix of shape (vocab_size, 300)
-            - "vocab_size": The size of the vocabulary   
+            - "vocab_size": The size of the vocabulary
     """
     print("Loading GloVe embeddings...")
     embeddings_index = {}
