@@ -1,2 +1,4 @@
 *.pyc
 src/contrastive_emotion.egg-info
+src/__pycache__
+src/models/__pycache__
