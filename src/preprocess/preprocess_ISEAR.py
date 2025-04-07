@@ -143,32 +143,44 @@ if __name__ == "__main__":
     parser.add_argument(
         "--with_glove", action="store_true", help="Use GloVe embeddings"
     )
+    parser.add_argument(
+        "--force_preprocess", action="store_true", help="Force reprocessing even if files exist"
+    )
     args = parser.parse_args()
     with_glove = args.with_glove
+    force_preprocess = args.force_preprocess
 
     os.makedirs("data", exist_ok=True)
 
     print("[Main] Loading and processing ISEAR dataset...")
 
     if with_glove:
-        isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
-        load_glove_embeddings(tokenizer, ISEAR_GLOVE_EMBEDDINGS_PATH)
+        if not force_preprocess and os.path.exists(ISEAR_TRAIN_DS_PATH_WITH_GLOVE) and os.path.exists(ISEAR_TEST_DS_PATH_WITH_GLOVE):
+            print("[Main] Dataset already preprocessed. Skipping...")
+        else:
+            print("[Main] Preprocessing Dataset.")
+            isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
+            load_glove_embeddings(tokenizer, ISEAR_GLOVE_EMBEDDINGS_PATH)
 
-        print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset(isear_dataset, split_ratio=0.8, glove=True)
+            print("[Main] Splitting dataset into train and test...")
+            train_ds, test_ds = split_dataset(isear_dataset, split_ratio=0.8, glove=True)
 
-        print("[Main] Saving datasets to disk...")
-        torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITH_GLOVE)
-        torch.save(test_ds, ISEAR_TEST_DS_PATH_WITH_GLOVE)
+            print("[Main] Saving datasets to disk...")
+            torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITH_GLOVE)
+            torch.save(test_ds, ISEAR_TEST_DS_PATH_WITH_GLOVE)
 
     else:
-        isear_dataset = load_isear_without_glove(ISEAR_PATH, max_length=128)
+        if not force_preprocess and os.path.exists(ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE) and os.path.exists(ISEAR_TEST_DS_PATH_WITHOUT_GLOVE):
+            print("[Main] Dataset already preprocessed. Skipping...")
+        else:
+            print("[Main] Preprocessing Dataset.")
+            isear_dataset = load_isear_without_glove(ISEAR_PATH, max_length=128)
 
-        print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset(isear_dataset, split_ratio=0.8, glove=False)
+            print("[Main] Splitting dataset into train and test...")
+            train_ds, test_ds = split_dataset(isear_dataset, split_ratio=0.8, glove=False)
 
-        print("[Main] Saving datasets to disk...")
-        torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE)
-        torch.save(test_ds, ISEAR_TEST_DS_PATH_WITHOUT_GLOVE)
+            print("[Main] Saving datasets to disk...")
+            torch.save(train_ds, ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE)
+            torch.save(test_ds, ISEAR_TEST_DS_PATH_WITHOUT_GLOVE)
 
     print("[Main] Done.")

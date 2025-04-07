@@ -160,36 +160,48 @@ if __name__ == "__main__":
     parser.add_argument(
         "--with_glove", action="store_true", help="Use GloVe embeddings"
     )
+    parser.add_argument(
+        "--force_preprocess", action="store_true", help="Force reprocessing even if files exist"
+    )
     args = parser.parse_args()
     with_glove = args.with_glove
+    force_preprocess = args.force_preprocess
 
     os.makedirs("data", exist_ok=True)
 
     print("[Main] Loading and processing CrowdFlower dataset...")
 
     if with_glove:
-        crowdflower_dataset, tokenizer = load_crowdflower_with_glove(CROWDFLOWER_PATH)
-        load_glove_embeddings(tokenizer, CROWDFLOWER_GLOVE_EMBEDDINGS_PATH)
+        if not force_preprocess and os.path.exists(CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE) and os.path.exists(CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE):
+            print("[Main] Dataset already preprocessed. Skipping...")
+        else:
+            print("[Main] Preprocessing Dataset.")
+            crowdflower_dataset, tokenizer = load_crowdflower_with_glove(CROWDFLOWER_PATH)
+            load_glove_embeddings(tokenizer, CROWDFLOWER_GLOVE_EMBEDDINGS_PATH)
 
-        print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset(
-            crowdflower_dataset, split_ratio=0.8, glove=True
-        )
+            print("[Main] Splitting dataset into train and test...")
+            train_ds, test_ds = split_dataset(
+                crowdflower_dataset, split_ratio=0.8, glove=True
+            )
 
-        print("[Main] Saving datasets to disk...")
-        torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE)
-        torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE)
+            print("[Main] Saving datasets to disk...")
+            torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE)
+            torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE)
 
     else:
-        crowdflower_dataset = load_crowdflower_without_glove(CROWDFLOWER_PATH)
+        if not force_preprocess and os.path.exists(CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE) and os.path.exists(CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE):
+            print("[Main] Dataset already preprocessed. Skipping...")
+        else:
+            print("[Main] Preprocessing Dataset.")
+            crowdflower_dataset = load_crowdflower_without_glove(CROWDFLOWER_PATH)
 
-        print("[Main] Splitting dataset into train and test...")
-        train_ds, test_ds = split_dataset(
-            crowdflower_dataset, split_ratio=0.8, glove=False
-        )
+            print("[Main] Splitting dataset into train and test...")
+            train_ds, test_ds = split_dataset(
+                crowdflower_dataset, split_ratio=0.8, glove=False
+            )
 
-        print("[Main] Saving datasets to disk...")
-        torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE)
-        torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE)
+            print("[Main] Saving datasets to disk...")
+            torch.save(train_ds, CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE)
+            torch.save(test_ds, CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE)
 
     print("[Main] Done.")
