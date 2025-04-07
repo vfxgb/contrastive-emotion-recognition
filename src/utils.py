@@ -69,6 +69,7 @@ def split_dataset(dataset, split_ratio=0.8, seed=42, glove=True):
     if glove:
         labels = dataset.tensors[1]
     else:
+        attention_mask = dataset.tensors[1]
         labels = dataset.tensors[2]
 
     # Convert to list of text tokens to ensure no overlaps
@@ -134,6 +135,7 @@ class DualViewDataset(torch.utils.data.Dataset):
 def set_seed(seed):
     """
     Sets random seed.
+    
     Args:
         seed(int) : random seed
     """
