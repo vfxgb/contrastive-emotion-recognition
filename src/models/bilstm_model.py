@@ -58,9 +58,6 @@ class BiLSTM_bert(nn.Module):
             batch_first=True,
         )
 
-        # Global max pooling layer
-        self.global_max_pool = lambda x: torch.max(x, dim=1)[0]
-
         # fully connected layers for classification
         self.fc1 = nn.Linear(hidden_dim * 2, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim // 2)
@@ -125,9 +122,6 @@ class BiLSTM_glove(nn.Module):
             bidirectional=True,
             batch_first=True,
         )
-
-        # Global max pooling layer
-        self.global_max_pool = lambda x: torch.max(x, dim=1)[0]
 
         # fully connected layers for classification
         self.fc1 = nn.Linear(hidden_dim * 2, hidden_dim)
