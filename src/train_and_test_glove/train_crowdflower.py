@@ -20,6 +20,7 @@ from config import (
     CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_GLOVE_EMBEDDINGS_PATH
 )
+from utils import split_dataset
 
 torch.serialization.add_safe_globals([TensorDataset])
 
@@ -41,19 +42,19 @@ def evaluate(model, dataloader, device, test=False):
             - precision (float): The precision (macro) of the model on the dataset.
     """
     model.eval()
+    
     all_labels = []
     all_preds = []
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, attention_mask, labels in tqdm(dataloader, desc=desc):
-            input_ids, attention_mask, labels = (
+        for input_ids, labels in tqdm(dataloader, desc=desc):
+            input_ids, labels = (
                 input_ids.to(device),
-                attention_mask.to(device),
                 labels.to(device),
             )
 
-            logits = model(input_ids, attention_mask)
+            logits = model(input_ids)
 
             _, predicted = logits.max(1)
             all_labels.extend(labels.cpu().numpy())
@@ -89,14 +90,10 @@ def main():
     print(f"Using device : {device}")
 
     print("Loading training data...")
-    train_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
+    train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE, weights_only=False)
     test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
 
-    train_len = int(0.90 * len(train_ds))
-    val_len = len(train_ds) - train_len
-    train_ds, val_ds = random_split(
-        train_ds, [train_len, val_len], generator=torch.Generator().manual_seed(42)
-    )
+    train_ds, val_ds = split_dataset(dataset=train_ds, split_ratio=0.9, glove=True)
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
@@ -122,18 +119,17 @@ def main():
         model.train()
         total_loss = 0
 
-        for input_ids, attention_mask, labels in tqdm(
+        for input_ids, labels in tqdm(
             train_loader, desc=f"Epoch {epoch+1}"
         ):
-            input_ids, attention_mask, labels = (
+            input_ids, labels = (
                 input_ids.to(device),
-                attention_mask.to(device),
                 labels.to(device),
             )
 
             optimizer.zero_grad()
 
-            logits = model(input_ids, attention_mask)
+            logits = model(input_ids)
             loss = criterion(logits, labels)
             loss.backward()
 

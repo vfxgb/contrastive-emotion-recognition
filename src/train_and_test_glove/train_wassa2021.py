@@ -87,14 +87,13 @@ def evaluate(model, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, attention_mask, labels in tqdm(dataloader, desc=desc):
-            input_ids, attention_mask, labels = (
+        for input_ids, labels in tqdm(dataloader, desc=desc):
+            input_ids, labels = (
                 input_ids.to(device),
-                attention_mask.to(device),
                 labels.to(device),
             )
 
-            logits = model(input_ids, attention_mask)
+            logits = model(input_ids)
 
             _, predicted = logits.max(1)
             all_labels.extend(labels.cpu().numpy())
@@ -140,13 +139,7 @@ def main():
         train_ds = torch.load(WASSA_TRAIN_DS_PATH_WITH_GLOVE, weights_only=False)
         test_ds = torch.load(WASSA_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
 
-        train_len = int(0.90 * len(train_ds))
-        val_len = len(train_ds) - train_len
-        train_ds, val_ds = random_split(
-            train_ds,
-            [train_len, val_len],
-            generator=torch.Generator().manual_seed(42 + run),
-        )
+        train_ds, val_ds = split_dataset(dataset=train_ds, split_ratio=0.9, seed=42+run, glove=True)
 
         train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
@@ -159,9 +152,9 @@ def main():
             model_config=model_config,
         )
 
-        # freeze bert and lstm layers and only train the final classification layer
-        for param in model.bert.parameters():
-            param.requires_grad = False  # freeze all
+        # freeze embedding and lstm layers and only train the final classification layer
+        for param in model.embedding.parameters():
+            param.requires_grad = False # freeze embeddings
         for param in model.lstm.parameters():
             param.requires_grad = True
         for param in model.fc1.parameters():
@@ -183,18 +176,17 @@ def main():
             model.train()
             total_loss = 0
 
-            for input_ids, attention_mask, labels in tqdm(
+            for input_ids, labels in tqdm(
                 train_loader, desc=f"Epoch {epoch+1}"
             ):
-                input_ids, attention_mask, labels = (
+                input_ids, labels = (
                     input_ids.to(device),
-                    attention_mask.to(device),
                     labels.to(device),
                 )
 
                 optimizer.zero_grad()
 
-                logits = model(input_ids, attention_mask)
+                logits = model(input_ids)
                 loss = criterion(logits, labels)
                 loss.backward()
 
