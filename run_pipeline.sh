@@ -1,18 +1,28 @@
 #!/bin/bash
 
-# run_pipeline_new.sh
 # Usage:
-#   ./run_pipeline_new.sh [--train_test] <dataset> [<model>]
+#     ./run_pipeline.sh [--force_preprocess] <dataset> <model>
+# Example:
+#     ./run_pipeline.sh --force_preprocess crowdflower bilstm_glove
 #   Available datasets: crowdflower, isear, wassa
-#   Available models: bilstm_glove, bilstm, mamba, 
+#   Available models: bilstm_glove, bilstm_bert, mamba
 
-# Configuration
+# === Configuration ===
 LOG_DIR="logs"
 GLOVE_DIR="glove"
 GLOVE_FILE="$GLOVE_DIR/glove.840B.300d.txt"
 GLOVE_ZIP_URL="http://nlp.stanford.edu/data/glove.840B.300d.zip"
 GLOVE_ZIP="$GLOVE_DIR/glove.840B.300d.zip"
 
+# === VALIDATION SETUP === 
+VALID_DATASETS=("crowdflower" "isear" "wassa")
+VALID_MODELS=("bilstm_glove" "bilstm_bert" "mamba")
+
+FORCE_PREPROCESS=false
+DATASET=""
+MODEL=""
+
+# === Scripts ===
 declare -A PREPROCESS_SCRIPTS=(
     ["crowdflower"]="src/preprocess/preprocess_crowdflower.py"
     ["isear"]="src/preprocess/preprocess_isear.py"
@@ -21,27 +31,20 @@ declare -A PREPROCESS_SCRIPTS=(
 
 declare -A TRAIN_SCRIPTS=(
     # bilstm model without glove 
-    ["crowdflower:bilstm"]="src/train_and_test_bilstm_bert/train_crowdflower.py"
-    ["isear:bilstm"]="src/train_and_test_bilstm_bert/train_isear.py"
-    ["wassa:bilstm"]="src/train_and_test_bilstm_bert/train_wassa2021.py"
+    ["crowdflower:bilstm_bert"]="src/train_and_test_bilstm_bert/train_crowdflower.py"
+    ["isear:bilstm_bert"]="src/train_and_test_bilstm_bert/train_isear.py"
+    ["wassa:bilstm_bert"]="src/train_and_test_bilstm_bert/train_wassa2021.py"
 
     # bilstm model with glove 
-    ["crowdflower:bilstm"]="src/train_and_test_bilstm_glove/train_crowdflower.py"
-    ["isear:bilstm"]="src/train_and_test_bilstm_glove/train_isear.py"
-    ["wassa:bilstm"]="src/train_and_test_bilstm_glove/train_wassa2021.py"
+    ["crowdflower:bilstm_glove"]="src/train_and_test_bilstm_glove/train_crowdflower.py"
+    ["isear:bilstm_glove"]="src/train_and_test_bilstm_glove/train_isear.py"
+    ["wassa:bilstm_glove"]="src/train_and_test_bilstm_glove/train_wassa2021.py"
 
     # mamba model
     ["crowdflower:mamba"]="src/train_and_test_mamba/train_crowdflower.py"
     ["isear:mamba"]="src/train_and_test_mamba/train_isear.py"
     ["wassa:mamba"]="src/train_and_test_mamba/train_wassa2021.py"
 )
-
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-ALL_DATASETS=("crowdflower" "isear" "wassa")
-ALL_MODELS=("bilstm_glove" "bilstm" "mamba")
-
-# Create log directory
-mkdir -p $LOG_DIR
 
 download_glove() {
     if [ -f "$GLOVE_FILE" ]; then
@@ -69,150 +72,92 @@ download_glove() {
     echo "GloVe embeddings downloaded and extracted to $GLOVE_FILE"
 }
 
-preprocess(){
-    local dataset=$1
-    echo "Starting preprocessing for $dataset..."
-    script=${PREPROCESS_SCRIPTS[$dataset]}
-
-    log_file="$LOG_DIR/${dataset}_preprocess_${TIMESTAMP}.log"
-
-    if [ -z "$script" ]; then
-        echo "No preprocessing script found for $dataset"
-        return 1
-    fi
-    python $script 2>&1 | tee $log_file
-    return ${PIPESTATUS[0]}
-}
-
-train_and_test(){
-    local dataset=$1
-    local model=$2
-    echo "Starting training/testing for $dataset with model $model..."
-    script=${TRAIN_SCRIPTS["$dataset:$model"]}
-
-    log_file="$LOG_DIR/${dataset}_${model}_train_${TIMESTAMP}.log"
-
-    if [ -z "$script" ]; then
-        echo "No training script found for $dataset with model $model"
-        return 1
-    fi
-
-    python $script 2>&1 | tee $log_file
-    return ${PIPESTATUS[0]}
-}
-
-usage(){
-    echo "Usage: $0 [--all] [--preprocess] [--train_test] [<dataset>] [<model>]"
+# === USAGE ===
+usage() {
+    echo "Usage: $0 [--force_preprocess] <dataset> <model>"
     echo "  Options:"
-    echo "    --all           Process all datasets"
-    echo "    --preprocess    Run only preprocessing"
-    echo "    --train_test    Run only training/testing"
-    echo "  Datasets: ${!PREPROCESS_SCRIPTS[@]}"
-    echo "  Models: ${ALL_MODELS[@]}"
-    echo "  Default: Run both preprocessing and training/testing"
+    echo "    --force_preprocess    Preprocesses data again if true, if false, preprocesses only if required"
+    echo "  Datasets: ${VALID_DATASETS[*]}"
+    echo "  Models: ${VALID_MODELS[*]}"
     exit 1
 }
 
-process_dataset() {
-    local dataset=$1
-    local model=$2
-    local do_preprocess=$3
-    local do_train_test=$4
+# === ARG PARSING ===
 
-    if $do_preprocess; then
-        preprocess $dataset || return 1
-    fi
-
-    if $do_train_test; then
-        train_and_test $dataset $model || return 1
-    fi
-}
-
-main() {
-    local do_preprocess=false
-    local do_train_test=false
-    local process_all=false
-    local dataset=""
-    local model=""
-
-    # Parse flags
-    while [ $# -gt 0 ]; do
-        case $1 in
-            --all)
-                process_all=true
-                shift
-                ;;
-            --preprocess)
-                do_preprocess=true
-                shift
-                ;;
-            --train_test)
-                do_train_test=true
-                shift
-                ;;
-            -*)
-                echo "Invalid option: $1"
-                usage
-                ;;
-            *)
-                if [[ -z "$dataset" ]]; then
-                    dataset=$1
-                elif [[ -z "$model" ]]; then
-                    model=$1
-                else
-                    echo "Unexpected argument: $1"
-                    usage
-                fi
-                shift
-                ;;
-        esac
-    done
-
-    # Validate argument combinations
-    if $process_all && [[ -n "$dataset" ]]; then
-        echo "Error: Cannot specify both --all and dataset"
-        usage
-    fi
-
-    if ! $do_preprocess && ! $do_train_test; then
-        do_preprocess=true
-        do_train_test=true
-    fi
-
-    if $do_train_test && [[ -z "$model" ]]; then
-        echo "Error: --train_test requires specifying a model (bilstm, mamba)"
-        usage
-    fi
-
-    # Download GloVe if not present
-    download_glove
-
-    # Determine datasets to process
-    local datasets=()
-    if $process_all; then
-        datasets=("${ALL_DATASETS[@]}")
-    elif [[ -n "$dataset" ]]; then
-        if [[ ! -v PREPROCESS_SCRIPTS[$dataset] ]]; then
-            echo "Invalid dataset: $dataset"
-            echo "Available datasets: ${!PREPROCESS_SCRIPTS[@]}"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --force_preprocess)
+            FORCE_PREPROCESS=true
+            shift
+            ;;
+        crowdflower|isear|wassa)
+            if [ -z "$DATASET" ]; then
+                DATASET=$1
+            else
+                echo "Error: Dataset already set to $DATASET. Unexpected value: $1"
+                exit 1
+            fi
+            shift
+            ;;
+        bilstm_glove|bilstm_bert|mamba)
+            if [ -z "$MODEL" ]; then
+                MODEL=$1
+            else
+                echo "Error: Model already set to $MODEL. Unexpected value: $1"
+                exit 1
+            fi
+            shift
+            ;;
+        -*)
+            echo "Invalid option: $1"
+            usage
+            ;;
+        *)
+            echo "Unknown argument: $1"
             exit 1
-        fi
-        datasets=("$dataset")
+            ;;
+    esac
+done
+
+# === VALIDATION CHECKS ===
+
+if [[ -z "$DATASET" || -z "$MODEL" ]]; then
+    usage
+fi
+
+# === GET SCRIPT TO RUN ===
+
+PREPROCESS_SCRIPT="${PREPROCESS_SCRIPTS[$DATASET]}"
+TRAIN_SCRIPT="${TRAIN_SCRIPTS["$DATASET:$MODEL"]}"
+
+if [ -z "$PREPROCESS_SCRIPT" ] || [ -z "$TRAIN_SCRIPT" ]; then
+    echo "No script found for dataset=$DATASET and model=$MODEL"
+    exit 1
+fi
+
+# === LOGGING ===
+
+mkdir -p $LOG_DIR
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="$LOG_DIR/${DATASET}_${MODEL}_${TIMESTAMP}.log"
+
+echo "Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
+
+# === CONDITIONAL PREPROCESSING ===
+if [ "$MODEL" = "bilstm_glove" ]; then
+    download_glove
+fi
+
+if [ "$FORCE_PREPROCESS" = true ]; then
+    if [ "$MODEL" = "bilstm_glove" ]; then
+        python "$PREPROCESS_SCRIPT" --with_glove --force_preprocess 2>&1 | tee -a "$LOG_FILE"
     else
-        echo "Error: Must specify either --all or a dataset"
-        usage
+        python "$PREPROCESS_SCRIPT" --force_preprocess 2>&1 | tee -a "$LOG_FILE"
     fi
+else
+    python "$PREPROCESS_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
+fi
 
-    # Process datasets
-    for ds in "${datasets[@]}"; do
-        echo "========================================"
-        echo "Processing dataset: $ds"
-        process_dataset $ds $model $do_preprocess $do_train_test || exit 1
-    done
-
-    echo "========================================"
-    echo "All operations completed successfully!"
-}
-
-# Run main function
-main "$@"
+# === TRAINING ===
+echo "[Train] Running training for dataset=$DATASET model=$MODEL"
+python "$TRAIN_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
