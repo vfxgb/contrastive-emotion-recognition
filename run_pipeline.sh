@@ -2,9 +2,9 @@
 
 # run_pipeline_new.sh
 # Usage:
-#   ./run_pipeline_new.sh [--all] [--preprocess] [--train_test] [<dataset>] [<model>]
+#   ./run_pipeline_new.sh [--train_test] <dataset> [<model>]
 #   Available datasets: crowdflower, isear, wassa
-#   Available models: lstm, mamba
+#   Available models: bilstm_glove, bilstm, mamba, 
 
 # Configuration
 LOG_DIR="logs"
@@ -20,10 +20,15 @@ declare -A PREPROCESS_SCRIPTS=(
 )
 
 declare -A TRAIN_SCRIPTS=(
-    # bilstm model
-    ["crowdflower:bilstm"]="src/train_and_test_bilstm_wo_glove/train_crowdflower.py"
-    ["isear:bilstm"]="src/train_and_test_bilstm_wo_glove/train_isear.py"
-    ["wassa:bilstm"]="src/train_and_test_bilstm_wo_glove/train_wassa2021.py"
+    # bilstm model without glove 
+    ["crowdflower:bilstm"]="src/train_and_test_bilstm_bert/train_crowdflower.py"
+    ["isear:bilstm"]="src/train_and_test_bilstm_bert/train_isear.py"
+    ["wassa:bilstm"]="src/train_and_test_bilstm_bert/train_wassa2021.py"
+
+    # bilstm model with glove 
+    ["crowdflower:bilstm"]="src/train_and_test_bilstm_glove/train_crowdflower.py"
+    ["isear:bilstm"]="src/train_and_test_bilstm_glove/train_isear.py"
+    ["wassa:bilstm"]="src/train_and_test_bilstm_glove/train_wassa2021.py"
 
     # mamba model
     ["crowdflower:mamba"]="src/train_and_test_mamba/train_crowdflower.py"
@@ -33,7 +38,7 @@ declare -A TRAIN_SCRIPTS=(
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 ALL_DATASETS=("crowdflower" "isear" "wassa")
-ALL_MODELS=("bilstm" "mamba")
+ALL_MODELS=("bilstm_glove" "bilstm" "mamba")
 
 # Create log directory
 mkdir -p $LOG_DIR

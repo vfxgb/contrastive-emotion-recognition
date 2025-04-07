@@ -49,9 +49,9 @@ declare -A TRAIN_SCRIPTS=(
     ["wassa:bigru"]="src/train_and_test_bigru/train_wassa2021.py"
 
     # bilstm model
-    ["crowdflower:bilstm"]="src/train_and_test_bilstm_wo_glove/train_crowdflower.py"
-    ["isear:bilstm"]="src/train_and_test_bilstm_wo_glove/train_isear.py"
-    ["wassa:bilstm"]="src/train_and_test_bilstm_wo_glove/train_wassa2021.py"
+    ["crowdflower:bilstm"]="src/train_and_test_bilstm_bert/train_crowdflower.py"
+    ["isear:bilstm"]="src/train_and_test_bilstm_bert/train_isear.py"
+    ["wassa:bilstm"]="src/train_and_test_bilstm_bert/train_wassa2021.py"
 
     # mamba model
     ["crowdflower:mamba"]="src/train_and_test_mamba/train_crowdflower.py"
