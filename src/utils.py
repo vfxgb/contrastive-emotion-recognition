@@ -56,39 +56,34 @@ def print_test_stats(test_acc_list, test_recall_list, test_precision_list, test_
     print(f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")
 
 def split_dataset(dataset, split_ratio=0.8, seed=42, glove=True):
-    """
-    Splits the dataset into training and test sets while maintaining label distribution using stratified sampling.
-
-    Args:
-        dataset (TensorDataset): The dataset to split.
-        split_ratio (float): The ratio of the data to be used for training.
-        seed (int): The random seed for reproducibility.
-
-    Returns:
-        tuple: A tuple containing the training and test datasets as Subset objects.
-    """
-    input_ids = dataset.tensors[0]
-    if glove:
-        labels = dataset.tensors[1]
+    if isinstance(dataset, torch.utils.data.Subset):
+        base_dataset = dataset.dataset
+        subset_indices = dataset.indices
     else:
-        attention_mask = dataset.tensors[1]
-        labels = dataset.tensors[2]
+        base_dataset = dataset
+        subset_indices = list(range(len(dataset)))
 
-    # Convert to list of text tokens to ensure no overlaps
-    text_ids = [tuple(row.tolist()) for row in input_ids]  # immutable for hashing
+    input_ids = base_dataset.tensors[0][subset_indices]
+    if glove:
+        labels = base_dataset.tensors[1][subset_indices]
+    else:
+        attention_mask = base_dataset.tensors[1][subset_indices]
+        labels = base_dataset.tensors[2][subset_indices]
+
+    text_ids = [tuple(row.tolist()) for row in input_ids]
     _, indices = np.unique(text_ids, return_index=True, axis=0)
 
+    selected_indices = [subset_indices[i] for i in indices]
+
     X_train_idx, X_test_idx = train_test_split(
-        indices,
+        selected_indices,
         train_size=split_ratio,
         random_state=seed,
-        stratify=labels[
-            indices
-        ].numpy(),  # Stratified sampling to maintain label distribution
+        stratify=labels[indices].numpy(),
     )
 
-    train_ds = Subset(dataset, X_train_idx)
-    test_ds = Subset(dataset, X_test_idx)
+    train_ds = Subset(base_dataset, X_train_idx)
+    test_ds = Subset(base_dataset, X_test_idx)
 
     print(f"[Split] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
     return train_ds, test_ds
