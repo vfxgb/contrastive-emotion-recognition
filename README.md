@@ -89,20 +89,6 @@ conda activate SC4001
 
 `--force_preprocess` is optional; if omitted, the script will only preprocess if it hasn’t been done before.
 
-
-**Examples**:
-```bash
-# Process all datasets (preprocess + train/test)
-./run_pipeline.sh --all
-
-# Preprocess WASSA only
-./run_pipeline.sh --preprocess wassa
-
-# Train/test on ISEAR and CrowdFlower
-./run_pipeline.sh --train_test isear
-./run_pipeline.sh --train_test crowdflower
-```
-
 ## 🛠️ Model Architectures
 - **Baseline:** Fine-tuned BERT classifier.
 - **Proposed:** **Selective Mamba** embeddings optimized with **Supervised + Self-Supervised Contrastive Learning** for enhanced emotion discrimination.
