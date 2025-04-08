@@ -26,7 +26,8 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     Evaluates model.
 
     Args:
-        model : The model to evaluate
+        encoder: The encoder of the model to evaluate
+        classifier: The classifier of the model to evaluate
         dataloader : dataloader for val or test dataset
         device : the device to perform computation on. ( cuda or cpu )
         test : whether evaluting on test or train ds.
