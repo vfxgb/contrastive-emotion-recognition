@@ -1,0 +1,203 @@
+name: SC4001_macos
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # --- Python + pip ---
+  - python=3.10
+  - pip
+
+  # --- Cross-platform basics (retained) ---
+  - absl-py
+  - aiohappyeyeballs
+  - aiohttp
+  - aiosignal
+  - arrow-cpp
+  - astunparse
+  - async-timeout
+  - attrs
+  - aws-c-auth
+  - aws-c-cal
+  - aws-c-common
+  - aws-c-compression
+  - aws-c-event-stream
+  - aws-c-http
+  - aws-c-io
+  - aws-c-mqtt
+  - aws-c-s3
+  - aws-c-sdkutils
+  - aws-checksums
+  - aws-crt-cpp
+  - aws-sdk-cpp
+  - blinker
+  - bottleneck
+  - brotli-python
+  - bzip2
+  - c-ares
+  - ca-certificates
+  - cachetools
+  - certifi
+  - cffi
+  - charset-normalizer
+  - click
+  - colorama
+  - cryptography
+  - datasets
+  - dill
+  - filelock
+  - flatbuffers
+  - frozenlist
+  - gast
+  - gflags
+  - giflib
+  - glog
+  - google-auth
+  - google-auth-oauthlib
+  - google-pasta
+  - grpc-cpp
+  - grpcio
+  - h5py
+  - hdf5
+  - huggingface_hub
+  - icu
+  - idna
+  - importlib-metadata
+  - joblib
+  - jpeg
+  - keras
+  - keras-preprocessing
+  - krb5
+  - libarrow           # Should exist on macOS
+  - libbrotlicommon
+  - libbrotlidec
+  - libbrotlienc
+  - libcurl
+  - libedit
+  - libev
+  - libevent
+  - libffi
+  - libgoogle-cloud
+  - libgrpc
+  - libnghttp2
+  - libpng
+  - libprotobuf
+  - libsqlite
+  - libssh2
+  - libthrift
+  - libutf8proc
+  - libuuid
+  - libzlib
+  - lz4-c
+  - markdown
+  - markupsafe
+  - multidict
+  - multiprocess
+  - ncurses
+  - numexpr
+  - numpy
+  - pandas
+  - parquet-cpp
+  - protobuf
+  - pyarrow
+  - pyarrow-hotfix
+  - pyasn1
+  - pyasn1-modules
+  - pycparser
+  - pyjwt
+  - requests
+  - requests-oauthlib
+  - rsa
+  - s2n
+  - safetensors
+  - scikit-learn
+  - scipy
+  - setuptools
+  - six
+  - snappy
+  - sqlite
+  - tbb
+  - tensorboard
+  - tensorboard-data-server
+  - tensorboard-plugin-wit
+  - termcolor
+  - threadpoolctl
+  - tk
+  - tokenizers
+  - tqdm
+  - transformers
+  - typing-extensions
+  - typing_extensions
+  - tzdata
+  - urllib3
+  - werkzeug
+  - wheel
+  - wrapt
+  - xxhash
+  - xz
+  - yaml
+  - yarl
+  - zipp
+  - zlib
+  - zstd
+
+  # --- Potentially problematic or not needed on macOS ARM ---
+  # If you are on Intel Mac, you could keep some of these. If on M1/M2, 
+  # they might not be available. 
+  # For example, you could remove these if they cause conflicts:
+  # - tensorflow
+  # - tensorflow-base
+  # - tensorflow-estimator
+  # - ...
+  - tensorflow
+  - tensorflow-base
+  - tensorflow-estimator
+  
+  # --- PyTorch (via pip or conda) ---
+  - pip:
+      # HPC / NVIDIA stuff removed. If you keep them, they’ll fail on macOS:
+      # - nvidia-cublas-cu12, nvidia-cudnn-cu12, etc.
+      
+      - annotated-types==0.7.0
+      - blis==1.2.0
+      - catalogue==2.0.10
+      - causal-conv1d==1.5.0.post8
+      - cloudpathlib==0.21.0
+      - confection==0.1.5
+      - cymem==2.0.11
+      - einops==0.8.1
+      - en-core-web-sm==3.8.0
+      - fsspec==2025.3.0
+      - jinja2==3.1.6
+      - langcodes==3.5.0
+      - language-data==1.3.0
+      - mamba-ssm==2.2.4
+      - marisa-trie==1.2.1
+      - markdown-it-py==3.0.0
+      - mdurl==0.1.2
+      - mpmath==1.3.0
+      - murmurhash==1.0.12
+      - networkx==3.4.2
+      - ninja==1.11.1.4
+      - preshed==3.0.9
+      - pydantic==2.11.1
+      - pydantic-core==2.33.0
+      - pygments==2.19.1
+      - rich==13.9.4
+      - shellingham==1.5.4
+      - smart-open==7.1.0
+      - spacy==3.8.4
+      - spacy-legacy==3.0.12
+      - spacy-loggers==1.0.5
+      - srsly==2.5.1
+      - sympy==1.13.1
+      - thinc==8.3.4
+
+      # Torch & Triton on macOS
+      - torch==2.6.0
+      - triton==3.2.0
+
+      - typer==0.15.2
+      - typing-inspection==0.4.0
+      - wasabi==1.1.3
+      - weasel==0.4.1
