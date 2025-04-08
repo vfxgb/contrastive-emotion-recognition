@@ -68,13 +68,6 @@ conda activate SC4001
 
 ---
 
-## 🛠️ Model Architectures
-- **Baseline:** Fine-tuned BERT classifier.
-- **Proposed:** **Selective Mamba** embeddings optimized with **Supervised + Self-Supervised Contrastive Learning** for enhanced emotion discrimination.
-- **Metrics:** Accuracy, F1-score, and t-SNE visualizations.
-
----
-
 ## 🤝 Contributing
 Feel free to contribute! Fork the repo, create a new branch, and submit a pull request.
 
