@@ -37,7 +37,7 @@ We propose an innovative **Mamba-Contrastive approach** that:
 ### **Step 1: Clone the Repository**
 ```bash
 git clone https://github.com/yourusername/contrastive-emotion-recognition.git
-cd contrastive-emotion-recognition.git
+cd contrastive-emotion-recognition
 ```
 
 ### **Step 2: Create a Virtual Environment & Install Dependencies**
