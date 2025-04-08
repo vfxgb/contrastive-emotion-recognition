@@ -21,7 +21,6 @@ We propose an innovative **Mamba-Contrastive approach** that:
 ---
 
 ## 🚀 Key Features
-✅ **Baseline Model:** Fine-tuned BERT for standard emotion classification.  
 ✅ **Proposed Model:** **Selective Mamba + Contrastive Learning** to leverage global context and learn robust emotion embeddings.  
 ✅ **Cross-Dataset Evaluation:** Train on **CrowdFlower**, evaluate on **WASSA 2021** & **ISEAR** to test generalization.  
 
@@ -73,32 +72,6 @@ conda activate SC4001
 - **Baseline:** Fine-tuned BERT classifier.
 - **Proposed:** **Selective Mamba** embeddings optimized with **Supervised + Self-Supervised Contrastive Learning** for enhanced emotion discrimination.
 - **Metrics:** Accuracy, F1-score, and t-SNE visualizations.
-
----
-
-## 📌 Expected Results - TBC
-✅ **Hypothesis:** The integration of Mamba and Contrastive Learning will yield superior performance and better generalization.
-
-| **Model**                   | **Dataset**     | **Accuracy** | **F1-Score** |
-|-----------------------------|-----------------|--------------|--------------|
-| Bilstm                      | CrowdFlower     | 85.2%        | 84.8%        |
-| Bilstm                      | WASSA           | 78.5%        | 77.9%        |
-| Bilstm                      | ISEAR           | 78.5%        | 77.9%        |
-| **Contrastive-Mamba (ours)**| **CrowdFlower** | **89.0%**    | **88.5%**    |
-| **Contrastive-Mamba (ours)**| **WASSA**       | **85.0%**    | **84.3%**    |
-| **Contrastive-Mamba (ours)**| **ISEAR**       | **85.0%**    | **84.3%**    |
-
----
-
-## 📌 To-Do Checklist
-- [x] Load and preprocess datasets
-- [x] Implement Baseline BERT classifier
-- [x] Implement Contrastive Loss
-- [x] Implement Mamba Model
-- [ ] Fine-tune Contrastive-Mamba Model
-- [ ] Evaluate cross-dataset generalization
-- [ ] Few-shot evaluation
-- [ ] Write and submit final report
 
 ---
 
