@@ -39,7 +39,8 @@ export PYTHONNOUSERSITE=1
 echo "Checking GPU availability"
 python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'Current device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU detected\"}')"
 
-export PYTHONPATH="$PYTHONPATH:/home/UG/bhargavi005/contrastive-emotion-recognition/src"
+export PYTHONPATH="$PYTHONPATH:./src"
+echo $PYTHONPATH
 
 # === Configuration ===
 LOG_DIR="logs"
