@@ -70,16 +70,25 @@ conda activate SC4001
 ```
 ### **Step 3: Run the Pipeline**
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `./run_pipeline.sh <dataset>` | Full pipeline (preprocess + train/test) for specific dataset | `./run_pipeline.sh isear` |
-| `./run_pipeline.sh --all` | Full pipeline for all datasets | `./run_pipeline.sh --all` |
-| `./run_pipeline.sh --preprocess <dataset>` | Preprocess only specific dataset | `./run_pipeline.sh --preprocess wassa` |
-| `./run_pipeline.sh --train_test <dataset>` | Train/test only specific dataset | `./run_pipeline.sh --train_test crowdflower` |
-| `./run_pipeline.sh --all --preprocess` | Preprocess all datasets | `./run_pipeline.sh --all --preprocess` |
-| `./run_pipeline.sh --all --train_test` | Train/test all datasets | `./run_pipeline.sh --all --train_test` |
+| Command                                                                                        | Description                                                                                                      | Example                                                                                           |
+|------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| `./run_pipeline.sh <dataset> <model>`                                                          | Runs preprocessing and train/test for the given dataset and model.                                               | `./run_pipeline.sh crowdflower mamba`                                                              |
+| `./run_pipeline.sh --force_preprocess <dataset> <model>`                                       | Forces re-preprocessing (even if already done) and then runs train/test.                                         | `./run_pipeline.sh --force_preprocess crowdflower bilstm_glove`                                    |
+| `./run_pipeline.sh <dataset> <model> --finetune_mode <1\|2\|3>`                                | Runs with a specified finetuning strategy (only required when dataset is `isear` or `wassa` + model is `mamba` or `bilstm_bert`). | `./run_pipeline.sh isear bilstm_bert --finetune_mode 3`                                            |
+| `./run_pipeline.sh --force_preprocess <dataset> <model> --finetune_mode <1\|2\|3>`             | Combines forced re-preprocessing **and** a specified finetuning strategy.                                        | `./run_pipeline.sh --force_preprocess wassa mamba --finetune_mode 1`                              |
 
-**Valid Dataset Options**: `crowdflower`, `isear`, `wassa`
+**Notes:**
+- **Datasets:** `crowdflower`, `isear`, `wassa`
+- **Models:** `bilstm_glove`, `bilstm_bert`, `mamba`
+- **Finetune modes:**  
+  1. Load checkpoint, freeze encoder, finetune classifier  
+  2. Load checkpoint, finetune encoder and classifier  
+  3. Train completely from scratch  
+
+`--finetune_mode` is **only required** if you're training on `isear` or `wassa` **with** `mamba` or `bilstm_bert`.
+
+`--force_preprocess` is optional; if omitted, the script will only preprocess if it hasn’t been done before.
+
 
 **Examples**:
 ```bash
