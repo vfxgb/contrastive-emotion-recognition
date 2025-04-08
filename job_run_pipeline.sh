@@ -119,7 +119,7 @@ download_glove() {
 
 # === USAGE ===
 usage() {
-    echo "Usage: $0 [--force_preprocess] <dataset> <model> --finetune_mode [<finetune_mode>]"
+    echo "Usage: $0 [--force_preprocess] <dataset> <model> [--finetune_mode <1|2|3>]"
     echo " Example : --force_preprocess isear bilstm_glove --finetune_mode 1"
     echo "  Options:"
     echo "    --force_preprocess    if set, preprocesses data again"
