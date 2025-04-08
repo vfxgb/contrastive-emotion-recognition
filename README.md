@@ -47,7 +47,7 @@ conda activate SC4001
 ```
 ### **Step 3: Run the Pipeline**
 ```bash
-chmod +x ./run_pipeline.sh
+chmod +x run_pipeline.sh
 ```
 
 | Command                                                                                        | Description                                                                                                      | Example                                                                                           |
