@@ -3,7 +3,7 @@
 
 ---
 
-## 📌 Overview
+## Overview
 This project integrates the powerful **Selective State Space Model (Mamba)** with **Contrastive Learning** to enhance **Text Emotion Recognition (TER)**.  
 Traditional models (e.g., CNN, RNN, BERT) often:
 - ❌ **Fail to capture global sentence context effectively**.
@@ -15,25 +15,25 @@ We propose an innovative **Mamba-Contrastive approach** that:
 
 ---
 
-## 🎯 Research Question
+## Research Question
 > How can integrating **Selective State Space Models (Mamba)** with **Contrastive Learning** significantly improve **emotion embedding quality**, **domain generalization**, and robustness to **unseen emotions**?
 
 ---
 
-## 🚀 Key Features
+## Key Features
 ✅ **Proposed Model:** **Selective Mamba + Contrastive Learning** to leverage global context and learn robust emotion embeddings.  
 ✅ **Cross-Dataset Evaluation:** Train on **CrowdFlower**, evaluate on **WASSA 2021** & **ISEAR** to test generalization.  
 
 ---
 
-## 📊 Datasets Used
+## Datasets Used
 - **CrowdFlower Emotion Dataset** (Training)
 - **WASSA 2021** (Domain generalization testing)
 - **ISEAR** (Domain generalization testing)
 
 ---
 
-## ⚡ Installation & Setup
+## Installation & Setup
 ### **Step 1: Clone the Repository**
 ```bash
 git clone https://github.com/yourusername/contrastive-emotion-recognition.git
@@ -68,12 +68,12 @@ conda activate SC4001
 
 ---
 
-## 🤝 Contributing
+## Contributing
 Feel free to contribute! Fork the repo, create a new branch, and submit a pull request.
 
 ---
 
-## 📜 References
+## References
 - Gu, A., & Dao, T. (2023). "Mamba: Linear-Time Sequence Modeling with Selective State Spaces".
 - Gao, T., Yao, X., & Chen, D. (2021). "SimCSE: Simple Contrastive Learning of Sentence Embeddings".
 - Gunel, B., et al. (2021). "Supervised Contrastive Learning for Pretrained Language Model Fine-Tuning".
@@ -82,6 +82,6 @@ Feel free to contribute! Fork the repo, create a new branch, and submit a pull r
 
 ---
 
-## 🏆 Acknowledgments
+## Acknowledgments
 This project is part of SC4001 CE/CZ4042: Neural Networks and Deep Learning.
 
