@@ -8,7 +8,7 @@ from sklearn.metrics import (
     f1_score,
     accuracy_score
 )
-from models.bilstm_model import BiLSTM_glove
+from models.bilstm_model import BiLSTM_GloVe_Encoder, BiLSTM_Classifier
 from utils import print_test_stats, set_seed, split_dataset
 from config import (
     SEED,
@@ -22,46 +22,7 @@ from config import (
 
 torch.serialization.add_safe_globals([TensorDataset])
 
-
-def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
-    """
-    Loads a pretrained model's state dictionary, adapts it by exluding the final classification layer,
-    and returns a new model instance with the loaded parameters.
-
-    Args:
-        pretrained_model_path (str): The file path to the saved pretrained model.
-        num_classes (int): The number of output classes for the final classification layer.
-        model_config (dict):  model config containing hyperparameter and other config.
-    """
-    pretrained_state_dict = torch.load(
-        pretrained_model_path, map_location=model_config["device"]
-    )
-
-    # Create a new model instance
-    new_model = BiLSTM_glove(
-        embedding_matrix_path=WASSA_GLOVE_EMBEDDINGS_PATH,
-        hidden_dim=model_config["hidden_dim"],
-        num_classes=num_classes,
-        dropout_rate=model_config["dropout_rate"],
-        lstm_layers=model_config["lstm_layers"],
-    )
-
-    # load parameters from pretrained model
-    model_dict = new_model.state_dict()
-
-    # filter out final classification layer
-    pretrained_state_dict = {
-        k: v
-        for k, v in pretrained_state_dict.items()
-        if k in model_dict and "fc3" not in k
-    }
-    model_dict.update(pretrained_state_dict)
-    new_model.load_state_dict(model_dict)
-
-    return new_model
-
-
-def evaluate(model, dataloader, device, test=False):
+def evaluate(encoder, classifier, dataloader, device, test=False):
     """
     Evaluates model.
 
@@ -76,7 +37,9 @@ def evaluate(model, dataloader, device, test=False):
             - accuracy (float): The accuracy of the model on the dataset.
             - f1 (float): The F1 score (macro) of the model on the dataset.
     """
-    model.eval()
+    encoder.eval()
+    classifier.eval()
+
     all_labels = []
     all_preds = []
     desc = "Test" if test else "Validation"
@@ -88,7 +51,8 @@ def evaluate(model, dataloader, device, test=False):
                 labels.to(device),
             )
 
-            logits = model(input_ids)
+            max_pool_encodings = encoder(input_ids)
+            logits = classifier(max_pool_encodings)
 
             _, predicted = logits.max(1)
             all_labels.extend(labels.cpu().numpy())
@@ -138,25 +102,33 @@ def main():
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
         test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-        # initialise model
-        model = BiLSTM_glove(
+        # initialise model 
+        encoder = BiLSTM_GloVe_Encoder(
             embedding_matrix_path=WASSA_GLOVE_EMBEDDINGS_PATH,
             hidden_dim=model_config["hidden_dim"],
-            num_classes=num_classes,
-            dropout_rate=model_config["dropout_rate"],
-            lstm_layers=model_config["lstm_layers"],
+            lstm_layers=model_config["lstm_layers"]
         )
+        encoder.to(device)
 
-        model.to(device)
+        classifier = BiLSTM_Classifier(
+            hidden_dim=model_config["hidden_dim"],
+            num_classes=num_classes,
+            dropout_rate=model_config["dropout_rate"]
+        )
+        classifier.to(device)
 
         # initialse loss function
         criterion = nn.CrossEntropyLoss()
 
         # initialise optimiser
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        optimizer = torch.optim.AdamW(
+            list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
+        )
 
         for epoch in range(num_epochs):
-            model.train()
+            encoder.train()
+            classifier.train()
+
             total_loss = 0
 
             for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
@@ -167,7 +139,8 @@ def main():
 
                 optimizer.zero_grad()
 
-                logits = model(input_ids)
+                max_pool_encodings = encoder(input_ids)
+                logits = classifier(max_pool_encodings)
                 loss = criterion(logits, labels)
                 loss.backward()
 
@@ -179,13 +152,19 @@ def main():
             print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
             val_accuracy, val_f1 = evaluate(
-                model, val_loader, device
+                encoder, classifier, val_loader, device
             )
             print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
-                torch.save(model.state_dict(), wassa_model_save_path)
+                torch.save(
+                    {
+                        "encoder": encoder.state_dict(),
+                        "classifier": classifier.state_dict(),
+                    },
+                    wassa_model_save_path,
+                )
                 trigger_times = 0
                 print(
                     f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
@@ -197,11 +176,12 @@ def main():
                     break
 
         print("\n----- Starting Evaluation on Test Set -----\n")
-        state_dict = torch.load(wassa_model_save_path, map_location=device)
-        model.load_state_dict(state_dict)
-        test_accuracy, test_f1 = evaluate(
-            model, test_loader, device, test=True
-        )
+        checkpoint = torch.load(wassa_model_save_path, map_location=device)
+        encoder.load_state_dict(checkpoint["encoder"])
+        classifier.load_state_dict(checkpoint["classifier"])
+
+        # fetch results on the test set
+        test_accuracy, test_f1 = evaluate(encoder, classifier, test_loader, device, test=True)
 
         test_acc_list.append(test_accuracy)
         test_f1_list.append(test_f1)
