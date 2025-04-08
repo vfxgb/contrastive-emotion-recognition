@@ -1,4 +1,4 @@
-# 🎭 Contrastive-Mamba Emotion Recognition (EmoCon)
+![image](https://github.com/user-attachments/assets/193ea1f6-bb76-4a80-849e-30343da1b000)# 🎭 Contrastive-Mamba Emotion Recognition (EmoCon)
 **Enhancing Text Emotion Recognition with Mamba and Contrastive Learning for Robust Emotion Embeddings**
 
 ---
@@ -30,21 +30,36 @@ We propose an innovative **Mamba-Contrastive approach** that:
 ## 📂 Updated Repository Structure - To DO
 ```plaintext
 contrastive-emotion-recognition/
-│── data/                          # Datasets (CrowdFlower, WASSA)
-│── notebooks/                     # Jupyter Notebooks (visualizations, analysis)
-│── src/
+├── data/                           # Datasets: CrowdFlower, ISEAR, WASSA2021
+│   ├── CrowdFlower/
+│   ├── ISEAR/
+│   └── WASSA2021/
+│   └── README.md                   # Short note about each dataset
+├── notebooks/                      # (Optional) Jupyter notebooks for exploration
+├── report/                         # Final project report (replaces "theory")
+├── results/                        # Experimental results, logs, etc.
+├── src/
 │   ├── models/
-│   │   ├── mamba.py               # Selective Mamba implementation
-│   │   └── contrastive_model.py   # Integrated Mamba-Contrastive model
-│   ├── preprocess_data.py         # Data preprocessing
-│   ├── train.py                   # Training script
-│   ├── evaluate.py                # Evaluation script
-│   ├── contrastive_loss.py        # Contrastive loss implementation
-│   └── utils.py                   # Utility functions
-│── results/                       # Experimental results and visualizations
-│── README.md                      # Project documentation
-│── requirements.txt               # Dependencies
-│── report/                        # Final project report
+│   │   ├── mamba.py               # Mamba model code
+│   │   └── contrastive_model.py   # (Or BILSTM modules, etc.)
+│   ├── preprocess/
+│   │   ├── preprocess_crowdflower.py
+│   │   ├── preprocess_isear.py
+│   │   └── preprocess_wassa2021.py
+│   ├── train_and_test_bilstm_bert/
+│   ├── train_and_test_bilstm_glove/
+│   ├── train_and_test_mamba/
+│   ├── contrastive_loss.py
+│   ├── utils.py
+│   ├── train.py                   # Consolidated training script (optional)
+│   └── evaluate.py                # Consolidated evaluation script (optional)
+├── environment.yaml               # Conda environment (if you keep using Conda)
+├── requirements.txt               # Pip dependencies (optional or if you prefer pip)
+├── run_pipeline.sh                # Main pipeline script
+├── job_run_pipeline.sh            # SLURM batch script for HPC/cluster
+├── setup.py                       # For installing as a Python package (optional)
+└── README.md                      # Project overview, usage, and instructions
+
 ```
 
 ---
