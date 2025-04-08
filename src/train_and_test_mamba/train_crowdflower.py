@@ -77,7 +77,7 @@ def main():
     model_save_path = model_config["model_save_path"]
 
     # early stopping parameters
-    best_f1 = 0
+    best_val_f1 = 0
     trigger_times = 0
     patience = 3
 
@@ -144,8 +144,8 @@ def main():
         )
 
         # Early stopping logic
-        if val_f1 > best_f1:
-            best_f1 = val_f1
+        if val_f1 > best_val_f1:
+            best_val_f1 = val_f1
             torch.save(
                 {
                     "encoder": encoder.state_dict(),
