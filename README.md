@@ -40,7 +40,9 @@ git clone https://github.com/vfxgb/contrastive-emotion-recognition.git
 cd contrastive-emotion-recognition
 ```
 
-### **Step 2: Create a Virtual Environment & Install Dependencies**
+### **Step 2: Create a Virtual Environment & Install Dependencies**\
+
+#### If using Windows / Linux
 ```bash
 conda env create -f environment.yaml
 conda activate SC4001
