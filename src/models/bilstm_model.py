@@ -38,9 +38,14 @@ class BiLSTM_bert(nn.Module):
         # Initialize BERT model
         self.bert = BertModel.from_pretrained(bert_model_name)
 
-        # Freeze BERT parameters
+        # Freeze all BERT parameters first
         for param in self.bert.parameters():
             param.requires_grad = False
+
+        # Unfreeze the last two layers for fine-tuning
+        for layer in self.bert.encoder.layer[-2:]:
+            for param in layer.parameters():
+                param.requires_grad = True
 
         # Get the input size based on the BERT model name
         if bert_model_name == "bert-large-uncased":
