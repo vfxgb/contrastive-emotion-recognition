@@ -17,10 +17,71 @@ from config import (
     F1_AVERAGE_METRIC,
 )
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
+import argparse
 
 torch.serialization.add_safe_globals([TensorDataset])
 
+finetune_mode = 1
 
+def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
+    """
+    Loads a pretrained model's state dictionary, adapts it by exluding the final classification layer,
+    and returns a new model instance with the loaded parameters.
+
+    Args:
+        pretrained_model_path (str): The file path to the saved pretrained model.
+        num_classes (int): The number of output classes for the final classification layer.
+        model_config (dict):  model config containing hyperparameter and other config.
+    Returns:
+        encoder (BiLSTM_BERT_Encoder): encoder according to the finetune_mode set
+        classifier (BiLSTM_Classifier):  classifier according to the finetune_mode set
+    """
+    if finetune_mode == 1 or finetune_mode == 2:
+        # ==== load checkpoint ===
+        checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
+        # initialise model
+        encoder = ContrastiveMambaEncoder(
+            mamba_args=model_config["mamba_args"], 
+            embed_dim=model_config["embed_dim"]
+        )
+        encoder.load_state_dict(checkpoint["encoder"])
+
+        classifier = ClassifierHead(
+            embed_dim=model_config["embed_dim"],
+            num_emotions=num_classes
+        )
+        
+        classifier_dict = classifier.state_dict()
+        pretrained_classifier_dict = checkpoint["classifier"]
+        filtered_dict = {
+            k: v for k, v in pretrained_classifier_dict.items()
+            if k in classifier_dict and "classifier.6" not in k
+        }
+        classifier_dict.update(filtered_dict)
+        classifier.load_state_dict(classifier_dict)
+
+        # === freeze encoder === 
+        if finetune_mode == 1:
+            for param in encoder.parameters():
+                param.requires_grad = False
+
+        return encoder, classifier
+    
+    elif finetune_mode == 3:
+        encoder = ContrastiveMambaEncoder(
+            mamba_args=model_config["mamba_args"], 
+            embed_dim=model_config["embed_dim"]
+        )
+        classifier = ClassifierHead(
+            embed_dim=model_config["embed_dim"],
+            num_emotions=num_classes
+        )
+
+        return encoder, classifier
+    
+    else:
+        raise ValueError("Invalid finetune mode.")
+    
 def evaluate(encoder, classifier, dataloader, device, test=False):
     """
     Evaluates model.
@@ -111,11 +172,11 @@ def main():
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
         test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-        encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
-        classifier = ClassifierHead(embed_dim, num_classes).to(device)
-
-        checkpoint = torch.load(model_save_path)
-        encoder.load_state_dict(checkpoint["encoder"])
+        encoder, classifier = load_and_adapt_model(
+            pretrained_model_path=model_save_path,
+            num_classes=num_classes, 
+            model_config=model_config
+        )
 
         criterion_cls = nn.CrossEntropyLoss()
         criterion_contrastive = SupConLoss()
@@ -199,4 +260,17 @@ def main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    # Accepts values 1, 2, or 3 to represent embedding type (e.g., 1: GloVe, 2: BERT, 3: Both or other config)
+    parser.add_argument(
+        "--finetune-mode",
+        type=int,
+        choices=[1, 2, 3],
+        required=True,  # Optional: Force the user to provide this
+        help="Embedding mode: 1 for GloVe, 2 for BERT, 3 for both"
+    )
+
+    args = parser.parse_args()
+    finetune_mode = args.finetune_mode
     main()
