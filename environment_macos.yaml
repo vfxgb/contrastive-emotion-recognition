@@ -68,7 +68,7 @@ dependencies:
   - keras
   - keras-preprocessing
   - krb5
-  - libarrow           # Should exist on macOS
+  - libarrow          
   - libbrotlicommon
   - libbrotlidec
   - libbrotlienc
@@ -141,23 +141,10 @@ dependencies:
   - zlib
   - zstd
 
-  # --- Potentially problematic or not needed on macOS ARM ---
-  # If you are on Intel Mac, you could keep some of these. If on M1/M2, 
-  # they might not be available. 
-  # For example, you could remove these if they cause conflicts:
-  # - tensorflow
-  # - tensorflow-base
-  # - tensorflow-estimator
-  # - ...
-  - tensorflow
-  - tensorflow-base
-  - tensorflow-estimator
   
   # --- PyTorch (via pip or conda) ---
   - pip:
-      # HPC / NVIDIA stuff removed. If you keep them, they’ll fail on macOS:
-      # - nvidia-cublas-cu12, nvidia-cudnn-cu12, etc.
-      
+  
       - annotated-types==0.7.0
       - blis==1.2.0
       - catalogue==2.0.10
