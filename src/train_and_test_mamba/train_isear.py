@@ -12,6 +12,7 @@ from config import (
     ISEAR_CLASSES,
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
     ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE,
+    SEED,
     mamba_config,
     F1_AVERAGE_METRIC,
 )
@@ -88,7 +89,7 @@ def main():
 
     for run in range(num_runs):
         print(f"\n🔁 Run {run+1}/{num_runs}")
-        set_seed(42 + run)
+        set_seed(SEED + run)
 
         train_ds = torch.load(ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
         test_ds = torch.load(ISEAR_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
@@ -98,7 +99,7 @@ def main():
         train_subset, val_subset = random_split(
             train_ds,
             [train_len, val_len],
-            generator=torch.Generator().manual_seed(42 + run),
+            generator=torch.Generator().manual_seed(SEED + run),
         )
 
         # Apply augmentation ONLY to training subset

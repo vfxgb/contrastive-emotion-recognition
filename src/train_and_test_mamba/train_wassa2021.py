@@ -9,6 +9,7 @@ from sklearn.metrics import (
 )
 from utils import print_test_stats, set_seed, DualViewDataset, SupConLoss
 from config import (
+    SEED,
     WASSA_CLASSES,
     WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE,
     WASSA_TEST_DS_PATH_WITHOUT_GLOVE,
@@ -88,7 +89,7 @@ def main():
 
     for run in range(num_runs):
         print(f"\n🔁 Run {run+1}/{num_runs}")
-        set_seed(42 + run)
+        set_seed(SEED + run)
 
         train_ds = torch.load(WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
         test_ds = torch.load(WASSA_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
@@ -98,7 +99,7 @@ def main():
         train_subset, val_subset = random_split(
             train_ds,
             [train_len, val_len],
-            generator=torch.Generator().manual_seed(42 + run),
+            generator=torch.Generator().manual_seed(SEED + run),
         )
 
         # Apply augmentation ONLY to training subset

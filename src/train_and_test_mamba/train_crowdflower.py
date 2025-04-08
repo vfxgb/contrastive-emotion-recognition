@@ -9,6 +9,7 @@ from sklearn.metrics import (
 )
 from config import (
     F1_AVERAGE_METRIC,
+    SEED,
     mamba_config,
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
@@ -89,7 +90,7 @@ def main():
     train_len = int(0.90 * len(train_ds))
     val_len = len(train_ds) - train_len
     train_subset, val_subset = random_split(
-        train_ds, [train_len, val_len], generator=torch.Generator().manual_seed(42)
+        train_ds, [train_len, val_len], generator=torch.Generator().manual_seed(SEED)
     )
 
     train_ds = DualViewDataset(train_subset, dropout_prob=0.1)

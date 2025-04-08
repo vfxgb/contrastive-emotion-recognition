@@ -9,7 +9,7 @@ import string
 import spacy
 from torch.utils.data.dataset import Subset
 from sklearn.model_selection import train_test_split
-from config import GLOVE_PATH
+from config import GLOVE_PATH, SEED
 
 # import matplotlib.pyplot as plt
 # def visualize_embeddings(embeddings, labels):
@@ -59,7 +59,7 @@ def print_test_stats(test_acc_list, test_f1_list, num_runs):
     print(f"\nFinal Test Accuracy over {num_runs} runs: {mean_test_acc:.4f} ± {std_test_acc:.4f}")
     print(f"Final Test F1 Score over {num_runs} runs: {mean_test_f1:.4f} ± {std_test_f1:.4f}")
 
-def split_dataset(dataset, split_ratio=0.8, seed=42, glove=True):
+def split_dataset(dataset, split_ratio=0.8, seed=SEED, glove=True):
     """
     Splits a TensorDataset (or its Subset) into training and testing subsets.
 

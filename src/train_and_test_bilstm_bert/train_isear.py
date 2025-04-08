@@ -14,6 +14,7 @@ from config import (
     ISEAR_CLASSES,
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
     ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE,
+    SEED,
     bilstm_bert_config,
     F1_AVERAGE_METRIC,
 )
@@ -124,13 +125,13 @@ def main():
 
     for run in range(num_runs):
         print(f"\n🔁 Run {run+1}/{num_runs}")
-        set_seed(42 + run)
+        set_seed(SEED + run)
 
         train_ds = torch.load(ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
         test_ds = torch.load(ISEAR_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
         train_ds, val_ds = split_dataset(
-            dataset=train_ds, split_ratio=0.9, seed=42 + run, glove=False
+            dataset=train_ds, split_ratio=0.9, seed=SEED + run, glove=False
         )
 
         train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)

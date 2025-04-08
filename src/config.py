@@ -33,7 +33,7 @@ SPACY_MODEL = "en_core_web_sm"
 GLOVE_PATH = "glove/glove.6B.300d.txt"
 
 F1_AVERAGE_METRIC = "macro"
-
+SEED = 42
 
 def bilstm_bert_config():
     """
