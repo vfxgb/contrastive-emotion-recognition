@@ -50,7 +50,7 @@ conda activate SC4001
 #### If on MacOS
 ```bash
 conda env create -f environment_macos.yaml
-conda activate SC4001
+conda activate SC4001_macos
 ```
 
 ### **Step 3: Run the Pipeline**
