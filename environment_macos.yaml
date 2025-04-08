@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 name: SC4001_macos
 channels:
     - conda-forge
