@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Usage:
-#     ./run_pipeline.sh [--force_preprocess] <dataset> <model>
+#     ./run_pipeline.sh [--force_preprocess] <dataset> <model> [<finetune_mode>]
 # Example:
-#     ./run_pipeline.sh --force_preprocess crowdflower bilstm_glove
+#     ./run_pipeline.sh --force_preprocess crowdflower bilstm_glove 1
 #   Available datasets: crowdflower, isear, wassa
 #   Available models: bilstm_glove, bilstm_bert, mamba
 
@@ -20,10 +20,12 @@ MAMBA_RESULTS_DIR="results/mamba"
 # === VALIDATION SETUP === 
 VALID_DATASETS=("crowdflower" "isear" "wassa")
 VALID_MODELS=("bilstm_glove" "bilstm_bert" "mamba")
+VALID_FINETUNE_MODES=(1 2 3)
 
 FORCE_PREPROCESS=false
 DATASET=""
 MODEL=""
+FINETUNE_MODE=1  # Default finetune_mode to 1 if not provided
 
 # === Scripts ===
 declare -A PREPROCESS_SCRIPTS=(
@@ -82,12 +84,17 @@ download_glove() {
 
 # === USAGE ===
 usage() {
-    echo "Usage: $0 [--force_preprocess] <dataset> <model>"
+    echo "Usage: $0 [--force_preprocess] <dataset> <model> [<finetune_mode>]"
     echo "  Options:"
     echo "    --force_preprocess    if set, preprocesses data again"
     echo "                          if not set, preprocesses data if not done before"
     echo "  Datasets: ${VALID_DATASETS[*]}"
     echo "  Models: ${VALID_MODELS[*]}"
+    echo "  Finetune_mode: ${VALID_FINETUNE_MODES[*]}"
+    echo "  Finetune mode is only required when training on isear and wassa."
+    echo "  1 - Load model checkpoint, freeze encoder, finetune classifier"
+    echo "  2 - Load model checkpoint, finetune encoder and classifier"
+    echo "  3 - Train from scratch completely"
     echo "  Please first train on crowdflower and then finetune on isear and wassa."
     exit 1
 }
@@ -117,6 +124,14 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             shift
+            ;;
+        --finetune_mode)
+            if [[ -z "$2" || ! "$2" =~ ^[1-3]$ ]]; then
+                echo "Error: Invalid finetune_mode. It must be 1, 2, or 3."
+                exit 1
+            fi
+            FINETUNE_MODE=$2
+            shift 2
             ;;
         -*)
             echo "Invalid option: $1"
@@ -196,4 +211,9 @@ fi
 
 # === TRAINING ===
 echo "[Train] Running training for dataset=$DATASET model=$MODEL"
-python "$TRAIN_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
+if { [ "$MODEL" = "bilstm_bert" ] || [ "$MODEL" = "mamba" ]; } && { [ "$DATASET" = "mamba" ] || [ "$DATASET" = "bilstm_bert" ]; }; then
+    python "$TRAIN_SCRIPT" --finetune_mode $FINETUNE_MODE 2>&1 | tee -a "$LOG_FILE"
+else    
+    python "$TRAIN_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
+fi
+
