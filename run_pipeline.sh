@@ -84,20 +84,24 @@ download_glove() {
 
 # === USAGE ===
 usage() {
-    echo "Usage: $0 [--force_preprocess] <dataset> <model> [<finetune_mode>]"
+    echo "Usage: $0 [--force_preprocess] <dataset> <model> [--finetune_mode <1|2|3>]"
     echo "  Options:"
-    echo "    --force_preprocess    if set, preprocesses data again"
-    echo "                          if not set, preprocesses data if not done before"
-    echo "  Datasets: ${VALID_DATASETS[*]}"
-    echo "  Models: ${VALID_MODELS[*]}"
-    echo "  Finetune_mode: ${VALID_FINETUNE_MODES[*]}"
-    echo "  Finetune mode is only required when training on isear and wassa."
-    echo "  1 - Load model checkpoint, freeze encoder, finetune classifier"
-    echo "  2 - Load model checkpoint, finetune encoder and classifier"
-    echo "  3 - Train from scratch completely"
-    echo "  Please first train on crowdflower and then finetune on isear and wassa."
+    echo "    --force_preprocess         Force re-preprocessing of the dataset"
+    echo "    --finetune_mode <1|2|3>    Finetuning strategy (required for isear or wassa with mamba/bilstm_bert):"
+    echo "                               1 - Load checkpoint, freeze encoder, finetune classifier"
+    echo "                               2 - Load checkpoint, finetune encoder and classifier"
+    echo "                               3 - Train from scratch completely"
+    echo ""
+    echo "  Example:"
+    echo "    $0 crowdflower mamba"
+    echo "    $0 isear mamba --finetune_mode 3"
+    echo "    $0 --force_preprocess wassa bilstm_bert --finetune_mode 2"
+    echo ""
+    echo "  Valid datasets: ${VALID_DATASETS[*]}"
+    echo "  Valid models:   ${VALID_MODELS[*]}"
     exit 1
 }
+
 
 # === ARG PARSING ===
 
