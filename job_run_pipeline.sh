@@ -15,7 +15,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
 #SBATCH --time=360
-#SBATCH --job-name=no_attention_isear
+#SBATCH --job-name=bert_cf
 #SBATCH --output=./outputlogs/output_%x_%j.out
 #SBATCH --error=./errorlogs/error_%x_%j.err
 
@@ -244,8 +244,9 @@ fi
 
 # === TRAINING ===
 echo "[Train] Running training for dataset=$DATASET model=$MODEL"
-if { [ "$MODEL" = "bilstm_bert" ] || [ "$MODEL" = "mamba" ]; } && { [ "$DATASET" = "mamba" ] || [ "$DATASET" = "bilstm_bert" ]; }; then
-    python "$TRAIN_SCRIPT" --finetune_mode $FINETUNE_MODE 2>&1 | tee -a "$LOG_FILE"
+
+if [[ "$MODEL" == "bilstm_bert" || "$MODEL" == "mamba" ]] && [[ "$DATASET" == "isear" || "$DATASET" == "wassa" ]]; then
+    python "$TRAIN_SCRIPT" --finetune_mode "$FINETUNE_MODE" 2>&1 | tee -a "$LOG_FILE"
 else    
     python "$TRAIN_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
 fi

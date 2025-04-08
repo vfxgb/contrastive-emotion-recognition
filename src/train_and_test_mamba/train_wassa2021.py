@@ -264,7 +264,7 @@ if __name__ == "__main__":
 
     # Accepts values 1, 2, or 3 to represent embedding type (e.g., 1: GloVe, 2: BERT, 3: Both or other config)
     parser.add_argument(
-        "--finetune-mode",
+        "--finetune_mode",
         type=int,
         choices=[1, 2, 3],
         required=True,  # Optional: Force the user to provide this

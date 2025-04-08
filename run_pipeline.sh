@@ -211,8 +211,9 @@ fi
 
 # === TRAINING ===
 echo "[Train] Running training for dataset=$DATASET model=$MODEL"
-if { [ "$MODEL" = "bilstm_bert" ] || [ "$MODEL" = "mamba" ]; } && { [ "$DATASET" = "mamba" ] || [ "$DATASET" = "bilstm_bert" ]; }; then
-    python "$TRAIN_SCRIPT" --finetune_mode $FINETUNE_MODE 2>&1 | tee -a "$LOG_FILE"
+
+if [[ "$MODEL" == "bilstm_bert" || "$MODEL" == "mamba" ]] && [[ "$DATASET" == "isear" || "$DATASET" == "wassa" ]]; then
+    python "$TRAIN_SCRIPT" --finetune_mode "$FINETUNE_MODE" 2>&1 | tee -a "$LOG_FILE"
 else    
     python "$TRAIN_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
 fi
