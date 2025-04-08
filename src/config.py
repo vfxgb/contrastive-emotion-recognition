@@ -70,12 +70,11 @@ def bilstm_glove_config():
         "lstm_layers": 1,
         "num_epochs": 30,
         "learning_rate": 0.001,
-        "batch_size": 1024,
-        "finetune_batch_size": 32,
+        "batch_size": 128,
         "device": device,
-        "model_save_path": "results/bilstm_glove/bilstm_glove.pt",
-        "isear_finetune_save_path": "results/bilstm_glove/isear_finetune_bilstm_glove.pt",
-        "wassa21_finetune_save_path": "results/bilstm_glove/wassa21_finetune_bilstm_glove.pt",
+        "crowdflower_model_save_path": "results/bilstm_glove/bilstm_glove_crowdflower.pt",
+        "isear_model_save_path": "results/bilstm_glove/bilstm_glove_isear.pt",
+        "wassa_model_save_path": "results/bilstm_glove/bilstm_glove_wassa.pt",
     }
 
     return model_config

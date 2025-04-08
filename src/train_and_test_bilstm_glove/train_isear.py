@@ -111,9 +111,9 @@ def main():
     num_classes = ISEAR_CLASSES
     num_epochs = model_config["num_epochs"]
     learning_rate = model_config["learning_rate"]
-    batch_size = model_config["finetune_batch_size"]
+    batch_size = model_config["batch_size"]
     device = model_config["device"]
-    isear_finetune_save_path = model_config["isear_finetune_save_path"]
+    isear_model_save_path = model_config["isear_model_save_path"]
 
     best_val_f1 = 0
     trigger_times = 0
@@ -138,23 +138,13 @@ def main():
         test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
         # initialise model
-        model = load_and_adapt_model(
-            model_config["model_save_path"],
+        model = BiLSTM_glove(
+            embedding_matrix_path=ISEAR_GLOVE_EMBEDDINGS_PATH,
+            hidden_dim=model_config["hidden_dim"],
             num_classes=num_classes,
-            model_config=model_config,
+            dropout_rate=model_config["dropout_rate"],
+            lstm_layers=model_config["lstm_layers"],
         )
-
-        # freeze embedding and lstm layers and only train the final classification layer
-        for param in model.embedding.parameters():
-            param.requires_grad = False  # freeze embeddings
-        for param in model.lstm.parameters():
-            param.requires_grad = True
-        for param in model.fc1.parameters():
-            param.requires_grad = True
-        for param in model.fc2.parameters():
-            param.requires_grad = True
-        for param in model.fc3.parameters():
-            param.requires_grad = True
 
         model.to(device)
 
@@ -191,10 +181,10 @@ def main():
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
-                torch.save(model.state_dict(), isear_finetune_save_path)
+                torch.save(model.state_dict(), isear_model_save_path)
                 trigger_times = 0
                 print(
-                    f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                    f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f}"
                 )
             else:
                 trigger_times += 1
@@ -203,7 +193,7 @@ def main():
                     break
 
         print("\n----- Starting Evaluation on Test Set -----\n")
-        state_dict = torch.load(isear_finetune_save_path, map_location=device)
+        state_dict = torch.load(isear_model_save_path, map_location=device)
         model.load_state_dict(state_dict)
         test_accuracy, test_f1 = evaluate(
             model, test_loader, device, test=True

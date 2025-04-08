@@ -71,7 +71,7 @@ def main():
     # fetch bilstm model config
     model_config = bilstm_glove_config()
 
-    model_save_path = model_config["model_save_path"]
+    crowdflower_model_save_path = model_config["crowdflower_model_save_path"]
     num_epochs = model_config["num_epochs"]
     learning_rate = model_config["learning_rate"]
     batch_size = model_config["batch_size"]
@@ -139,7 +139,7 @@ def main():
 
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
-            torch.save(model.state_dict(), model_save_path)
+            torch.save(model.state_dict(), crowdflower_model_save_path)
             trigger_times = 0
             print(
                 f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and val: {val_f1:.4f}"
@@ -151,7 +151,7 @@ def main():
                 break
 
     print("\n----- Starting Evaluation on Test Set -----\n")
-    state_dict = torch.load(model_save_path, map_location=device)
+    state_dict = torch.load(crowdflower_model_save_path, map_location=device)
     model.load_state_dict(state_dict)
     evaluate(model, test_loader, device, test=True)
 
