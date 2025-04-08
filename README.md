@@ -49,6 +49,7 @@ conda activate SC4001
 ```
 #### If on MacOS
 ```bash
+brew install bash
 conda env create -f environment_macos.yaml
 conda activate SC4001_macos
 ```
