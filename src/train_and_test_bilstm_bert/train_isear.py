@@ -8,7 +8,7 @@ from sklearn.metrics import (
     f1_score,
     accuracy_score
 )
-from models.bilstm_model import BiLSTM_bert
+from models.bilstm_model import BiLSTM_BERT_Encoder, BiLSTM_Classifier
 from utils import print_test_stats, set_seed, split_dataset
 from config import (
     ISEAR_CLASSES,
@@ -18,9 +18,11 @@ from config import (
     bilstm_bert_config,
     F1_AVERAGE_METRIC,
 )
+import argparse
 
 torch.serialization.add_safe_globals([TensorDataset])
 
+finetune_mode = 1
 
 def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     """
@@ -31,36 +33,95 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
         pretrained_model_path (str): The file path to the saved pretrained model.
         num_classes (int): The number of output classes for the final classification layer.
         model_config (dict):  model config containing hyperparameter and other config.
+    Returns:
+        encoder (BiLSTM_BERT_Encoder): encoder according to the finetune_mode set
+        classifier (BiLSTM_Classifier):  classifier according to the finetune_mode set
     """
-    pretrained_state_dict = torch.load(
-        pretrained_model_path, map_location=model_config["device"]
-    )
+    if finetune_mode == 1:
+        # ==== load checkpoint ===
+        checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
+        # initialise model
+        encoder = BiLSTM_BERT_Encoder(
+            bert_model_name=model_config["bert_model_name"],
+            hidden_dim=model_config["hidden_dim"],
+            lstm_layers=model_config["lstm_layers"]
+        )
+        encoder.load_state_dict(checkpoint["encoder"])
 
-    # Create a new model instance
-    new_model = BiLSTM_bert(
-        bert_model_name=model_config["bert_model_name"],
-        hidden_dim=model_config["hidden_dim"],
-        num_classes=num_classes,
-        dropout_rate=model_config["dropout_rate"],
-        lstm_layers=model_config["lstm_layers"],
-    )
+        classifier = BiLSTM_Classifier(
+            hidden_dim=model_config["hidden_dim"],
+            num_classes=num_classes,
+            dropout_rate=model_config["dropout_rate"]
+        )
+        
+        classifier_dict = classifier.state_dict()
+        pretrained_classifier_dict = checkpoint["classifier"]
 
-    # load parameters from pretrained model
-    model_dict = new_model.state_dict()
+        # filter out final classification layer
+        pretrained_classifier_dict = {
+            k: v
+            for k, v in pretrained_classifier_dict.items()
+            if k in classifier_dict and "fc3" not in k
+        }
+        classifier_dict.update(pretrained_classifier_dict)
+        classifier.load_state_dict(classifier_dict)
 
-    # filter out final classification layer
-    pretrained_state_dict = {
-        k: v
-        for k, v in pretrained_state_dict.items()
-        if k in model_dict and "fc3" not in k
-    }
-    model_dict.update(pretrained_state_dict)
-    new_model.load_state_dict(model_dict)
+        # === freeze encoder === 
+        for param in encoder.parameters():
+            param.requires_grad = False
 
-    return new_model
+        return encoder, classifier
+    
+    elif finetune_mode == 2:
+        # load checkpoint 
+        checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
+        # initialise model
+        encoder = BiLSTM_BERT_Encoder(
+            bert_model_name=model_config["bert_model_name"],
+            hidden_dim=model_config["hidden_dim"],
+            lstm_layers=model_config["lstm_layers"]
+        )
+        encoder.load_state_dict(checkpoint["encoder"])
 
+        classifier = BiLSTM_Classifier(
+            hidden_dim=model_config["hidden_dim"],
+            num_classes=num_classes,
+            dropout_rate=model_config["dropout_rate"]
+        )
+        
+        classifier_dict = classifier.state_dict()
+        pretrained_classifier_dict = checkpoint["classifier"]
 
-def evaluate(model, dataloader, device, test=False):
+        # filter out final classification layer
+        pretrained_classifier_dict = {
+            k: v
+            for k, v in pretrained_classifier_dict.items()
+            if k in classifier_dict and "fc3" not in k
+        }
+        classifier_dict.update(pretrained_classifier_dict)
+        classifier.load_state_dict(classifier_dict)
+
+        return encoder, classifier
+    
+    elif finetune_mode == 3:
+        encoder = BiLSTM_BERT_Encoder(
+            bert_model_name=model_config["bert_model_name"],
+            hidden_dim=model_config["hidden_dim"],
+            lstm_layers=model_config["lstm_layers"]
+        )
+        classifier = BiLSTM_Classifier(
+            hidden_dim=model_config["hidden_dim"],
+            num_classes=num_classes,
+            dropout_rate=model_config["dropout_rate"]
+        )
+
+        return encoder, classifier
+    
+    else:
+        raise ValueError("Invalid finetune mode.")
+    
+
+def evaluate(encoder, classifier, dataloader, device, test=False):
     """
     Evaluates model.
 
@@ -75,7 +136,9 @@ def evaluate(model, dataloader, device, test=False):
             - accuracy (float): The accuracy of the model on the dataset.
             - f1 (float): The F1 score (macro) of the model on the dataset.
     """
-    model.eval()
+    encoder.eval()
+    classifier.eval()
+
     all_labels = []
     all_preds = []
     desc = "Test" if test else "Validation"
@@ -88,7 +151,8 @@ def evaluate(model, dataloader, device, test=False):
                 labels.to(device),
             )
 
-            logits = model(input_ids, attention_mask)
+            max_pool_encodings = encoder(input_ids, attention_mask)
+            logits = classifier(max_pool_encodings)
 
             _, predicted = logits.max(1)
             all_labels.extend(labels.cpu().numpy())
@@ -139,34 +203,26 @@ def main():
         test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
         # initialise model
-        model = load_and_adapt_model(
+        encoder, classifier = load_and_adapt_model(
             model_config["model_save_path"],
             num_classes=num_classes,
             model_config=model_config,
         )
 
-        # freeze bert and lstm layers and only train the final classification layer
-        for param in model.bert.parameters():
-            param.requires_grad = False  # freeze all
-        for param in model.lstm.parameters():
-            param.requires_grad = True
-        for param in model.fc1.parameters():
-            param.requires_grad = True
-        for param in model.fc2.parameters():
-            param.requires_grad = True
-        for param in model.fc3.parameters():
-            param.requires_grad = True
-
-        model.to(device)
+        encoder.to(device)
+        classifier.to(device)
 
         # initialse loss function
         criterion = nn.CrossEntropyLoss()
 
         # initialise optimiser
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        optimizer = torch.optim.AdamW(
+            list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
+        )
 
         for epoch in range(num_epochs):
-            model.train()
+            encoder.train()
+            classifier.train()
             total_loss = 0
 
             for input_ids, attention_mask, labels in tqdm(
@@ -180,7 +236,8 @@ def main():
 
                 optimizer.zero_grad()
 
-                logits = model(input_ids, attention_mask)
+                max_pool_encodings = encoder(input_ids, attention_mask)
+                logits = classifier(max_pool_encodings)
                 loss = criterion(logits, labels)
                 loss.backward()
 
@@ -192,13 +249,19 @@ def main():
             print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
             val_accuracy, val_f1 = evaluate(
-                model, val_loader, device
+                encoder, classifier, val_loader, device
             )
             print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
-                torch.save(model.state_dict(), isear_finetune_save_path)
+                torch.save(
+                    {
+                        "encoder": encoder.state_dict(),
+                        "classifier": classifier.state_dict(),
+                    },
+                    isear_finetune_save_path,
+                )
                 trigger_times = 0
                 print(
                     f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
@@ -210,10 +273,11 @@ def main():
                     break
 
         print("\n----- Starting Evaluation on Test Set -----\n")
-        state_dict = torch.load(isear_finetune_save_path, map_location=device)
-        model.load_state_dict(state_dict)
+        checkpoint = torch.load(isear_finetune_save_path, map_location=device)
+        encoder.load_state_dict(checkpoint["encoder"])
+        classifier.load_state_dict(checkpoint["classifier"])
         test_accuracy, test_f1 = evaluate(
-            model, test_loader, device, test=True
+            encoder, classifier, test_loader, device, test=True
         )
 
         test_acc_list.append(test_accuracy)
@@ -225,4 +289,17 @@ def main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    # Accepts values 1, 2, or 3 to represent embedding type (e.g., 1: GloVe, 2: BERT, 3: Both or other config)
+    parser.add_argument(
+        "--finetune-mode",
+        type=int,
+        choices=[1, 2, 3],
+        required=True,  # Optional: Force the user to provide this
+        help="Embedding mode: 1 for GloVe, 2 for BERT, 3 for both"
+    )
+
+    args = parser.parse_args()
+    finetune_mode = args.finetune_mode
     main()
