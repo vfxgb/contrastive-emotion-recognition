@@ -6,9 +6,7 @@ from tqdm import tqdm
 from sklearn.metrics import (
     classification_report,
     f1_score,
-    accuracy_score,
-    recall_score,
-    precision_score,
+    accuracy_score
 )
 from models.bilstm_model import BiLSTM_bert
 from config import (
@@ -37,8 +35,6 @@ def evaluate(model, dataloader, device, test=False):
         tuple: A tuple containing:
             - accuracy (float): The accuracy of the model on the dataset.
             - f1 (float): The F1 score (macro) of the model on the dataset.
-            - recall (float): The recall (macro) of the model on the dataset.
-            - precision (float): The precision (macro) of the model on the dataset.
     """
     model.eval()
     all_labels = []
@@ -61,15 +57,13 @@ def evaluate(model, dataloader, device, test=False):
 
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
-    recall = recall_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
-    precision = precision_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
 
     print(
-        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}, Recall: {recall:.4f}, Precision: {precision:.4f}"
+        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}"
     )
     print("\nDetailed Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
-    return accuracy, f1, recall, precision
+    return accuracy, f1
 
 
 def main():
@@ -146,7 +140,7 @@ def main():
         avg_loss = total_loss / len(train_loader)
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
-        val_accuracy, val_f1, val_recall, val_precision = evaluate(
+        val_accuracy, val_f1 = evaluate(
             model, val_loader, device
         )
 
