@@ -8,7 +8,7 @@ from sklearn.metrics import (
     f1_score,
     accuracy_score
 )
-from models.bilstm_model import BiLSTM_glove
+from models.bilstm_model import BiLSTM_GloVe_Encoder, BiLSTM_Classifier
 from config import (
     F1_AVERAGE_METRIC,
     bilstm_glove_config,
@@ -22,7 +22,7 @@ from utils import split_dataset
 torch.serialization.add_safe_globals([TensorDataset])
 
 
-def evaluate(model, dataloader, device, test=False):
+def evaluate(encoder, classifier, dataloader, device, test=False):
     """
     Evaluates model.
 
@@ -37,7 +37,8 @@ def evaluate(model, dataloader, device, test=False):
             - accuracy (float): The accuracy of the model on the dataset.
             - f1 (float): The F1 score (macro) of the model on the dataset.
     """
-    model.eval()
+    encoder.eval()
+    classifier.eval()
 
     all_labels = []
     all_preds = []
@@ -50,7 +51,8 @@ def evaluate(model, dataloader, device, test=False):
                 labels.to(device),
             )
 
-            logits = model(input_ids)
+            max_pool_encodings = encoder(input_ids)
+            logits = classifier(max_pool_encodings)
 
             _, predicted = logits.max(1)
             all_labels.extend(labels.cpu().numpy())
@@ -94,24 +96,33 @@ def main():
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-    # initialise model
-    model = BiLSTM_glove(
+    # initialise model 
+    encoder = BiLSTM_GloVe_Encoder(
         embedding_matrix_path=CROWDFLOWER_GLOVE_EMBEDDINGS_PATH,
         hidden_dim=model_config["hidden_dim"],
-        num_classes=CROWDFLOWER_CLASSES,
-        dropout_rate=model_config["dropout_rate"],
-        lstm_layers=model_config["lstm_layers"],
+        lstm_layers=model_config["lstm_layers"]
     )
-    model.to(device)
+    encoder.to(device)
+
+    classifier = BiLSTM_Classifier(
+        hidden_dim=model_config["hidden_dim"],
+        num_classes=CROWDFLOWER_CLASSES,
+        dropout_rate=model_config["dropout_rate"]
+    )
+    classifier.to(device)
 
     # initialse loss function
     criterion = nn.CrossEntropyLoss()
 
     # initialise optimiser
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(
+        list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
+    )
 
     for epoch in range(num_epochs):
-        model.train()
+        encoder.train()
+        classifier.train()
+
         total_loss = 0
 
         for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
@@ -122,7 +133,8 @@ def main():
 
             optimizer.zero_grad()
 
-            logits = model(input_ids)
+            max_pool_encodings = encoder(input_ids)
+            logits = classifier(max_pool_encodings)
             loss = criterion(logits, labels)
             loss.backward()
 
@@ -134,12 +146,18 @@ def main():
         print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
 
         val_accuracy, val_f1 = evaluate(
-            model, val_loader, device
+            encoder, classifier, val_loader, device
         )
 
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
-            torch.save(model.state_dict(), crowdflower_model_save_path)
+            torch.save(
+                {
+                    "encoder": encoder.state_dict(),
+                    "classifier": classifier.state_dict(),
+                },
+                crowdflower_model_save_path,
+            )
             trigger_times = 0
             print(
                 f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and val: {val_f1:.4f}"
@@ -151,9 +169,12 @@ def main():
                 break
 
     print("\n----- Starting Evaluation on Test Set -----\n")
-    state_dict = torch.load(crowdflower_model_save_path, map_location=device)
-    model.load_state_dict(state_dict)
-    evaluate(model, test_loader, device, test=True)
+    checkpoint = torch.load(crowdflower_model_save_path, map_location=device)
+    encoder.load_state_dict(checkpoint["encoder"])
+    classifier.load_state_dict(checkpoint["classifier"])
+
+    # fetch results on the test set
+    evaluate(encoder, classifier, test_loader, device, test=True)
 
 
 if __name__ == "__main__":
