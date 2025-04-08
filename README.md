@@ -47,7 +47,7 @@ cd contrastive-emotion-recognition
 conda env create -f environment.yaml
 conda activate SC4001
 ```
-#### If on MacOS
+#### If using MacOS
 ```bash
 conda env create -f environment_macos.yaml
 brew install bash
