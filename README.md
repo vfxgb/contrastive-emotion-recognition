@@ -89,6 +89,8 @@ conda activate SC4001
 
 `--force_preprocess` is optional; if omitted, the script will only preprocess if it hasn’t been done before.
 
+---
+
 ## 🛠️ Model Architectures
 - **Baseline:** Fine-tuned BERT classifier.
 - **Proposed:** **Selective Mamba** embeddings optimized with **Supervised + Self-Supervised Contrastive Learning** for enhanced emotion discrimination.
