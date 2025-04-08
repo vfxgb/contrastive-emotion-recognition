@@ -65,10 +65,8 @@ cd contrastive-emotion-recognition.git
 
 ### **Step 2: Create a Virtual Environment & Install Dependencies**
 ```bash
-conda create --name mamba_contrastive python==3.10
-conda activate mamba_contrastive
-python -m spacy download en_core_web_sm
-pip install -e .
+conda env create -f environment.yaml
+conda activate SC4001
 ```
 ### **Step 3: Run the Pipeline**
 
