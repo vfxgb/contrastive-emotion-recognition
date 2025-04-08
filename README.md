@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/193ea1f6-bb76-4a80-849e-30343da1b000)# 🎭 Contrastive-Mamba Emotion Recognition (EmoCon)
+# 🎭 Contrastive-Mamba Emotion Recognition (EmoCon)
 **Enhancing Text Emotion Recognition with Mamba and Contrastive Learning for Robust Emotion Embeddings**
 
 ---
