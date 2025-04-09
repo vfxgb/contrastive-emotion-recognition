@@ -70,7 +70,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # fetch bilstm model config
     model_config = mamba_config()
-    print(f"\n 🌟🌟 Model Configuration : {model_config}")
+    print(f"\n 🌟🌟 Model Configuration : {model_config}, Dataset : CROWDFLOWER")
 
     mamba_args = model_config["mamba_args"]
     device = model_config["device"]
