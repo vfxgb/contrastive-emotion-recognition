@@ -7,7 +7,7 @@ from sklearn.metrics import (
     f1_score,
     accuracy_score
 )
-from utils import print_test_stats, set_seed, DualViewDataset, SupConLoss
+from utils import print_test_stats, set_seed, DualViewDataset, SupConLoss, get_versioned_path
 from config import (
     SEED,
     WASSA_CLASSES,
@@ -139,7 +139,7 @@ def main():
     num_epochs = model_config["num_epochs"]
     learning_rate = model_config["learning_rate"]
     model_save_path = model_config["model_save_path"]
-    wassa21_finetune_save_path = model_config["wassa21_finetune_save_path"]
+    wassa21_finetune_save_path = get_versioned_path(model_config["wassa21_finetune_save_path"], finetune_mode)
 
     best_f1 = 0
     trigger_times = 0

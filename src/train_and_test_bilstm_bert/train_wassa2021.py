@@ -9,7 +9,7 @@ from sklearn.metrics import (
     accuracy_score
 )
 from models.bilstm_model import BiLSTM_BERT_Encoder, BiLSTM_Classifier
-from utils import print_test_stats, set_seed, split_dataset
+from utils import print_test_stats, set_seed, split_dataset, get_versioned_path
 from config import (
     SEED,
     WASSA_CLASSES,
@@ -179,7 +179,7 @@ def main():
     learning_rate = model_config["learning_rate"]
     batch_size = model_config["finetune_batch_size"]
     device = model_config["device"]
-    wassa21_finetune_save_path = model_config["wassa21_finetune_save_path"]
+    wassa21_finetune_save_path = get_versioned_path(model_config["wassa21_finetune_save_path"], finetune_mode)
 
     best_val_f1 = 0
     trigger_times = 0

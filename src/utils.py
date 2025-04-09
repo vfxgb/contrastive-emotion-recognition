@@ -10,6 +10,7 @@ import spacy
 from torch.utils.data.dataset import Subset
 from sklearn.model_selection import train_test_split
 from config import GLOVE_PATH, SEED
+import os
 
 # import matplotlib.pyplot as plt
 # def visualize_embeddings(embeddings, labels):
@@ -24,6 +25,11 @@ from config import GLOVE_PATH, SEED
 
 nlp = spacy.load("en_core_web_sm")
 
+def get_versioned_path(base_path, version):
+    base_dir, filename = os.path.split(base_path)
+    name, ext = os.path.splitext(filename)
+    new_filename = f"{name}_{version}{ext}"
+    return os.path.join(base_dir, new_filename)
 
 def random_dropout_tokens(token_ids, dropout_prob=0.1):
     """

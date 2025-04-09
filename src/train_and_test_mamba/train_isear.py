@@ -7,7 +7,7 @@ from sklearn.metrics import (
     f1_score,
     accuracy_score
 )
-from utils import print_test_stats, set_seed, DualViewDataset, SupConLoss
+from utils import print_test_stats, set_seed, DualViewDataset, SupConLoss, get_versioned_path
 from config import (
     ISEAR_CLASSES,
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
@@ -139,7 +139,7 @@ def main():
     num_epochs = model_config["num_epochs"]
     learning_rate = model_config["learning_rate"]
     model_save_path = model_config["model_save_path"]
-    isear_finetune_save_path = model_config["isear_finetune_save_path"]
+    isear_finetune_save_path = get_versioned_path(model_config["isear_finetune_save_path"], finetune_mode)
 
     best_val_f1 = 0
     trigger_times = 0
