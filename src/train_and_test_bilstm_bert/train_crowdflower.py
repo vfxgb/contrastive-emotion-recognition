@@ -193,12 +193,14 @@ def main():
         num_classes=CROWDFLOWER_CLASSES,
         dropout_rate=model_config["dropout_rate"]
     )
-
+    
     # load the best model
     checkpoint = torch.load(model_save_path, map_location=device)
     test_encoder.load_state_dict(checkpoint["encoder"])
     test_classifier.load_state_dict(checkpoint["classifier"])
-
+    test_encoder.to(device)
+    test_classifier.to(device)
+    
     # fetch results on the test set
     evaluate(test_encoder, test_classifier, test_loader, device, test=True)
 
