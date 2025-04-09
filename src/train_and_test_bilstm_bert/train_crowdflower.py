@@ -73,7 +73,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # fetch bilstm model config
     model_config = bilstm_bert_config()
-    print(f"\n Model Configuration : {model_config}")
+    print(f"\n 🌟🌟 Model Configuration : {model_config}")
 
     model_save_path = model_config["model_save_path"]
     num_epochs = model_config["num_epochs"]
