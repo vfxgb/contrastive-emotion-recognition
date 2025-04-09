@@ -69,6 +69,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # fetch bilstm model config
     model_config = mamba_config()
+    
     mamba_args = model_config["mamba_args"]
     device = model_config["device"]
     embed_dim = model_config["embed_dim"]

@@ -37,7 +37,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
         encoder (BiLSTM_BERT_Encoder): encoder according to the finetune_mode set
         classifier (BiLSTM_Classifier):  classifier according to the finetune_mode set
     """
-    if finetune_mode == 1:
+    if finetune_mode == 1 or finetune_mode == 2:
         # ==== load checkpoint ===
         checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
         # initialise model
@@ -67,39 +67,9 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
         classifier.load_state_dict(classifier_dict)
 
         # === freeze encoder === 
-        for param in encoder.parameters():
-            param.requires_grad = False
-
-        return encoder, classifier
-    
-    elif finetune_mode == 2:
-        # load checkpoint 
-        checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
-        # initialise model
-        encoder = BiLSTM_BERT_Encoder(
-            bert_model_name=model_config["bert_model_name"],
-            hidden_dim=model_config["hidden_dim"],
-            lstm_layers=model_config["lstm_layers"]
-        )
-        encoder.load_state_dict(checkpoint["encoder"])
-
-        classifier = BiLSTM_Classifier(
-            hidden_dim=model_config["hidden_dim"],
-            num_classes=num_classes,
-            dropout_rate=model_config["dropout_rate"]
-        )
-        
-        classifier_dict = classifier.state_dict()
-        pretrained_classifier_dict = checkpoint["classifier"]
-
-        # filter out final classification layer
-        pretrained_classifier_dict = {
-            k: v
-            for k, v in pretrained_classifier_dict.items()
-            if k in classifier_dict and "fc3" not in k
-        }
-        classifier_dict.update(pretrained_classifier_dict)
-        classifier.load_state_dict(classifier_dict)
+        if finetune_mode == 1:
+            for param in encoder.parameters():
+                param.requires_grad = False
 
         return encoder, classifier
     
@@ -183,6 +153,7 @@ def main():
 
     patience = 5
     num_runs = 5
+
     test_acc_list = []
     test_f1_list = []
 
@@ -257,21 +228,23 @@ def main():
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
+                best_encoder = encoder.state_dict()
+                best_classifier = classifier.state_dict()
                 torch.save(
                     {
-                        "encoder": encoder.state_dict(),
-                        "classifier": classifier.state_dict(),
+                        "encoder": best_encoder,
+                        "classifier": best_classifier,
                     },
                     isear_finetune_save_path,
                 )
                 trigger_times = 0
                 print(
-                    f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                    f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f}"
                 )
             else:
                 trigger_times += 1
                 if trigger_times >= patience:
-                    print(f"Early stopping at epoch {epoch+1}")
+                    print(f"💀💀 Early stopping at epoch {epoch+1} due to no improvement in val F1")
                     break
 
         print("\n----- Starting Evaluation on Test Set -----\n")

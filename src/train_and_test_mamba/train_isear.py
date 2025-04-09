@@ -39,6 +39,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     if finetune_mode == 1 or finetune_mode == 2:
         # ==== load checkpoint ===
         checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
+        
         # initialise model
         encoder = ContrastiveMambaEncoder(
             mamba_args=model_config["mamba_args"], 

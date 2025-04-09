@@ -143,6 +143,7 @@ def main():
 
             max_pool_encodings = encoder(input_ids, attention_mask)
             logits = classifier(max_pool_encodings)
+
             loss = criterion(logits, labels)
             loss.backward()
 
@@ -177,13 +178,27 @@ def main():
                 break
 
     print("\n----- Starting Evaluation on Test Set -----\n")
+
+    # initialise model
+    test_encoder = BiLSTM_BERT_Encoder(
+        bert_model_name=model_config["bert_model_name"],
+        hidden_dim=model_config["hidden_dim"],
+        lstm_layers=model_config["lstm_layers"]
+    )
+
+    test_classifier = BiLSTM_Classifier(
+        hidden_dim=model_config["hidden_dim"],
+        num_classes=CROWDFLOWER_CLASSES,
+        dropout_rate=model_config["dropout_rate"]
+    )
+
     # load the best model
     checkpoint = torch.load(model_save_path, map_location=device)
-    encoder.load_state_dict(checkpoint["encoder"])
-    classifier.load_state_dict(checkpoint["classifier"])
+    test_encoder.load_state_dict(checkpoint["encoder"])
+    test_classifier.load_state_dict(checkpoint["classifier"])
 
     # fetch results on the test set
-    evaluate(encoder, classifier, test_loader, device, test=True)
+    evaluate(test_encoder, test_classifier, test_loader, device, test=True)
 
 
 if __name__ == "__main__":
