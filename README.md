@@ -43,7 +43,7 @@ cd contrastive-emotion-recognition
 ### **Step 2: Create a Virtual Environment & Install Dependencies**\
 
 ```bash
-conda env create -n mamba_contrastive python==3.10.6
+conda create -n mamba_contrastive python==3.10.6
 conda activate mamba_contrastive
 pip install -e .
 pip install --no-cache-dir --no-binary causal-conv1d causal-conv1d
