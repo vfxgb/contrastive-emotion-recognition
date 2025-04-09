@@ -42,6 +42,7 @@ def bilstm_bert_config():
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_config = {
+        "name": "bilstm_bert",
         "bert_model_name": "bert-large-uncased",
         "hidden_dim": 256,
         "dropout_rate": 0.3,
@@ -65,6 +66,7 @@ def bilstm_glove_config():
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_config = {
+        "name": "bilstm_glove",
         "bert_model_name": "bert-large-uncased",
         "hidden_dim": 256,
         "dropout_rate": 0.3,
@@ -87,6 +89,7 @@ def mamba_config():
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_config = {
+        "name": "mamba",
         "device": device,
         "embed_dim": 1024,
         "batch_size": 128,

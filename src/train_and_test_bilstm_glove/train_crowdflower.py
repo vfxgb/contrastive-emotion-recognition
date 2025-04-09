@@ -73,6 +73,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # fetch bilstm model config
     model_config = bilstm_glove_config()
+    print(f"\n Model Configuration : {model_config}")
 
     crowdflower_model_save_path = model_config["crowdflower_model_save_path"]
     num_epochs = model_config["num_epochs"]

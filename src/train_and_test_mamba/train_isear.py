@@ -132,6 +132,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # Configurations
     model_config = mamba_config()
+    print(f"\n 🌟🌟 Model Configuration : {model_config}, Finetune Mode : {finetune_mode}")
 
     num_classes = ISEAR_CLASSES
     mamba_args = model_config["mamba_args"]

@@ -144,6 +144,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # Configurations
     model_config = bilstm_bert_config()
+    print(f"\n 🌟🌟 Model Configuration : {model_config}, Finetune Mode : {finetune_mode}")
 
     num_classes = ISEAR_CLASSES
     num_epochs = model_config["num_epochs"]
