@@ -80,8 +80,6 @@ def main():
     device = model_config["device"]
     wassa_model_save_path = model_config["wassa_model_save_path"]
 
-    best_val_f1 = 0
-    trigger_times = 0
     patience = 5
     num_runs = 5
     test_acc_list = []
@@ -90,6 +88,9 @@ def main():
     for run in range(num_runs):
         print(f"\n🔁 Run {run+1}/{num_runs}")
         set_seed(SEED + run)
+
+        best_val_f1 = 0
+        trigger_times = 0
 
         train_ds = torch.load(WASSA_TRAIN_DS_PATH_WITH_GLOVE, weights_only=False)
         test_ds = torch.load(WASSA_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
@@ -108,19 +109,18 @@ def main():
             hidden_dim=model_config["hidden_dim"],
             lstm_layers=model_config["lstm_layers"]
         )
-        encoder.to(device)
 
         classifier = BiLSTM_Classifier(
             hidden_dim=model_config["hidden_dim"],
             num_classes=num_classes,
             dropout_rate=model_config["dropout_rate"]
         )
+
+        encoder.to(device)
         classifier.to(device)
 
-        # initialse loss function
+        # initialse loss function and optimiser
         criterion = nn.CrossEntropyLoss()
-
-        # initialise optimiser
         optimizer = torch.optim.AdamW(
             list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
         )
@@ -177,12 +177,12 @@ def main():
 
         print("\n----- Starting Evaluation on Test Set -----\n")
         checkpoint = torch.load(wassa_model_save_path, map_location=device)
+
         encoder.load_state_dict(checkpoint["encoder"])
         classifier.load_state_dict(checkpoint["classifier"])
 
         # fetch results on the test set
         test_accuracy, test_f1 = evaluate(encoder, classifier, test_loader, device, test=True)
-
         test_acc_list.append(test_accuracy)
         test_f1_list.append(test_f1)
 
