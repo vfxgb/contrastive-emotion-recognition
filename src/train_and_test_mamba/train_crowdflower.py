@@ -104,7 +104,7 @@ def main():
     print("Initializing models...")
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     classifier = ClassifierHead(embed_dim, CROWDFLOWER_CLASSES).to(device)
-
+    
     # Losses & optimizer
     criterion_cls = nn.CrossEntropyLoss()
     criterion_contrastive = SupConLoss()

@@ -178,6 +178,9 @@ def main():
             model_config=model_config
         )
 
+        encoder.to(device)
+        classifier.to(device)
+        
         criterion_cls = nn.CrossEntropyLoss()
         criterion_contrastive = SupConLoss()
         optimizer = torch.optim.AdamW(

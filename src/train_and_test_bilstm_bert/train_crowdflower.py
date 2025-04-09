@@ -107,13 +107,14 @@ def main():
         hidden_dim=model_config["hidden_dim"],
         lstm_layers=model_config["lstm_layers"]
     )
-    encoder.to(device)
 
     classifier = BiLSTM_Classifier(
         hidden_dim=model_config["hidden_dim"],
         num_classes=CROWDFLOWER_CLASSES,
         dropout_rate=model_config["dropout_rate"]
     )
+    
+    encoder.to(device)
     classifier.to(device)
 
     # initialse loss function
