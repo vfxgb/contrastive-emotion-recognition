@@ -14,6 +14,7 @@ from config import (
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
+    USE_TQDM
 )
 from utils import DualViewDataset, SupConLoss
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
@@ -45,7 +46,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, _, labels in tqdm(dataloader, desc=desc):
+        for input_ids, _, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
             input_ids, labels = input_ids.to(device), labels.to(device)
 
             embeddings = encoder(input_ids)
@@ -118,7 +119,7 @@ def main():
         classifier.train()
         total_loss = 0
 
-        for view1, view2, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
+        for view1, view2, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM):
             view1, view2, labels = view1.to(device), view2.to(device), labels.to(device)
 
             emb1, emb2 = encoder(view1), encoder(view2)

@@ -12,6 +12,7 @@ from models.bilstm_model import BiLSTM_BERT_Encoder, BiLSTM_Classifier
 from utils import print_test_stats, set_seed, split_dataset, get_versioned_path
 from config import (
     SEED,
+    USE_TQDM,
     WASSA_CLASSES,
     WASSA_TRAIN_DS_PATH_WITHOUT_GLOVE,
     WASSA_TEST_DS_PATH_WITHOUT_GLOVE,
@@ -146,7 +147,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, attention_mask, labels in tqdm(dataloader, desc=desc):
+        for input_ids, attention_mask, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
             input_ids, attention_mask, labels = (
                 input_ids.to(device),
                 attention_mask.to(device),
@@ -229,7 +230,7 @@ def main():
             total_loss = 0
 
             for input_ids, attention_mask, labels in tqdm(
-                train_loader, desc=f"Epoch {epoch+1}"
+                train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM
             ):
                 input_ids, attention_mask, labels = (
                     input_ids.to(device),

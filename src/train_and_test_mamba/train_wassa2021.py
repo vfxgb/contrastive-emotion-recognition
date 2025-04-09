@@ -15,6 +15,7 @@ from config import (
     WASSA_TEST_DS_PATH_WITHOUT_GLOVE,
     mamba_config,
     F1_AVERAGE_METRIC,
+    USE_TQDM
 )
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 import argparse
@@ -106,7 +107,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, _, labels in tqdm(dataloader, desc=desc):
+        for input_ids, _, labels in tqdm(dataloader, desc=desc, disable=USE_TQDM):
             input_ids, labels = input_ids.to(device), labels.to(device)
 
             embeddings = encoder(input_ids)
@@ -194,7 +195,7 @@ def main():
             total_loss = 0
 
             for view1, view2, labels in tqdm(
-                train_loader, desc=f"Epoch {epoch+1}", leave=False
+                train_loader, desc=f"Epoch {epoch+1}", leave=False, disable=USE_TQDM
             ):
                 view1, view2, labels = (
                     view1.to(device),

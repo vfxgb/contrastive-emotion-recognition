@@ -18,6 +18,7 @@ from config import (
     bilstm_glove_config,
     ISEAR_GLOVE_EMBEDDINGS_PATH,
     F1_AVERAGE_METRIC,
+    USE_TQDM
 )
 
 torch.serialization.add_safe_globals([TensorDataset])
@@ -45,7 +46,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, labels in tqdm(dataloader, desc=desc):
+        for input_ids, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
             input_ids, labels = (
                 input_ids.to(device),
                 labels.to(device),
@@ -88,7 +89,7 @@ def main():
     for run in range(num_runs):
         best_val_f1 = 0
         trigger_times = 0
-        
+
         print(f"\n🔁 Run {run+1}/{num_runs}")
         set_seed(SEED + run)
 
@@ -132,7 +133,7 @@ def main():
 
             total_loss = 0
 
-            for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
+            for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM):
                 input_ids, labels = (input_ids.to(device), labels.to(device))
 
                 optimizer.zero_grad()

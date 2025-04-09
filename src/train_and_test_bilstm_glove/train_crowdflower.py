@@ -16,6 +16,7 @@ from config import (
     CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_GLOVE_EMBEDDINGS_PATH,
+    USE_TQDM
 )
 from utils import split_dataset
 
@@ -45,7 +46,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, labels in tqdm(dataloader, desc=desc):
+        for input_ids, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
             input_ids, labels = (
                 input_ids.to(device),
                 labels.to(device),
@@ -125,7 +126,7 @@ def main():
 
         total_loss = 0
 
-        for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
+        for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM):
             input_ids, labels = (
                 input_ids.to(device),
                 labels.to(device),

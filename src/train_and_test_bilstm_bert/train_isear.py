@@ -15,6 +15,7 @@ from config import (
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
     ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE,
     SEED,
+    USE_TQDM,
     bilstm_bert_config,
     F1_AVERAGE_METRIC,
 )
@@ -115,7 +116,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, attention_mask, labels in tqdm(dataloader, desc=desc):
+        for input_ids, attention_mask, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
             input_ids, attention_mask, labels = (
                 input_ids.to(device),
                 attention_mask.to(device),
@@ -199,7 +200,7 @@ def main():
             total_loss = 0
 
             for input_ids, attention_mask, labels in tqdm(
-                train_loader, desc=f"Epoch {epoch+1}"
+                train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM
             ):
                 input_ids, attention_mask, labels = (
                     input_ids.to(device),
