@@ -141,8 +141,6 @@ def main():
     model_save_path = model_config["model_save_path"]
     isear_finetune_save_path = get_versioned_path(model_config["isear_finetune_save_path"], finetune_mode)
 
-    best_val_f1 = 0
-    trigger_times = 0
     patience = 3
     num_runs = 5
 
@@ -150,6 +148,8 @@ def main():
     test_f1_list = []
 
     for run in range(num_runs):
+        best_val_f1 = 0
+        trigger_times = 0
         print(f"\n🔁 Run {run+1}/{num_runs}")
         set_seed(SEED + run)
 

@@ -37,6 +37,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
         encoder (BiLSTM_BERT_Encoder): encoder according to the finetune_mode set
         classifier (BiLSTM_Classifier):  classifier according to the finetune_mode set
     """
+    print(f"[Finetune mode] : finetune mode is {finetune_mode}")
     if finetune_mode == 1:
         # ==== load checkpoint ===
         checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
@@ -163,7 +164,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
 
     print(
-        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}"
+        f"Accuracy: {accuracy*100:.4f}%, F1 Score: {f1:.4f}"
     )
     print("\nDetailed Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
@@ -181,14 +182,15 @@ def main():
     device = model_config["device"]
     wassa21_finetune_save_path = get_versioned_path(model_config["wassa21_finetune_save_path"], finetune_mode)
 
-    best_val_f1 = 0
-    trigger_times = 0
     patience = 5
     num_runs = 5
     test_acc_list = []
     test_f1_list = []
 
     for run in range(num_runs):
+        best_val_f1 = 0
+        trigger_times = 0
+
         print(f"\n🔁 Run {run+1}/{num_runs}")
         set_seed(SEED + run)
 
@@ -196,7 +198,7 @@ def main():
         test_ds = torch.load(WASSA_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
         train_ds, val_ds = split_dataset(
-            dataset=train_ds, split_ratio=0.9, seed=SEED + run, glove=False
+            dataset=train_ds, split_ratio=0.9, seed=SEED+run, glove=False
         )
 
         train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
@@ -265,7 +267,7 @@ def main():
                 )
                 trigger_times = 0
                 print(
-                    f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                    f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f}"
                 )
             else:
                 trigger_times += 1
