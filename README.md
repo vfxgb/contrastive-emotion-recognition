@@ -42,16 +42,23 @@ cd contrastive-emotion-recognition
 
 ### **Step 2: Create a Virtual Environment & Install Dependencies**\
 
-#### If using Windows / Linux
 ```bash
-conda env create -f environment.yaml
-conda activate SC4001
+conda env create -n mamba_contrastive python==3.10.6
+conda activate mamba_contrastive
+pip install -e .
+pip install --no-cache-dir --no-binary causal-conv1d causal-conv1d
 ```
 
 ### **Step 3: Run the Pipeline**
 ```bash
 chmod +x run_pipeline.sh
 ```
+
+#### If using SLURM Cluster (use this instead for the rest of the commands)
+```bash
+chmod +x job_run_pipeline.sh 
+```
+
 
 | Command                                                                                        | Description                                                                                                      | Example                                                                                           |
 |------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
