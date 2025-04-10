@@ -72,7 +72,8 @@ def bilstm_glove_config():
         "dropout_rate": 0.3,
         "lstm_layers": 1,
         "num_epochs": 30,
-        "learning_rate": 0.001,
+        "cf_learning_rate":1e-4, # learning rate finetuned for crowdflower
+        "learning_rate": 0.001, # learning rate for isear and wasssa
         "batch_size": 128,
         "device": device,
         "crowdflower_model_save_path": "results/bilstm_glove/bilstm_glove_crowdflower.pt",

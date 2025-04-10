@@ -77,7 +77,7 @@ def main():
 
     num_classes = CROWDFLOWER_CLASSES
     num_epochs = model_config["num_epochs"]
-    learning_rate = 1e-4
+    learning_rate = model_config["cf_learning_rate"]
     batch_size = model_config["batch_size"]
     device = model_config["device"]
     crowdflower_model_save_path = model_config["crowdflower_model_save_path"]
