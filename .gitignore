@@ -5,5 +5,5 @@ src/models/__pycache__
 glove
 errorlogs
 outputlogs
-data
+data/preprocessed_dataset
 results
