@@ -48,7 +48,7 @@ def bilstm_bert_config():
         "dropout_rate": 0.3,
         "lstm_layers": 1,
         "num_epochs": 30,
-        "learning_rate": 0.001,
+        "learning_rate": 6e-5,
         "batch_size": 1024,
         "finetune_batch_size": 32,
         "device": device,
