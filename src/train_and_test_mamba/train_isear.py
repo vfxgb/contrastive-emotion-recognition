@@ -108,7 +108,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, _, labels in tqdm(dataloader, desc=desc, disable=USE_TQDM):
+        for input_ids, _, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
             input_ids, labels = input_ids.to(device), labels.to(device)
 
             embeddings = encoder(input_ids)
@@ -196,7 +196,7 @@ def main():
             total_loss = 0
 
             for view1, view2, labels in tqdm(
-                train_loader, desc=f"Epoch {epoch+1}", leave=False, disable=USE_TQDM
+                train_loader, desc=f"Epoch {epoch+1}", leave=False, disable=not USE_TQDM
             ):
                 view1, view2, labels = (
                     view1.to(device),
