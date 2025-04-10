@@ -16,9 +16,10 @@ from config import (
     CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE,
     CROWDFLOWER_GLOVE_EMBEDDINGS_PATH,
-    USE_TQDM
+    USE_TQDM, 
+    SEED
 )
-from utils import split_dataset
+from utils import split_dataset, set_seed, print_test_stats
 
 torch.serialization.add_safe_globals([TensorDataset])
 
@@ -69,114 +70,127 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 
     return accuracy, f1
 
-
 def main():
-    # fetch bilstm model config
+    # Configurations
     model_config = bilstm_glove_config()
     print(f"\n 🌟🌟 Model Configuration : {model_config}")
 
-    crowdflower_model_save_path = model_config["crowdflower_model_save_path"]
+    num_classes = CROWDFLOWER_CLASSES
     num_epochs = model_config["num_epochs"]
-    learning_rate = model_config["learning_rate"]
+    learning_rate = 1e-4
     batch_size = model_config["batch_size"]
     device = model_config["device"]
+    crowdflower_model_save_path = model_config["crowdflower_model_save_path"]
 
-    # early stopping parameters
-    best_val_f1 = 0
-    trigger_times = 0
     patience = 5
+    num_runs = 5
+    test_acc_list = []
+    test_f1_list = []
 
-    print(f"Using device : {device}")
+    for run in range(num_runs):
+        print(f"\n🔁 Run {run+1}/{num_runs}")
+        set_seed(SEED + run)
 
-    print("Loading training data...")
-    train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE, weights_only=False)
-    test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
+        best_val_f1 = 0
+        trigger_times = 0
 
-    train_ds, val_ds = split_dataset(dataset=train_ds, split_ratio=0.9, glove=True)
+        train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH_WITH_GLOVE, weights_only=False)
+        test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
-
-    # initialise model 
-    encoder = BiLSTM_GloVe_Encoder(
-        embedding_matrix_path=CROWDFLOWER_GLOVE_EMBEDDINGS_PATH,
-        hidden_dim=model_config["hidden_dim"],
-        lstm_layers=model_config["lstm_layers"]
-    )
-    encoder.to(device)
-
-    classifier = BiLSTM_Classifier(
-        hidden_dim=model_config["hidden_dim"],
-        num_classes=CROWDFLOWER_CLASSES,
-        dropout_rate=model_config["dropout_rate"]
-    )
-    classifier.to(device)
-
-    # initialse loss function
-    criterion = nn.CrossEntropyLoss()
-
-    # initialise optimiser
-    optimizer = torch.optim.AdamW(
-        list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
-    )
-
-    for epoch in range(num_epochs):
-        encoder.train()
-        classifier.train()
-
-        total_loss = 0
-
-        for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM):
-            input_ids, labels = (
-                input_ids.to(device),
-                labels.to(device),
-            )
-
-            optimizer.zero_grad()
-
-            max_pool_encodings = encoder(input_ids)
-            logits = classifier(max_pool_encodings)
-            loss = criterion(logits, labels)
-            loss.backward()
-
-            optimizer.step()
-
-            total_loss += loss.item()
-
-        avg_loss = total_loss / len(train_loader)
-        print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
-
-        val_accuracy, val_f1 = evaluate(
-            encoder, classifier, val_loader, device
+        train_ds, val_ds = split_dataset(
+            dataset=train_ds, split_ratio=0.9, seed=SEED + run, glove=True
         )
 
-        if val_f1 > best_val_f1:
-            best_val_f1 = val_f1
-            torch.save(
-                {
-                    "encoder": encoder.state_dict(),
-                    "classifier": classifier.state_dict(),
-                },
-                crowdflower_model_save_path,
-            )
-            trigger_times = 0
-            print(
-                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and val: {val_f1:.4f}"
-            )
-        else:
-            trigger_times += 1
-            if trigger_times >= patience:
-                print(f"Early stopping at epoch {epoch+1}")
-                break
+        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+        val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+        test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-    print("\n----- Starting Evaluation on Test Set -----\n")
-    checkpoint = torch.load(crowdflower_model_save_path, map_location=device)
-    encoder.load_state_dict(checkpoint["encoder"])
-    classifier.load_state_dict(checkpoint["classifier"])
+        # initialise model 
+        encoder = BiLSTM_GloVe_Encoder(
+            embedding_matrix_path=CROWDFLOWER_GLOVE_EMBEDDINGS_PATH,
+            hidden_dim=model_config["hidden_dim"],
+            lstm_layers=model_config["lstm_layers"]
+        )
 
-    # fetch results on the test set
-    evaluate(encoder, classifier, test_loader, device, test=True)
+        classifier = BiLSTM_Classifier(
+            hidden_dim=model_config["hidden_dim"],
+            num_classes=num_classes,
+            dropout_rate=model_config["dropout_rate"]
+        )
+
+        encoder.to(device)
+        classifier.to(device)
+
+        # initialse loss function and optimiser
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.AdamW(
+            list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
+        )
+
+        for epoch in range(num_epochs):
+            encoder.train()
+            classifier.train()
+
+            total_loss = 0
+
+            for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM):
+                input_ids, labels = (
+                    input_ids.to(device),
+                    labels.to(device),
+                )
+
+                optimizer.zero_grad()
+
+                max_pool_encodings = encoder(input_ids)
+                logits = classifier(max_pool_encodings)
+                loss = criterion(logits, labels)
+                loss.backward()
+
+                optimizer.step()
+
+                total_loss += loss.item()
+
+            avg_loss = total_loss / len(train_loader)
+            print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
+
+            val_accuracy, val_f1 = evaluate(
+                encoder, classifier, val_loader, device
+            )
+            print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
+
+            if val_f1 > best_val_f1:
+                best_val_f1 = val_f1
+                torch.save(
+                    {
+                        "encoder": encoder.state_dict(),
+                        "classifier": classifier.state_dict(),
+                    },
+                    crowdflower_model_save_path,
+                )
+                trigger_times = 0
+                print(
+                    f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                )
+            else:
+                trigger_times += 1
+                if trigger_times >= patience:
+                    print(f"Early stopping at epoch {epoch+1}")
+                    break
+
+        print("\n----- Starting Evaluation on Test Set -----\n")
+        checkpoint = torch.load(crowdflower_model_save_path, map_location=device)
+
+        encoder.load_state_dict(checkpoint["encoder"])
+        classifier.load_state_dict(checkpoint["classifier"])
+
+        # fetch results on the test set
+        test_accuracy, test_f1 = evaluate(encoder, classifier, test_loader, device, test=True)
+        test_acc_list.append(test_accuracy)
+        test_f1_list.append(test_f1)
+
+    print_test_stats(
+        test_acc_list, test_f1_list, num_runs
+    )
 
 
 if __name__ == "__main__":
