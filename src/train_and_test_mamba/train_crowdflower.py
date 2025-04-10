@@ -159,7 +159,7 @@ def main():
             )
             trigger_times = 0
             print(
-                f"Best model saved at cepoch {epoch+1} with accuracy: {val_accuracy:.4f} val F1 Macro: {val_f1:.4f}"
+                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} val F1 Macro: {val_f1:.4f}"
             )
         else:
             trigger_times += 1
