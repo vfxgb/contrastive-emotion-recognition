@@ -40,7 +40,7 @@ git clone https://github.com/vfxgb/contrastive-emotion-recognition.git
 cd contrastive-emotion-recognition
 ```
 
-### **Step 2: Create a Virtual Environment & Install Dependencies**\
+### **Step 2: Create a Virtual Environment & Install Dependencies**
 
 ```bash
 conda create -n mamba_contrastive python==3.10.6
@@ -90,8 +90,9 @@ Feel free to contribute! Fork the repo, create a new branch, and submit a pull r
 - Gu, A., & Dao, T. (2023). "Mamba: Linear-Time Sequence Modeling with Selective State Spaces".
 - Gao, T., Yao, X., & Chen, D. (2021). "SimCSE: Simple Contrastive Learning of Sentence Embeddings".
 - Gunel, B., et al. (2021). "Supervised Contrastive Learning for Pretrained Language Model Fine-Tuning".
-- CrowdFlower Dataset: [Link](https://data.world/crowdflower/sentiment-analysis-in-text)
-- WASSA 2017 Dataset: [Link](https://github.com/vinayakumarr/WASSA-2017)
+- CrowdFlower Dataset
+- WASSA 2021 Dataset
+- ISEAR Dataset
 
 ---
 
