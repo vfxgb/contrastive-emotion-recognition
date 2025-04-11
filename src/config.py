@@ -96,7 +96,7 @@ def mamba_config():
         "embed_dim": 2048,
         "batch_size": 128,
         "num_epochs": 30,
-        "learning_rate": 6e-5,
+        "learning_rate": 1e-5,
         "mamba_args": dict(
             d_model=2048,
             d_state=512,
