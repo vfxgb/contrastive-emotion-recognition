@@ -3,11 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-from sklearn.metrics import (
-    classification_report,
-    f1_score,
-    accuracy_score
-)
+from sklearn.metrics import classification_report, f1_score, accuracy_score
 from models.bilstm_model import BiLSTM_BERT_Encoder, BiLSTM_Classifier
 from config import (
     F1_AVERAGE_METRIC,
@@ -15,7 +11,7 @@ from config import (
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
-    USE_TQDM
+    USE_TQDM,
 )
 from utils import split_dataset
 
@@ -46,7 +42,9 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     desc = "Test" if test else "Validation"
 
     with torch.no_grad():
-        for input_ids, attention_mask, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
+        for input_ids, attention_mask, labels in tqdm(
+            dataloader, desc=desc, disable=not USE_TQDM
+        ):
             input_ids, attention_mask, labels = (
                 input_ids.to(device),
                 attention_mask.to(device),
@@ -64,10 +62,11 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
 
+    print(f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}")
     print(
-        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}"
+        "\Classification Report:\n",
+        classification_report(all_labels, all_preds, zero_division=0),
     )
-    print("\Classification Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
     return accuracy, f1
 
@@ -103,17 +102,17 @@ def main():
     encoder = BiLSTM_BERT_Encoder(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
-        lstm_layers=model_config["lstm_layers"]
+        lstm_layers=model_config["lstm_layers"],
     )
     encoder.to(device)
 
     classifier = BiLSTM_Classifier(
         hidden_dim=model_config["hidden_dim"],
         num_classes=num_classes,
-        dropout_rate=model_config["dropout_rate"]
+        dropout_rate=model_config["dropout_rate"],
     )
     classifier.to(device)
-    
+
     # initialse loss function
     criterion = nn.CrossEntropyLoss()
 
@@ -152,9 +151,7 @@ def main():
         print(f"[Epoch {epoch+1}]")
 
         # print out evaluation metrics
-        val_accuracy, val_f1 = evaluate(
-            encoder, classifier, val_loader, device
-        )
+        val_accuracy, val_f1 = evaluate(encoder, classifier, val_loader, device)
 
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
@@ -177,14 +174,14 @@ def main():
 
     print("[Main] Start testing model...")
 
-    # load saved best model 
+    # load saved best model
     checkpoint = torch.load(model_save_path, map_location=device)
 
     # initialise model
     test_encoder = BiLSTM_BERT_Encoder(
         bert_model_name=model_config["bert_model_name"],
         hidden_dim=model_config["hidden_dim"],
-        lstm_layers=model_config["lstm_layers"]
+        lstm_layers=model_config["lstm_layers"],
     )
     test_encoder.load_state_dict(checkpoint["encoder"])
     test_encoder.to(device)
@@ -192,12 +189,11 @@ def main():
     test_classifier = BiLSTM_Classifier(
         hidden_dim=model_config["hidden_dim"],
         num_classes=num_classes,
-        dropout_rate=model_config["dropout_rate"]
+        dropout_rate=model_config["dropout_rate"],
     )
     test_classifier.load_state_dict(checkpoint["classifier"])
     test_classifier.to(device)
-    
-    
+
     # print results on the test set
     evaluate(test_encoder, test_classifier, test_loader, device, test=True)
 
