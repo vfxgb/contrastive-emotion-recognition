@@ -30,15 +30,12 @@ conda activate mamba_contrastive
 
 ### Set CUDA variables ###
 export CUDA_HOME=$(dirname $(dirname $(which nvcc)))
-echo "CUDA_HOME is set to: $CUDA_HOME"
 export PATH="$CONDA_PREFIX/bin:$PATH"
 export PYTHONNOUSERSITE=1
+export PYTHONPATH="$PYTHONPATH:./src"
 
 echo "Checking GPU availability"
 python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'Current device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU detected\"}')"
-
-export PYTHONPATH="$PYTHONPATH:./src"
-echo $PYTHONPATH
 
 # === Configuration ===
 LOG_DIR="logs"
@@ -224,7 +221,7 @@ elif [ "$MODEL" = "mamba" ]; then
     mkdir -p $MAMBA_RESULTS_DIR
 fi
 
-echo "Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
+echo "[Preprocess] Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
 
 if [ "$FORCE_PREPROCESS" = true ]; then
     if [ "$MODEL" = "bilstm_glove" ]; then

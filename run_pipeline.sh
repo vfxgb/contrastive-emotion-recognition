@@ -17,6 +17,8 @@ BILSTM_BERT_RESULTS_DIR="results/bilstm_bert"
 BILSTM_GLOVE_RESULTS_DIR="results/bilstm_glove"
 MAMBA_RESULTS_DIR="results/mamba"
 
+export PYTHONPATH="$PYTHONPATH:./src"
+
 # === VALIDATION SETUP === 
 VALID_DATASETS=("crowdflower" "isear" "wassa")
 VALID_MODELS=("bilstm_glove" "bilstm_bert" "mamba")
@@ -193,22 +195,18 @@ elif [ "$MODEL" = "mamba" ]; then
     mkdir -p "$MAMBA_RESULTS_DIR"
 fi
 
-echo "Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
+echo "[Preprocess] Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"
 
 if [ "$FORCE_PREPROCESS" = true ]; then
     if [ "$MODEL" = "bilstm_glove" ]; then
-        echo "hi A"
         python "$PREPROCESS_SCRIPT" --with_glove --force_preprocess 2>&1 | tee -a "$LOG_FILE"
     else
-        echo "hi B"
         python "$PREPROCESS_SCRIPT" --force_preprocess 2>&1 | tee -a "$LOG_FILE"
     fi
 else
     if [ "$MODEL" = "bilstm_glove" ]; then
-        echo "hi A"
         python "$PREPROCESS_SCRIPT" --with_glove 2>&1 | tee -a "$LOG_FILE"
     else
-        echo "hi B"
         python "$PREPROCESS_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
     fi
 fi
