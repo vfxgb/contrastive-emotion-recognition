@@ -28,10 +28,11 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     Evaluates model.
 
     Args:
-        model : The model to evaluate
-        dataloader : dataloader for val or test dataset
-        device : the device to perform computation on. ( cuda or cpu )
-        test : whether evaluting on test or train ds.
+        encoder: The encoder of the model to evaluate.
+        classifier: The classifier of the model to evaluate.
+        dataloader : dataloader for val or test dataset.
+        device : the device to perform computation on ( cuda or cpu ).
+        test : whether we evaluation on train or val ds for tqdm status description.
 
     Returns:
         tuple: A tuple containing:
@@ -52,6 +53,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
                 labels.to(device),
             )
 
+            # get prediction
             max_pool_encodings = encoder(input_ids)
             logits = classifier(max_pool_encodings)
 
@@ -62,18 +64,19 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
 
+    print(f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}")
     print(
-        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}"
+        "\Classification Report:\n",
+        classification_report(all_labels, all_preds, zero_division=0),
     )
-    print("\nDetailed Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
     return accuracy, f1
 
 
 def main():
-    # Configurations
+    # fetch bilstm glove model config
     model_config = bilstm_glove_config()
-    print(f"\n 🌟🌟 Model Configuration : {model_config}")
+    print(f"\n [Main] Dataset : Isear, Model Configuration : {model_config}")
 
     num_classes = ISEAR_CLASSES
     num_epochs = model_config["num_epochs"]
@@ -84,6 +87,7 @@ def main():
 
     patience = 5
     num_runs = 5
+
     test_acc_list = []
     test_f1_list = []
 
@@ -91,9 +95,10 @@ def main():
         best_val_f1 = 0
         trigger_times = 0
 
-        print(f"\n🔁 Run {run+1}/{num_runs}")
         set_seed(SEED + run)
 
+        print(f"\n[Main] Run {run+1}/{num_runs}")
+        print("[Main] Loading training data...")
         train_ds = torch.load(ISEAR_TRAIN_DS_PATH_WITH_GLOVE, weights_only=False)
         test_ds = torch.load(ISEAR_TEST_DS_PATH_WITH_GLOVE, weights_only=False)
 
@@ -128,6 +133,7 @@ def main():
             list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
         )
 
+        print("[Main] Start training model...")
         for epoch in range(num_epochs):
             encoder.train()
             classifier.train()
@@ -141,6 +147,7 @@ def main():
 
                 max_pool_encodings = encoder(input_ids)
                 logits = classifier(max_pool_encodings)
+
                 loss = criterion(logits, labels)
                 loss.backward()
 
@@ -148,13 +155,12 @@ def main():
 
                 total_loss += loss.item()
 
-            avg_loss = total_loss / len(train_loader)
-            print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
+            print(f"[Epoch {epoch+1}]")
 
+            # print out evaluation metrics
             val_accuracy, val_f1 = evaluate(
                 encoder, classifier, val_loader, device
             )
-            print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
@@ -167,7 +173,7 @@ def main():
                 )
                 trigger_times = 0
                 print(
-                    f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                    f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and f1 score: {val_f1:.4f}"
                 )
             else:
                 trigger_times += 1
@@ -175,17 +181,19 @@ def main():
                     print(f"Early stopping at epoch {epoch+1}")
                     break
 
-        print("\n----- Starting Evaluation on Test Set -----\n")
+        print("\n[Main] Start testing model...")
         checkpoint = torch.load(isear_model_save_path, map_location=device)
+
         encoder.load_state_dict(checkpoint["encoder"])
         classifier.load_state_dict(checkpoint["classifier"])
 
-        # fetch results on the test set
+        # fetch and print results on the test set
         test_accuracy, test_f1 = evaluate(encoder, classifier, test_loader, device, test=True)
 
         test_acc_list.append(test_accuracy)
         test_f1_list.append(test_f1)
 
+    # print avg stats across all runs
     print_test_stats(
         test_acc_list, test_f1_list, num_runs
     )
