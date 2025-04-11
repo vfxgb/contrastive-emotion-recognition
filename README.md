@@ -82,8 +82,6 @@ chmod +x job_run_pipeline.sh
 ---
 
 ## Datasets
-- ## Datasets
-
 - [CrowdFlower Dataset](https://data.world/crowdflower/sentiment-analysis-in-text)
 - [WASSA 2021 Dataset](https://lt3.ugent.be/resources/wassa-2021-shared-task/dataset-download-form/)
 - [ISEAR Dataset](https://www.unige.ch/cisa/research/materials-and-online-research/research-material/)
