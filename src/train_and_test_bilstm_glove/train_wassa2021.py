@@ -3,11 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-from sklearn.metrics import (
-    classification_report,
-    f1_score,
-    accuracy_score
-)
+from sklearn.metrics import classification_report, f1_score, accuracy_score
 from models.bilstm_model import BiLSTM_GloVe_Encoder, BiLSTM_Classifier
 from utils import print_test_stats, set_seed, split_dataset
 from config import (
@@ -18,10 +14,11 @@ from config import (
     bilstm_glove_config,
     F1_AVERAGE_METRIC,
     WASSA_GLOVE_EMBEDDINGS_PATH,
-    USE_TQDM
+    USE_TQDM,
 )
 
 torch.serialization.add_safe_globals([TensorDataset])
+
 
 def evaluate(encoder, classifier, dataloader, device, test=False):
     """
@@ -110,22 +107,22 @@ def main():
         val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
         test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-        # initialise model 
+        # initialise model
         encoder = BiLSTM_GloVe_Encoder(
             embedding_matrix_path=WASSA_GLOVE_EMBEDDINGS_PATH,
             hidden_dim=model_config["hidden_dim"],
-            lstm_layers=model_config["lstm_layers"]
+            lstm_layers=model_config["lstm_layers"],
         )
         encoder.to(device)
 
         classifier = BiLSTM_Classifier(
             hidden_dim=model_config["hidden_dim"],
             num_classes=num_classes,
-            dropout_rate=model_config["dropout_rate"]
+            dropout_rate=model_config["dropout_rate"],
         )
         classifier.to(device)
 
-        # initialse loss function 
+        # initialse loss function
         criterion = nn.CrossEntropyLoss()
 
         # intialise optimiser
@@ -140,7 +137,9 @@ def main():
 
             total_loss = 0
 
-            for input_ids, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM):
+            for input_ids, labels in tqdm(
+                train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM
+            ):
                 input_ids, labels = (
                     input_ids.to(device),
                     labels.to(device),
@@ -161,9 +160,7 @@ def main():
             print(f"[Epoch {epoch+1}]")
 
             # print out evaluation metrics
-            val_accuracy, val_f1 = evaluate(
-                encoder, classifier, val_loader, device
-            )
+            val_accuracy, val_f1 = evaluate(encoder, classifier, val_loader, device)
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
@@ -191,15 +188,16 @@ def main():
         classifier.load_state_dict(checkpoint["classifier"])
 
         # fetch and print results on the test set
-        test_accuracy, test_f1 = evaluate(encoder, classifier, test_loader, device, test=True)
+        test_accuracy, test_f1 = evaluate(
+            encoder, classifier, test_loader, device, test=True
+        )
 
         test_acc_list.append(test_accuracy)
         test_f1_list.append(test_f1)
 
     # print avg stats across all runs
-    print_test_stats(
-        test_acc_list, test_f1_list, num_runs
-    )
+    print_test_stats(test_acc_list, test_f1_list, num_runs)
+
 
 if __name__ == "__main__":
     main()
