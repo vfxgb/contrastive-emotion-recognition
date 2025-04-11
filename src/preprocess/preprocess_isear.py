@@ -25,10 +25,11 @@ import argparse
 # fetch label mapping for ISEAR dataset
 label_mapping = fetch_label_mapping(isear=True)
 
+
 def load_isear_with_glove(path, max_length=128):
     """
     Load and preprocess the ISEAR dataset from a CSV file for use with GloVe embeddings.
-    
+
     Assumes the CSV has columns 'Field1' and 'SIT'.
     'Field1' is used as the label and 'SIT' as the text.
     Only rows with labels present in label_mapping are kept.
@@ -71,9 +72,7 @@ def load_isear_with_glove(path, max_length=128):
 
     # Create and return a TensorDataset
     dataset = TensorDataset(input_tensor, labels)
-    print(
-        f"[Isear] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
-    )
+    print(f"[Isear] Loaded crowdflower dataset: {len(dataset)} samples from {path}")
     print(f"[Isear] Label map: {label_mapping}")
 
     return dataset, tokenizer
@@ -121,9 +120,7 @@ def load_isear_without_glove(path, max_length=128):
 
     # Create and return a TensorDataset
     dataset = TensorDataset(encodings["input_ids"], encodings["attention_mask"], labels)
-    print(
-        f"[Isear] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
-    )
+    print(f"[Isear] Loaded crowdflower dataset: {len(dataset)} samples from {path}")
     print(f"[Isear] Label map: {label_mapping}")
 
     return dataset
@@ -163,7 +160,7 @@ if __name__ == "__main__":
         else:
             print("[Main] Preprocessing Dataset.")
             isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
-            
+
             print("[Main] Loading glove embeddings.")
             load_glove_embeddings(tokenizer, ISEAR_GLOVE_EMBEDDINGS_PATH)
 
