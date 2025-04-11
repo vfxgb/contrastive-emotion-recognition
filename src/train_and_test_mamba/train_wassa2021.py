@@ -129,7 +129,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 
     print(f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}")
     print(
-        "\Classification Report:\n",
+        "Classification Report:\n",
         classification_report(all_labels, all_preds, zero_division=0),
     )
 
