@@ -150,7 +150,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 
 
 def main():
-    # Configurations
+    # fetch model config
     model_config = bilstm_bert_config()
     print(f"\n [Main] Dataset : Isear, Model Configuration : {model_config}")
 

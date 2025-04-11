@@ -27,11 +27,11 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     Evaluates model.
 
     Args:
-        encoder: The encoder of the model to evaluate
-        classifier: The classifier of the model to evaluate
-        dataloader : dataloader for val or test dataset
-        device : the device to perform computation on. ( cuda or cpu )
-        test : whether evaluting on test or train ds.
+        encoder: The encoder of the model to evaluate.
+        classifier: The classifier of the model to evaluate.
+        dataloader : dataloader for val or test dataset.
+        device : the device to perform computation on ( cuda or cpu ).
+        test : whether we evaluation on train or val ds for tqdm status description.
 
     Returns:
         tuple: A tuple containing:
@@ -49,6 +49,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
         for input_ids, _, labels in tqdm(dataloader, desc=desc, disable=not USE_TQDM):
             input_ids, labels = input_ids.to(device), labels.to(device)
 
+            # get prediction
             embeddings = encoder(input_ids)
             logits = classifier(embeddings)
 
@@ -59,10 +60,11 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average=F1_AVERAGE_METRIC, zero_division=0)
 
+    print(f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}")
     print(
-        f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}"
+        "\Classification Report:\n",
+        classification_report(all_labels, all_preds, zero_division=0),
     )
-    print("\nDetailed Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
     return accuracy, f1
 
@@ -70,7 +72,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # fetch bilstm model config
     model_config = mamba_config()
-    print(f"\n 🌟🌟 Model Configuration : {model_config}, Dataset : CROWDFLOWER")
+    print(f"\n [Main] Dataset : Crowdflower, Model Configuration : {model_config}")
 
     mamba_args = model_config["mamba_args"]
     device = model_config["device"]
@@ -85,9 +87,7 @@ def main():
     trigger_times = 0
     patience = 5
 
-    print(f"Using device : {device}")
-
-    print("Loading training data...")
+    print("[Main] Loading training data...")
     train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
     test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
@@ -104,7 +104,7 @@ def main():
     test_loader = DataLoader(test_ds, batch_size=32, shuffle=False)
 
     # Initialize encoder & classifier for training
-    print("Initializing models...")
+    print("[Main] Initializing models...")
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     classifier = ClassifierHead(embed_dim, CROWDFLOWER_CLASSES).to(device)
     
@@ -115,6 +115,7 @@ def main():
         list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
     )
 
+    print("[Main] Start training model...")
     for epoch in range(num_epochs):
         encoder.train()
         classifier.train()
@@ -136,15 +137,11 @@ def main():
 
             total_loss += loss.item()
 
-        avg_loss = total_loss / len(train_loader)
-        print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
+        print(f"[Epoch {epoch+1}]")
 
-        # Validation step
+        # print out evaluation metrics
         val_accuracy, val_f1 = evaluate(
             encoder, classifier, val_loader, device
-        )
-        print(
-            f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f} Val F1 Macro: {val_f1:.4f}"
         )
 
         # Early stopping logic
@@ -159,7 +156,7 @@ def main():
             )
             trigger_times = 0
             print(
-                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} val F1 Macro: {val_f1:.4f}"
+                f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and f1 score: {val_f1:.4f}"
             )
         else:
             trigger_times += 1
@@ -167,19 +164,18 @@ def main():
                 print(f"Early stopping at epoch {epoch+1}")
                 break
 
-    print("\n----- Starting Evaluation on Test Set -----\n")
+    print("[Main] Start testing model...")
+    checkpoint = torch.load(model_save_path, map_location=device)
 
     # Initialize test model with new classifier head for test emotions
     test_encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     test_classifier = ClassifierHead(embed_dim, CROWDFLOWER_CLASSES).to(device)
 
-    # Load model weights
-    print("Loading best model weights...")
-    checkpoint = torch.load(model_save_path, map_location=device)
     test_encoder.load_state_dict(checkpoint["encoder"])
     test_classifier.load_state_dict(checkpoint["classifier"])
+    
+    # print results on the test set
     evaluate(test_encoder, test_classifier, test_loader, device=device, test=True)
-
 
 if __name__ == "__main__":
     main()
