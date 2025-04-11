@@ -81,15 +81,7 @@ chmod +x job_run_pipeline.sh
 
 ---
 
-## Contributing
-Feel free to contribute! Fork the repo, create a new branch, and submit a pull request.
-
----
-
-## References
-- Gu, A., & Dao, T. (2023). "Mamba: Linear-Time Sequence Modeling with Selective State Spaces".
-- Gao, T., Yao, X., & Chen, D. (2021). "SimCSE: Simple Contrastive Learning of Sentence Embeddings".
-- Gunel, B., et al. (2021). "Supervised Contrastive Learning for Pretrained Language Model Fine-Tuning".
+## Datasets
 - CrowdFlower Dataset
 - WASSA 2021 Dataset
 - ISEAR Dataset
