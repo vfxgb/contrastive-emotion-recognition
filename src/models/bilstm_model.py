@@ -110,7 +110,6 @@ class BiLSTM_GloVe_Encoder(nn.Module):
             self.embedding.weight.data.copy_(
                 torch.tensor(embedding_matrix, dtype=torch.float)
             )
-            self.embedding.weight.requires_grad = True
 
         # bidirectional LSTM layer
         self.lstm = nn.LSTM(
