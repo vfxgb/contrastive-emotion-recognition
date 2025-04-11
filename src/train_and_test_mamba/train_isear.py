@@ -144,7 +144,7 @@ def main():
     model_save_path = model_config["model_save_path"]
     isear_finetune_save_path = get_versioned_path(model_config["isear_finetune_save_path"], finetune_mode)
 
-    patience = 3
+    patience = 5
     num_runs = 5
 
     test_acc_list = []
