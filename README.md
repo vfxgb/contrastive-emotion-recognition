@@ -54,7 +54,7 @@ pip install --no-cache-dir --no-binary causal-conv1d causal-conv1d
 chmod +x run_pipeline.sh
 ```
 
-#### If using SLURM Cluster (Use the SLURM-compatible job script instead)
+#### If using SLURM Cluster (Use this SLURM-compatible job script instead)
 ```bash
 chmod +x job_run_pipeline.sh 
 ```
