@@ -19,7 +19,7 @@ import argparse
 
 torch.serialization.add_safe_globals([TensorDataset])
 
-finetune_mode = 1
+finetune_mode = 3
 
 
 def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
