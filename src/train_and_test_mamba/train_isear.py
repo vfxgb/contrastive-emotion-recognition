@@ -2,12 +2,14 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from sklearn.metrics import (
-    classification_report,
-    f1_score,
-    accuracy_score
+from sklearn.metrics import classification_report, f1_score, accuracy_score
+from utils import (
+    print_test_stats,
+    set_seed,
+    DualViewDataset,
+    SupConLoss,
+    get_versioned_path,
 )
-from utils import print_test_stats, set_seed, DualViewDataset, SupConLoss, get_versioned_path
 from config import (
     ISEAR_CLASSES,
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
@@ -15,7 +17,7 @@ from config import (
     SEED,
     mamba_config,
     F1_AVERAGE_METRIC,
-    USE_TQDM
+    USE_TQDM,
 )
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 import argparse
@@ -23,6 +25,7 @@ import argparse
 finetune_mode = 1
 
 torch.serialization.add_safe_globals([TensorDataset])
+
 
 def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     """
@@ -39,51 +42,51 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
     """
     print(f"[Finetune mode] : Finetune mode set to {finetune_mode}")
     if finetune_mode == 1 or finetune_mode == 2:
-        checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
-        
+        checkpoint = torch.load(
+            pretrained_model_path, map_location=model_config["device"]
+        )
+
         # initialise model
         encoder = ContrastiveMambaEncoder(
-            mamba_args=model_config["mamba_args"], 
-            embed_dim=model_config["embed_dim"]
+            mamba_args=model_config["mamba_args"], embed_dim=model_config["embed_dim"]
         )
         encoder.load_state_dict(checkpoint["encoder"])
 
         classifier = ClassifierHead(
-            embed_dim=model_config["embed_dim"],
-            num_emotions=num_classes
+            embed_dim=model_config["embed_dim"], num_emotions=num_classes
         )
-        
+
         classifier_dict = classifier.state_dict()
         pretrained_classifier_dict = checkpoint["classifier"]
         filtered_dict = {
-            k: v for k, v in pretrained_classifier_dict.items()
+            k: v
+            for k, v in pretrained_classifier_dict.items()
             if k in classifier_dict and "classifier.6" not in k
         }
         classifier_dict.update(filtered_dict)
         classifier.load_state_dict(classifier_dict)
 
-        # === freeze encoder === 
+        # === freeze encoder ===
         if finetune_mode == 1:
             for param in encoder.parameters():
                 param.requires_grad = False
 
         return encoder, classifier
-    
+
     elif finetune_mode == 3:
         encoder = ContrastiveMambaEncoder(
-            mamba_args=model_config["mamba_args"], 
-            embed_dim=model_config["embed_dim"]
+            mamba_args=model_config["mamba_args"], embed_dim=model_config["embed_dim"]
         )
         classifier = ClassifierHead(
-            embed_dim=model_config["embed_dim"],
-            num_emotions=num_classes
+            embed_dim=model_config["embed_dim"], num_emotions=num_classes
         )
 
         return encoder, classifier
-    
+
     else:
         raise ValueError("Invalid finetune mode.")
-    
+
+
 def evaluate(encoder, classifier, dataloader, device, test=False):
     """
     Evaluates model.
@@ -144,7 +147,9 @@ def main():
     num_epochs = model_config["num_epochs"]
     learning_rate = model_config["learning_rate"]
     model_save_path = model_config["model_save_path"]
-    isear_finetune_save_path = get_versioned_path(model_config["isear_finetune_save_path"], finetune_mode)
+    isear_finetune_save_path = get_versioned_path(
+        model_config["isear_finetune_save_path"], finetune_mode
+    )
 
     patience = 5
     num_runs = 5
@@ -181,13 +186,13 @@ def main():
 
         encoder, classifier = load_and_adapt_model(
             pretrained_model_path=model_save_path,
-            num_classes=num_classes, 
-            model_config=model_config
+            num_classes=num_classes,
+            model_config=model_config,
         )
 
         encoder.to(device)
         classifier.to(device)
-        
+
         criterion_cls = nn.CrossEntropyLoss()
         criterion_contrastive = SupConLoss()
         optimizer = torch.optim.AdamW(
@@ -230,9 +235,7 @@ def main():
             print(f"[Epoch {epoch+1}]")
 
             # Validation step
-            val_accuracy, val_f1 = evaluate(
-                encoder, classifier, val_loader, device
-            )
+            val_accuracy, val_f1 = evaluate(encoder, classifier, val_loader, device)
 
             # Save model based on best val F1
             if val_f1 > best_val_f1:
@@ -253,9 +256,7 @@ def main():
             else:
                 trigger_times += 1
                 if trigger_times >= patience:
-                    print(
-                        f"Early stopping at epoch {epoch+1}."
-                    )
+                    print(f"Early stopping at epoch {epoch+1}.")
                     break
 
         print("\n[Main] Start testing model...")
@@ -274,9 +275,7 @@ def main():
         test_f1_list.append(test_f1)
 
     # print avg stats across all runs
-    print_test_stats(
-        test_acc_list, test_f1_list, num_runs
-    )
+    print_test_stats(test_acc_list, test_f1_list, num_runs)
 
 
 if __name__ == "__main__":

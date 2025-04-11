@@ -2,11 +2,7 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from sklearn.metrics import (
-    classification_report,
-    f1_score,
-    accuracy_score
-)
+from sklearn.metrics import classification_report, f1_score, accuracy_score
 from config import (
     F1_AVERAGE_METRIC,
     SEED,
@@ -14,7 +10,7 @@ from config import (
     CROWDFLOWER_CLASSES,
     CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
     CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
-    USE_TQDM
+    USE_TQDM,
 )
 from utils import DualViewDataset, SupConLoss
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
@@ -107,7 +103,7 @@ def main():
     print("[Main] Initializing models...")
     encoder = ContrastiveMambaEncoder(mamba_args, embed_dim=embed_dim).to(device)
     classifier = ClassifierHead(embed_dim, CROWDFLOWER_CLASSES).to(device)
-    
+
     # Losses & optimizer
     criterion_cls = nn.CrossEntropyLoss()
     criterion_contrastive = SupConLoss()
@@ -121,7 +117,9 @@ def main():
         classifier.train()
         total_loss = 0
 
-        for view1, view2, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM):
+        for view1, view2, labels in tqdm(
+            train_loader, desc=f"Epoch {epoch+1}", disable=not USE_TQDM
+        ):
             view1, view2, labels = view1.to(device), view2.to(device), labels.to(device)
 
             emb1, emb2 = encoder(view1), encoder(view2)
@@ -140,9 +138,7 @@ def main():
         print(f"[Epoch {epoch+1}]")
 
         # print out evaluation metrics
-        val_accuracy, val_f1 = evaluate(
-            encoder, classifier, val_loader, device
-        )
+        val_accuracy, val_f1 = evaluate(encoder, classifier, val_loader, device)
 
         # Early stopping logic
         if val_f1 > best_val_f1:
@@ -173,9 +169,10 @@ def main():
 
     test_encoder.load_state_dict(checkpoint["encoder"])
     test_classifier.load_state_dict(checkpoint["classifier"])
-    
+
     # print results on the test set
     evaluate(test_encoder, test_classifier, test_loader, device=device, test=True)
+
 
 if __name__ == "__main__":
     main()
