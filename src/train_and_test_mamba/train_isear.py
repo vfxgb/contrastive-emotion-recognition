@@ -22,7 +22,7 @@ from config import (
 from models.contrastive_model import ContrastiveMambaEncoder, ClassifierHead
 import argparse
 
-finetune_mode = 1
+finetune_mode = 3
 
 torch.serialization.add_safe_globals([TensorDataset])
 
