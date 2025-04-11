@@ -34,13 +34,18 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
         pretrained_model_path (str): The file path to the saved pretrained model.
         num_classes (int): The number of output classes for the final classification layer.
         model_config (dict):  model config containing hyperparameter and other config.
+
     Returns:
         encoder (BiLSTM_BERT_Encoder): encoder according to the finetune_mode set
         classifier (BiLSTM_Classifier):  classifier according to the finetune_mode set
+
     """
+    print(f"[Finetune mode] : Finetune mode set to {finetune_mode}")
+
     if finetune_mode == 1 or finetune_mode == 2:
-        # ==== load checkpoint ===
+        # load checkpoint 
         checkpoint = torch.load(pretrained_model_path, map_location=model_config["device"])
+
         # initialise model
         encoder = BiLSTM_BERT_Encoder(
             bert_model_name=model_config["bert_model_name"],
@@ -67,7 +72,7 @@ def load_and_adapt_model(pretrained_model_path, num_classes, model_config):
         classifier_dict.update(pretrained_classifier_dict)
         classifier.load_state_dict(classifier_dict)
 
-        # === freeze encoder === 
+        # freeze encoder 
         if finetune_mode == 1:
             for param in encoder.parameters():
                 param.requires_grad = False
@@ -97,11 +102,11 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     Evaluates model.
 
     Args:
-        encoder: The encoder of the model to evaluate
-        classifier: The classifier of the model to evaluate
-        dataloader : dataloader for val or test dataset
-        device : the device to perform computation on. ( cuda or cpu )
-        test : whether evaluting on test or train ds.
+        encoder: The encoder of the model to evaluate.
+        classifier: The classifier of the model to evaluate.
+        dataloader : dataloader for val or test dataset.
+        device : the device to perform computation on ( cuda or cpu ).
+        test : whether we evaluation on train or val ds for tqdm status description.
 
     Returns:
         tuple: A tuple containing:
@@ -123,6 +128,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
                 labels.to(device),
             )
 
+            # get prediction
             max_pool_encodings = encoder(input_ids, attention_mask)
             logits = classifier(max_pool_encodings)
 
@@ -136,7 +142,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     print(
         f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}"
     )
-    print("\nDetailed Report:\n", classification_report(all_labels, all_preds, zero_division=0))
+    print("\Classification Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
     return accuracy, f1
 
@@ -144,7 +150,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # Configurations
     model_config = bilstm_bert_config()
-    print(f"\n 🌟🌟 Model Configuration : {model_config}, Finetune Mode : {finetune_mode}, dataset : ISEAR")
+    print(f"\n [Main] Dataset : Crowdflower, Model Configuration : {model_config}")
 
     num_classes = ISEAR_CLASSES
     num_epochs = model_config["num_epochs"]
@@ -163,9 +169,10 @@ def main():
         best_val_f1 = 0
         trigger_times = 0
         
-        print(f"\n🔁 Run {run+1}/{num_runs}")
         set_seed(SEED + run)
 
+        print(f"\n[Main] Run {run+1}/{num_runs}")
+        print("[Main] Loading training data...")
         train_ds = torch.load(ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
         test_ds = torch.load(ISEAR_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
@@ -183,7 +190,6 @@ def main():
             num_classes=num_classes,
             model_config=model_config,
         )
-
         encoder.to(device)
         classifier.to(device)
 
@@ -195,6 +201,7 @@ def main():
             list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
         )
 
+        print("[Main] Start training model...")
         for epoch in range(num_epochs):
             encoder.train()
             classifier.train()
@@ -213,6 +220,7 @@ def main():
 
                 max_pool_encodings = encoder(input_ids, attention_mask)
                 logits = classifier(max_pool_encodings)
+
                 loss = criterion(logits, labels)
                 loss.backward()
 
@@ -220,39 +228,40 @@ def main():
 
                 total_loss += loss.item()
 
-            avg_loss = total_loss / len(train_loader)
-            print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
+            print(f"[Epoch {epoch+1}]")
 
+            # print out evaluation metrics
             val_accuracy, val_f1 = evaluate(
                 encoder, classifier, val_loader, device
             )
-            print(f"[Epoch {epoch+1}] Validation Accuracy: {val_accuracy:.4f}")
 
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
-                best_encoder = encoder.state_dict()
-                best_classifier = classifier.state_dict()
                 torch.save(
                     {
-                        "encoder": best_encoder,
-                        "classifier": best_classifier,
+                        "encoder": encoder.state_dict(),
+                        "classifier": classifier.state_dict(),
                     },
                     isear_finetune_save_path,
                 )
                 trigger_times = 0
                 print(
-                    f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f}"
+                    f"Best model saved at epoch {epoch+1} with accuracy: {val_accuracy:.4f} and f1 score: {val_f1:.4f}"
                 )
             else:
                 trigger_times += 1
                 if trigger_times >= patience:
-                    print(f"💀💀 Early stopping at epoch {epoch+1} due to no improvement in val F1")
+                    print(f"Early stopping at epoch {epoch+1}")
                     break
 
-        print("\n----- Starting Evaluation on Test Set -----\n")
+        print("\n[Main] Start testing model...")
+
+        # load saved best model 
         checkpoint = torch.load(isear_finetune_save_path, map_location=device)
         encoder.load_state_dict(checkpoint["encoder"])
         classifier.load_state_dict(checkpoint["classifier"])
+
+        # print results on test set
         test_accuracy, test_f1 = evaluate(
             encoder, classifier, test_loader, device, test=True
         )
@@ -260,6 +269,7 @@ def main():
         test_acc_list.append(test_accuracy)
         test_f1_list.append(test_f1)
 
+    # print avg stats across all runs
     print_test_stats(
         test_acc_list, test_f1_list, num_runs
     )
@@ -268,13 +278,13 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    # Accepts values 1, 2, or 3 to represent embedding type (e.g., 1: GloVe, 2: BERT, 3: Both or other config)
+    # takes in values 1,2,3 depending on how to train the model
     parser.add_argument(
         "--finetune_mode",
         type=int,
         choices=[1, 2, 3],
-        required=True,  # Optional: Force the user to provide this
-        help="Embedding mode: 1 for GloVe, 2 for BERT, 3 for both"
+        required=True, 
+        help="Select Training Mode"
     )
 
     args = parser.parse_args()

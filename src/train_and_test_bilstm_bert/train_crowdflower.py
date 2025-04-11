@@ -27,10 +27,11 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     Evaluates model.
 
     Args:
-        model : The model to evaluate
-        dataloader : dataloader for val or test dataset
-        device : the device to perform computation on. ( cuda or cpu )
-        test : whether evaluting on test or train ds.
+        encoder: The encoder of the model to evaluate.
+        classifier: The classifier of the model to evaluate.
+        dataloader : dataloader for val or test dataset.
+        device : the device to perform computation on ( cuda or cpu ).
+        test : whether we evaluation on train or val ds for tqdm status description.
 
     Returns:
         tuple: A tuple containing:
@@ -52,6 +53,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
                 labels.to(device),
             )
 
+            # get prediction
             max_pool_encodings = encoder(input_ids, attention_mask)
             logits = classifier(max_pool_encodings)
 
@@ -65,7 +67,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
     print(
         f"Accuracy: {accuracy*100:.2f}%, F1 Score: {f1:.4f}"
     )
-    print("\nDetailed Report:\n", classification_report(all_labels, all_preds, zero_division=0))
+    print("\Classification Report:\n", classification_report(all_labels, all_preds, zero_division=0))
 
     return accuracy, f1
 
@@ -73,8 +75,9 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # fetch bilstm model config
     model_config = bilstm_bert_config()
-    print(f"\n 🌟🌟 Model Configuration : {model_config}, Dataset : CROWDFLOWER")
+    print(f"\n [Main] Dataset : Crowdflower, Model Configuration : {model_config}")
 
+    num_classes = CROWDFLOWER_CLASSES
     model_save_path = model_config["model_save_path"]
     num_epochs = model_config["num_epochs"]
     learning_rate = model_config["learning_rate"]
@@ -86,19 +89,12 @@ def main():
     trigger_times = 0
     patience = 5
 
-    print(f"Using device : {device}")
-
-    print("Loading training data...")
+    print("[Main] Loading training data...")
     train_ds = torch.load(CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE, weights_only=False)
     test_ds = torch.load(CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE, weights_only=False)
 
     train_ds, val_ds = split_dataset(train_ds, split_ratio=0.9, glove=False)
 
-    # debugging TO DO - remove
-    print("Number of samples in test_ds:", len(test_ds))
-    print("Number of samples in train_ds:", len(train_ds))
-    print("Number of samples in val_ds:", len(val_ds))
-    print("Batch size: ", batch_size)
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
@@ -109,16 +105,15 @@ def main():
         hidden_dim=model_config["hidden_dim"],
         lstm_layers=model_config["lstm_layers"]
     )
+    encoder.to(device)
 
     classifier = BiLSTM_Classifier(
         hidden_dim=model_config["hidden_dim"],
-        num_classes=CROWDFLOWER_CLASSES,
+        num_classes=num_classes,
         dropout_rate=model_config["dropout_rate"]
     )
-    
-    encoder.to(device)
     classifier.to(device)
-
+    
     # initialse loss function
     criterion = nn.CrossEntropyLoss()
 
@@ -127,6 +122,7 @@ def main():
         list(encoder.parameters()) + list(classifier.parameters()), lr=learning_rate
     )
 
+    print("[Main] Start training model...")
     for epoch in range(num_epochs):
         encoder.train()
         classifier.train()
@@ -153,9 +149,9 @@ def main():
 
             total_loss += loss.item()
 
-        avg_loss = total_loss / len(train_loader)
-        print(f"[Epoch {epoch+1}] Training Loss: {avg_loss:.4f}")
+        print(f"[Epoch {epoch+1}]")
 
+        # print out evaluation metrics
         val_accuracy, val_f1 = evaluate(
             encoder, classifier, val_loader, device
         )
@@ -179,7 +175,10 @@ def main():
                 print(f"Early stopping at epoch {epoch+1}")
                 break
 
-    print("\n----- Starting Evaluation on Test Set -----\n")
+    print("[Main] Start testing model...")
+
+    # load saved best model 
+    checkpoint = torch.load(model_save_path, map_location=device)
 
     # initialise model
     test_encoder = BiLSTM_BERT_Encoder(
@@ -187,21 +186,19 @@ def main():
         hidden_dim=model_config["hidden_dim"],
         lstm_layers=model_config["lstm_layers"]
     )
+    test_encoder.load_state_dict(checkpoint["encoder"])
+    test_encoder.to(device)
 
     test_classifier = BiLSTM_Classifier(
         hidden_dim=model_config["hidden_dim"],
-        num_classes=CROWDFLOWER_CLASSES,
+        num_classes=num_classes,
         dropout_rate=model_config["dropout_rate"]
     )
-    
-    # load the best model
-    checkpoint = torch.load(model_save_path, map_location=device)
-    test_encoder.load_state_dict(checkpoint["encoder"])
     test_classifier.load_state_dict(checkpoint["classifier"])
-    test_encoder.to(device)
     test_classifier.to(device)
     
-    # fetch results on the test set
+    
+    # print results on the test set
     evaluate(test_encoder, test_classifier, test_loader, device, test=True)
 
 
