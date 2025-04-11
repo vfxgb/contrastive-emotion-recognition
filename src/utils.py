@@ -14,6 +14,7 @@ import os
 
 nlp = spacy.load("en_core_web_sm")
 
+
 def get_versioned_path(base_path, finetune_mode):
     """
     Adds finetune_mode tag to filename before extension and returns the new path.
@@ -30,6 +31,7 @@ def get_versioned_path(base_path, finetune_mode):
     new_filename = f"{name}_{finetune_mode}{ext}"
 
     return os.path.join(base_dir, new_filename)
+
 
 def random_dropout_tokens(token_ids, dropout_prob=0.1):
     """
@@ -49,6 +51,7 @@ def random_dropout_tokens(token_ids, dropout_prob=0.1):
         for tok in token_ids
         if random.random() > dropout_prob or tok in [101, 102, 0]
     ]
+
 
 def print_test_stats(test_acc_list, test_f1_list, num_runs):
     """
@@ -141,7 +144,7 @@ class DualViewDataset(torch.utils.data.Dataset):
         return len(self.indices)
 
     def __getitem__(self, idx):
-        
+
         # Get original sample
         original_idx = self.indices[idx]
         input_ids, attention_mask, label = self.dataset[original_idx]
