@@ -151,7 +151,7 @@ def evaluate(encoder, classifier, dataloader, device, test=False):
 def main():
     # Configurations
     model_config = bilstm_bert_config()
-    print(f"\n [Main] Dataset : Crowdflower, Model Configuration : {model_config}")
+    print(f"\n [Main] Dataset : Wassa, Model Configuration : {model_config}")
 
     num_classes = WASSA_CLASSES
     num_epochs = model_config["num_epochs"]
