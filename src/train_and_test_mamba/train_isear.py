@@ -207,9 +207,16 @@ def main():
                 emb2 = encoder(view2)
                 features = torch.stack([emb1, emb2], dim=1)
 
-                loss_cls = criterion_cls(classifier(emb1), labels)
-                loss_contrastive = criterion_contrastive(features, labels)
-                loss = 0.9 * loss_cls + 0.1 * loss_contrastive
+                if finetune_mode == 1 or finetune_mode == 2:
+                    # use only CE when finetuning
+                    loss = criterion_cls(classifier(emb1), labels)
+
+                elif finetune_mode == 3:
+                    # use supcon + CE when training from scratch
+                    loss_cls = criterion_cls(classifier(emb1), labels)
+                    loss_contrastive = criterion_contrastive(features, labels)
+                    loss = 0.9 * loss_cls + 0.1 * loss_contrastive
+
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
