@@ -28,7 +28,7 @@ VALID_FINETUNE_MODES=(1 2 3)
 FORCE_PREPROCESS=false
 DATASET=""
 MODEL=""
-FINETUNE_MODE=1  # Default finetune_mode to 1 if not provided
+FINETUNE_MODE=3  # Default finetune_mode to 3 if not provided
 
 # === Scripts ===
 declare -A PREPROCESS_SCRIPTS=(
