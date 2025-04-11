@@ -92,13 +92,13 @@ def mamba_config():
     model_config = {
         "name": "mamba",
         "device": device,
-        "embed_dim": 1024,
+        "embed_dim": 2048,
         "batch_size": 128,
         "num_epochs": 30,
         "learning_rate": 6e-5,
         "mamba_args": dict(
             d_model=2048,
-            d_state=256,
+            d_state=512,
             d_conv=4,
             expand=2,
         ),
