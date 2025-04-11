@@ -83,7 +83,7 @@ def main():
     # early stopping parameters
     best_val_f1 = 0
     trigger_times = 0
-    patience = 3
+    patience = 5
 
     print(f"Using device : {device}")
 
