@@ -1,6 +1,6 @@
 import pandas as pd
 import torch
-from torch.utils.data import TensorDataset, random_split
+from torch.utils.data import TensorDataset
 from transformers import AutoTokenizer
 import os
 from utils import (
@@ -8,11 +8,9 @@ from utils import (
     fetch_label_mapping,
     load_glove_embeddings,
     split_dataset,
-    DualViewDataset,
 )
 from config import (
     BERT_MODEL,
-    SPACY_MODEL,
     ISEAR_PATH,
     ISEAR_TEST_DS_PATH_WITHOUT_GLOVE,
     ISEAR_TRAIN_DS_PATH_WITHOUT_GLOVE,
@@ -27,35 +25,29 @@ import argparse
 # fetch label mapping for ISEAR dataset
 label_mapping = fetch_label_mapping(isear=True)
 
-
-def load_isear_with_glove(csv_path, max_length=128):
+def load_isear_with_glove(path, max_length=128):
     """
-    Load and preprocess the ISEAR dataset from a CSV file.
+    Load and preprocess the ISEAR dataset from a CSV file for use with GloVe embeddings.
+    
     Assumes the CSV has columns 'Field1' and 'SIT'.
     'Field1' is used as the label and 'SIT' as the text.
     Only rows with labels present in label_mapping are kept.
 
     Args:
-        csv_path (str): Path to the CSV file.
+        path (str): Path to the CSV file.
         max_length (int): Maximum sequence length for tokenization.
 
     Returns:
-        TensorDataset: Dataset object containing input_ids, attention_masks, and labels.
+        TensorDataset: Dataset object containing input_ids and labels.
+        Tokenizer: Fitted Keras Tokeniser object
 
     """
     # Initialize the BERT tokenizer
     tokenizer = Tokenizer(num_words=5000, oov_token="<UNK>")
 
     # Load CSV using latin1 encoding and comma separator
-    df = pd.read_csv(csv_path, encoding="latin1", sep=",")
-    print(f"[Isear] Loaded {len(df)} rows from {csv_path}")
-
-    # Rename columns: use 'Field1' as 'Emotion' and 'SIT' as 'Text'
+    df = pd.read_csv(path, encoding="latin1", sep=",")
     df = df.rename(columns={"Field1": "Emotion", "SIT": "Text"})
-
-    # Show original label distribution based on 'Emotion'
-    print("Original label distribution in 'Emotion':")
-    print(df["Emotion"].value_counts())
 
     # Filter to keep only rows with desired emotions
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
@@ -65,10 +57,10 @@ def load_isear_with_glove(csv_path, max_length=128):
     print("Sample cleaned text:", df["content"].iloc[0])
 
     texts = df["content"].tolist()
+
+    # Convert text to numerical sequences
     tokenizer.fit_on_texts(texts)
-    sequences = tokenizer.texts_to_sequences(
-        texts
-    )  # Convert text to numerical sequences
+    sequences = tokenizer.texts_to_sequences(texts)
     padded_sequences = pad_sequences(
         sequences, maxlen=max_length, padding="post", truncating="post"
     )
@@ -79,12 +71,15 @@ def load_isear_with_glove(csv_path, max_length=128):
 
     # Create and return a TensorDataset
     dataset = TensorDataset(input_tensor, labels)
-    print(f"ISEAR dataset loaded: {len(dataset)} samples")
+    print(
+        f"[Isear] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
+    )
+    print(f"[Isear] Label map: {label_mapping}")
 
     return dataset, tokenizer
 
 
-def load_isear_without_glove(csv_path, max_length=128):
+def load_isear_without_glove(path, max_length=128):
     """
     Load and preprocess the ISEAR dataset from a CSV file.
     Assumes the CSV has columns 'Field1' and 'SIT'.
@@ -92,7 +87,7 @@ def load_isear_without_glove(csv_path, max_length=128):
     Only rows with labels present in label_mapping are kept.
 
     Args:
-        csv_path (str): Path to the CSV file.
+        path (str): Path to the CSV file.
         max_length (int): Maximum sequence length for tokenization.
 
     Returns:
@@ -103,15 +98,8 @@ def load_isear_without_glove(csv_path, max_length=128):
     tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
 
     # Load CSV using latin1 encoding and comma separator
-    df = pd.read_csv(csv_path, encoding="latin1", sep=",")
-    print(f"[Isear] Loaded {len(df)} rows from {csv_path}")
-
-    # Rename columns: use 'Field1' as 'Emotion' and 'SIT' as 'Text'
+    df = pd.read_csv(path, encoding="latin1", sep=",")
     df = df.rename(columns={"Field1": "Emotion", "SIT": "Text"})
-
-    # Show original label distribution based on 'Emotion'
-    print("Original label distribution in 'Emotion':")
-    print(df["Emotion"].value_counts())
 
     # Filter to keep only rows with desired emotions
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
@@ -133,7 +121,10 @@ def load_isear_without_glove(csv_path, max_length=128):
 
     # Create and return a TensorDataset
     dataset = TensorDataset(encodings["input_ids"], encodings["attention_mask"], labels)
-    print(f"ISEAR dataset loaded: {len(dataset)} samples")
+    print(
+        f"[Isear] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
+    )
+    print(f"[Isear] Label map: {label_mapping}")
 
     return dataset
 
@@ -157,6 +148,7 @@ if __name__ == "__main__":
     with_glove = args.with_glove
     force_preprocess = args.force_preprocess
 
+    # create preprocessing directory
     os.makedirs("data/preprocessed_dataset/isear/", exist_ok=True)
 
     print("[Main] Loading and processing ISEAR dataset...")
@@ -171,6 +163,8 @@ if __name__ == "__main__":
         else:
             print("[Main] Preprocessing Dataset.")
             isear_dataset, tokenizer = load_isear_with_glove(ISEAR_PATH, max_length=128)
+            
+            print("[Main] Loading glove embeddings.")
             load_glove_embeddings(tokenizer, ISEAR_GLOVE_EMBEDDINGS_PATH)
 
             print("[Main] Splitting dataset into train and test...")

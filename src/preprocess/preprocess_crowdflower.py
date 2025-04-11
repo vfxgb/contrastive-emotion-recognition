@@ -3,12 +3,8 @@ import torch
 from transformers import AutoTokenizer
 from torch.utils.data import TensorDataset
 import os
-import spacy
-import numpy as np
 from config import (
     BERT_MODEL,
-    SPACY_MODEL,
-    GLOVE_PATH,
     CROWDFLOWER_PATH,
     CROWDFLOWER_TEST_DS_PATH_WITHOUT_GLOVE,
     CROWDFLOWER_TRAIN_DS_PATH_WITHOUT_GLOVE,
@@ -20,8 +16,6 @@ from utils import clean_text, split_dataset, load_glove_embeddings
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import argparse
-
-nlp = spacy.load(SPACY_MODEL)
 
 
 def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
@@ -38,10 +32,10 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
         Tokenizer: Fitted Keras Tokeniser object
 
     """
+    # intialize tokenizer
     tokenizer = Tokenizer(num_words=5000, oov_token="<UNK>")
 
     df = pd.read_csv(path)
-    print(f"[CrowdFlower] Loaded {len(df)} rows from {path}")
 
     df["original"] = df["content"]  # Keep original for debugging
     df["content"] = df["content"].apply(clean_text, extended=True)
@@ -50,10 +44,6 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     unique_sentiments = sorted(df["sentiment"].unique())
     label_map = {label: idx for idx, label in enumerate(unique_sentiments)}
     df["label"] = df["sentiment"].map(label_map)
-
-    # Print original distribution
-    print(f"[Original Label Distribution]")
-    print(df["label"].value_counts())
 
     # Filter out classes with < min_samples
     class_counts = df["label"].value_counts()
@@ -69,10 +59,9 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     texts = df_filtered["content"].tolist()
     labels = df_filtered["label"].tolist()
 
+    # Convert text to numerical sequences
     tokenizer.fit_on_texts(texts)
-    sequences = tokenizer.texts_to_sequences(
-        texts
-    )  # Convert text to numerical sequences
+    sequences = tokenizer.texts_to_sequences(texts)
     padded_sequences = pad_sequences(
         sequences, maxlen=max_length, padding="post", truncating="post"
     )
@@ -81,8 +70,10 @@ def load_crowdflower_with_glove(path, max_length=128, min_samples=1000):
     label_tensor = torch.tensor(labels)
 
     dataset = TensorDataset(input_tensor, label_tensor)
-    print(f"[CrowdFlower] Final FILTERED dataset shape: {len(dataset)} samples")
-    print(f"[Final Label Mapping] {new_label_map}")
+    print(
+        f"[CrowdFlower] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
+    )
+    print(f"[CrowdFlower] Label map: {new_label_map}")
 
     return dataset, tokenizer
 
@@ -103,7 +94,6 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
     tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
 
     df = pd.read_csv(path)
-    print(f"[CrowdFlower] Loaded {len(df)} rows from {path}")
 
     df["original"] = df["content"]  # Keep original for debugging
     df["content"] = df["content"].apply(clean_text)
@@ -131,6 +121,7 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
     texts = df_filtered["content"].tolist()
     labels = df_filtered["label"].tolist()
 
+    # create tokenizer
     encodings = tokenizer(
         texts,
         truncation=True,
@@ -144,8 +135,10 @@ def load_crowdflower_without_glove(path, max_length=128, min_samples=1000):
     label_tensor = torch.tensor(labels)
 
     dataset = TensorDataset(input_ids, attention_masks, label_tensor)
-    print(f"[CrowdFlower] Final FILTERED dataset shape: {len(dataset)} samples")
-    print(f"[Final Label Mapping] {new_label_map}")
+    print(
+        f"[CrowdFlower] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
+    )
+    print(f"[CrowdFlower] Label map: {new_label_map}")
 
     return dataset
 
@@ -185,6 +178,8 @@ if __name__ == "__main__":
             crowdflower_dataset, tokenizer = load_crowdflower_with_glove(
                 CROWDFLOWER_PATH
             )
+
+            print("[Main] Loading glove embeddings.")
             load_glove_embeddings(tokenizer, CROWDFLOWER_GLOVE_EMBEDDINGS_PATH)
 
             print("[Main] Splitting dataset into train and test...")

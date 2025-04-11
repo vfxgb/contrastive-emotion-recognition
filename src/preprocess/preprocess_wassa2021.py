@@ -20,37 +20,41 @@ import argparse
 # get label mapping for WASSA dataset
 label_mapping = fetch_label_mapping(wassa=True)
 
-
-def load_wassa_with_glove(tsv_path, max_length=128):
+def load_wassa_with_glove(path, max_length=128):
     """
-    Load and preprocess the WASSA 2021 dataset from a TSV file.
+    Load and preprocess the WASSA 2021 dataset from a TSV file for use with GloVe embeddings.
+
     Renames 'emotion_labels' to 'Emotion' and 'essays' to 'Text'.
+    Removes neutral emotions.
     Filters to keep only rows with one of the six Ekman emotions,
     cleans the text, tokenizes it, and maps the labels.
-    Returns a TensorDataset.
+    
+    Args:
+        path (str): Path to the TSV file.
+        max_length (int): Maximum sequence length for tokenization.
+
+    Returns:
+        TensorDataset: Dataset object containing input_ids and labels.
+        Tokenizer: Fitted Keras Tokeniser object
+
     """
+    # initialise tokenizer
     tokenizer = Tokenizer(num_words=5000, oov_token="<UNK>")
 
-    print("Loading TSV from:", tsv_path)
-    df = pd.read_csv(tsv_path, sep="\t")
-    print("Original dataset shape:", df.shape)
-    print("Columns in dataset:", df.columns.tolist())
-
-    # Rename columns for consistency
+    df = pd.read_csv(path, sep="\t")
     df = df.rename(columns={"emotion_label": "Emotion", "essay": "Text"})
 
-    # Filter to keep only rows with desired emotions (exclude others such as 'neutral')
+    # keep only rows with desired emotions 
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
 
-    # Clean the text in the 'Text' column
+    # Clean text
     df["content"] = df["Text"].apply(clean_text, extended=True)
     texts = df["content"].tolist()
 
     # Tokenize the cleaned text using the BERT tokenizer
+    # Convert text to numerical sequences
     tokenizer.fit_on_texts(texts)
-    sequences = tokenizer.texts_to_sequences(
-        texts
-    )  # Convert text to numerical sequences
+    sequences = tokenizer.texts_to_sequences(texts)
     padded_sequences = pad_sequences(
         sequences, maxlen=max_length, padding="post", truncating="post"
     )
@@ -61,34 +65,41 @@ def load_wassa_with_glove(tsv_path, max_length=128):
 
     # Create and return a TensorDataset
     dataset = TensorDataset(input_tensor, labels)
-    print(f"WASSA 2021 dataset loaded: {len(dataset)} samples")
+    print(
+        f"[WASSA] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
+    )
+    print(f"[WASSA] Label map: {label_mapping}")
 
     return dataset, tokenizer
 
 
-def load_wassa_without_glove(tsv_path, max_length=128):
+def load_wassa_without_glove(path, max_length=128):
     """
     Load and preprocess the WASSA 2021 dataset from a TSV file.
+
     Renames 'emotion_labels' to 'Emotion' and 'essays' to 'Text'.
+    Removes neutral emotions.
     Filters to keep only rows with one of the six Ekman emotions,
     cleans the text, tokenizes it, and maps the labels.
-    Returns a TensorDataset.
+    
+    Args:
+        path (str): Path to the TSV file.
+        max_length (int): Maximum sequence length for tokenization.
+
+    Returns:
+        TensorDataset: Dataset object containing input_ids, attention_masks, and labels.
     """
+
     # Initialize the BERT tokenizer
     tokenizer = AutoTokenizer.from_pretrained(BERT_MODEL)
 
-    print("Loading TSV from:", tsv_path)
-    df = pd.read_csv(tsv_path, sep="\t")
-    print("Original dataset shape:", df.shape)
-    print("Columns in dataset:", df.columns.tolist())
-
-    # Rename columns for consistency
+    df = pd.read_csv(path, sep="\t")
     df = df.rename(columns={"emotion_label": "Emotion", "essay": "Text"})
 
-    # Filter to keep only rows with desired emotions (exclude others such as 'neutral')
+    # keep only rows with desired emotions 
     df = df[df["Emotion"].isin(label_mapping.keys())].reset_index(drop=True)
 
-    # Clean the text in the 'Text' column
+    # Clean the text 
     df["content"] = df["Text"].apply(clean_text)
 
     # Tokenize the cleaned text using the BERT tokenizer
@@ -102,12 +113,13 @@ def load_wassa_without_glove(tsv_path, max_length=128):
 
     # Map emotion labels to integers using the defined mapping
     labels = torch.tensor(df["Emotion"].map(label_mapping).values)
-    print("Labels tensor shape:", labels.shape)
-    print("Unique label mapping:", label_mapping)
 
     # Create and return a TensorDataset
     dataset = TensorDataset(encodings["input_ids"], encodings["attention_mask"], labels)
-    print(f"WASSA 2021 dataset loaded: {len(dataset)} samples")
+    print(
+        f"[WASSA] Loaded crowdflower dataset: {len(dataset)} samples from {path}"
+    )
+    print(f"[WASSA] Label map: {label_mapping}")
 
     return dataset
 
