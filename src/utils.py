@@ -12,23 +12,23 @@ from sklearn.model_selection import train_test_split
 from config import GLOVE_PATH, SEED
 import os
 
-# import matplotlib.pyplot as plt
-# def visualize_embeddings(embeddings, labels):
-#     tsne = TSNE(n_components=2, random_state=42)
-#     reduced_emb = tsne.fit_transform(embeddings)
-
-#     plt.figure(figsize=(8, 8))
-#     scatter = plt.scatter(reduced_emb[:, 0], reduced_emb[:, 1], c=labels, cmap='tab10', alpha=0.7)
-#     plt.legend(*scatter.legend_elements(), title="Classes")
-#     plt.title('t-SNE visualization of emotion embeddings')
-#     plt.show()
-
 nlp = spacy.load("en_core_web_sm")
 
-def get_versioned_path(base_path, version):
+def get_versioned_path(base_path, finetune_mode):
+    """
+    Adds finetune_mode tag to filename before extension and returns the new path.
+
+    Args:
+        base_path (str): the original file name
+        finetune_mode (int): the number to append
+
+    Returns:
+        str: new file path name
+    """
     base_dir, filename = os.path.split(base_path)
     name, ext = os.path.splitext(filename)
-    new_filename = f"{name}_{version}{ext}"
+    new_filename = f"{name}_{finetune_mode}{ext}"
+
     return os.path.join(base_dir, new_filename)
 
 def random_dropout_tokens(token_ids, dropout_prob=0.1):
@@ -113,7 +113,6 @@ def split_dataset(dataset, split_ratio=0.8, seed=SEED, glove=True):
     train_ds = Subset(base_dataset, X_train_idx)
     test_ds = Subset(base_dataset, X_test_idx)
 
-    print(f"[Split] Train size: {len(train_ds)}, Test size: {len(test_ds)}")
     return train_ds, test_ds
 
 
@@ -142,6 +141,7 @@ class DualViewDataset(torch.utils.data.Dataset):
         return len(self.indices)
 
     def __getitem__(self, idx):
+        
         # Get original sample
         original_idx = self.indices[idx]
         input_ids, attention_mask, label = self.dataset[original_idx]
