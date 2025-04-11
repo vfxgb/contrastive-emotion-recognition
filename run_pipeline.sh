@@ -6,6 +6,7 @@
 #     ./run_pipeline.sh --force_preprocess crowdflower bilstm_glove 1
 #   Available datasets: crowdflower, isear, wassa
 #   Available models: bilstm_glove, bilstm_bert, mamba
+#   Available finetune modes: 1,2,3
 
 # === Configuration ===
 LOG_DIR="logs"
@@ -89,11 +90,12 @@ usage() {
     echo "Usage: $0 [--force_preprocess] <dataset> <model> [--finetune_mode <1|2|3>]"
     echo "  Options:"
     echo "    --force_preprocess         Force re-preprocessing of the dataset"
-    echo "    --finetune_mode <1|2|3>    Finetuning strategy (required for isear or wassa with mamba/bilstm_bert):"
+    echo "    --finetune_mode <1|2|3>    Finetuning strategy (required only for isear or wassa with mamba/bilstm_bert):"
     echo "                               1 - Load checkpoint, freeze encoder, finetune classifier"
     echo "                               2 - Load checkpoint, finetune encoder and classifier"
     echo "                               3 - Train from scratch completely"
-    echo ""
+    echo "  For bilstm_bert and mamba, please train the base model on crowdflower before finetuning (finetune mode 1 and 2)"
+    echo "  on isear or wassa"
     echo "  Example:"
     echo "    $0 crowdflower mamba"
     echo "    $0 isear mamba --finetune_mode 3"
@@ -188,11 +190,11 @@ fi
 
 if [ "$MODEL" = "bilstm_glove" ]; then
     download_glove
-    mkdir -p "$BILSTM_GLOVE_RESULTS_DIR"
+    mkdir -p $BILSTM_GLOVE_RESULTS_DIR
 elif [ "$MODEL" = "bilstm_bert" ]; then 
-    mkdir -p "$BILSTM_BERT_RESULTS_DIR"
+    mkdir -p $BILSTM_BERT_RESULTS_DIR
 elif [ "$MODEL" = "mamba" ]; then 
-    mkdir -p "$MAMBA_RESULTS_DIR"
+    mkdir -p $MAMBA_RESULTS_DIR
 fi
 
 echo "[Preprocess] Running preprocessing and training for dataset=$DATASET model=$MODEL (force_preprocess=$FORCE_PREPROCESS)"

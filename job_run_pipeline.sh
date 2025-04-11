@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # Usage:
-#     ./run_pipeline.sh [--force_preprocess] <dataset> <model>
+#     ./run_pipeline.sh [--force_preprocess] <dataset> <model> [<finetune_mode>]
 # Example:
-#     ./run_pipeline.sh --force_preprocess crowdflower bilstm_glove
+#     ./run_pipeline.sh --force_preprocess crowdflower bilstm_glove 1
 #   Available datasets: crowdflower, isear, wassa
 #   Available models: bilstm_glove, bilstm_bert, mamba
+#   Available finetune modes: 1,2,3
+
 ### TC1 Job Script ###
 
 #SBATCH --partition=UGGPU-TC1
@@ -115,18 +117,21 @@ download_glove() {
 # === USAGE ===
 usage() {
     echo "Usage: $0 [--force_preprocess] <dataset> <model> [--finetune_mode <1|2|3>]"
-    echo " Example : --force_preprocess isear bilstm_glove --finetune_mode 1"
     echo "  Options:"
-    echo "    --force_preprocess    if set, preprocesses data again"
-    echo "                          if not set, preprocesses data if not done before"
-    echo "  Datasets: ${VALID_DATASETS[*]}"
-    echo "  Models: ${VALID_MODELS[*]}"
-    echo "  Finetune_mode: ${VALID_FINETUNE_MODES[*]}"
-    echo "  Finetune mode is only required when training on isear and wassa."
-    echo "  1 - Load model checkpoint, freeze encoder, finetune classifier"
-    echo "  2 - Load model checkpoint, finetune encoder and classifier"
-    echo "  3 - Train from scratch completely"
-    echo "  Please first train on crowdflower and then finetune on isear and wassa."
+    echo "    --force_preprocess         Force re-preprocessing of the dataset"
+    echo "    --finetune_mode <1|2|3>    Finetuning strategy (required only for isear or wassa with mamba/bilstm_bert):"
+    echo "                               1 - Load checkpoint, freeze encoder, finetune classifier"
+    echo "                               2 - Load checkpoint, finetune encoder and classifier"
+    echo "                               3 - Train from scratch completely"
+    echo "  For bilstm_bert and mamba, please train the base model on crowdflower before finetuning (finetune mode 1 and 2)"
+    echo "  on isear or wassa"
+    echo "  Example:"
+    echo "    $0 crowdflower mamba"
+    echo "    $0 isear mamba --finetune_mode 3"
+    echo "    $0 --force_preprocess wassa bilstm_bert --finetune_mode 2"
+    echo ""
+    echo "  Valid datasets: ${VALID_DATASETS[*]}"
+    echo "  Valid models:   ${VALID_MODELS[*]}"
     exit 1
 }
 
@@ -213,7 +218,6 @@ fi
 # === CONDITIONAL PREPROCESSING ===
 if [ "$MODEL" = "bilstm_glove" ]; then
     download_glove
-    echo "Made directory"
     mkdir -p $BILSTM_GLOVE_RESULTS_DIR
 elif [ "$MODEL" = "bilstm_bert" ]; then 
     mkdir -p $BILSTM_BERT_RESULTS_DIR
