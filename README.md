@@ -1,8 +1,6 @@
 # 🎭 Contrastive-Mamba Emotion Recognition (EmoCon)
-**Enhancing Text Emotion Recognition with Mamba and Contrastive Learning for Robust Emotion Embeddings**
-
+**Enhancing Text Emotion Recognition with Mamba and Contrastive Learning for Robust Emotion Embeddings** [[Report]](https://github.com/vfxgb/contrastive-emotion-recognition/blob/main/NNDL_Assignment.pdf)
 ---
-
 ## Overview
 This project integrates the powerful **Selective State Space Model (Mamba)** with **Contrastive Learning** to enhance **Text Emotion Recognition (TER)**.  
 Traditional models (e.g., CNN, RNN, BERT) often:
